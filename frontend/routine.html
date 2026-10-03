@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Routine - AI Skin Care Advisor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">SkinCare AI</div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="analysis.html">Analysis</a>
+            <a href="progress.html">Progress</a>
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <section class="routine-section">
+        <h1>My Skin Care Routine</h1>
+
+        <div class="routine-input">
+            <input type="text" id="concernInput" placeholder="Enter your skin concern (e.g., acne, oily skin)">
+            <button id="generateBtn" class="btn-primary">Generate Routine</button>
+        </div>
+
+        <div id="routineResult" class="result-box"></div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

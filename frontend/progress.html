@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress - AI Skin Care Advisor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">SkinCare AI</div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="analysis.html">Analysis</a>
+            <a href="routine.html">Routine</a>
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <section class="progress-section">
+        <h1>Track Your Progress</h1>
+
+        <div class="progress-form">
+            <input type="date" id="progressDate">
+            <textarea id="progressNotes" placeholder="How is your skin today?"></textarea>
+            <button id="addProgressBtn" class="btn-primary">Add Entry</button>
+        </div>
+
+        <div id="progressList" class="progress-list"></div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

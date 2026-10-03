@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Analysis - AI Skin Care Advisor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">SkinCare AI</div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="routine.html">Routine</a>
+            <a href="progress.html">Progress</a>
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <section class="analysis-section">
+        <h1>Skin Analysis</h1>
+        <p>Upload a clear photo of your face for AI analysis</p>
+
+        <div class="upload-box">
+            <input type="file" id="photoInput" accept="image/*">
+            <label for="photoInput" class="upload-label">
+                <span>Click to Upload Photo</span>
+            </label>
+        </div>
+
+        <button id="analyzeBtn" class="btn-primary">Analyze Skin</button>
+
+        <div id="analysisResult" class="result-box"></div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
