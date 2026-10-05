@@ -116,3 +116,51 @@ document.addEventListener("click", function (e) {
         window.location.href = "index.html";
     }
 });
+
+// ============ AI ANALYSIS ============
+const analyzeBtn = document.getElementById("analyzeBtn");
+if (analyzeBtn) {
+    analyzeBtn.addEventListener("click", async function () {
+        const concern = document.getElementById("concernInput").value.trim();
+        const resultBox = document.getElementById("analysisResult");
+
+        if (concern === "") {
+            alert("Please enter your skin concern");
+            return;
+        }
+
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) {
+            alert("Please login first");
+            window.location.href = "login.html";
+            return;
+        }
+
+        resultBox.textContent = "Generating your personalized routine... Please wait 10-20 seconds.";
+        analyzeBtn.disabled = true;
+        analyzeBtn.textContent = "Generating...";
+
+        try {
+            const response = await fetch("http://localhost:5000/api/analysis/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ concern, userId: user.id })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                resultBox.textContent = data.error || "Something went wrong";
+            } else {
+                resultBox.textContent = data.routine;
+            }
+
+        } catch (error) {
+            console.log(error);
+            resultBox.textContent = "Cannot connect to server. Make sure backend is running.";
+        } finally {
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = "Get Routine";
+        }
+    });
+}

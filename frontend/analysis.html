@@ -20,17 +20,13 @@
     </nav>
 
     <section class="analysis-section">
-        <h1>Skin Analysis</h1>
-        <p>Upload a clear photo of your face for AI analysis</p>
+        <h1>AI Skin Analysis</h1>
+        <p>Describe your skin concern and get a personalized routine</p>
 
-        <div class="upload-box">
-            <input type="file" id="photoInput" accept="image/*">
-            <label for="photoInput" class="upload-label">
-                <span>Click to Upload Photo</span>
-            </label>
+        <div class="concern-input">
+            <input type="text" id="concernInput" placeholder="e.g., acne, oily skin, dry skin, dark spots" />
+            <button id="analyzeBtn" class="btn-primary">Get Routine</button>
         </div>
-
-        <button id="analyzeBtn" class="btn-primary">Analyze Skin</button>
 
         <div id="analysisResult" class="result-box"></div>
     </section>
