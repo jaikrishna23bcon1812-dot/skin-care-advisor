@@ -21,16 +21,45 @@
 
     <section class="progress-section">
         <h1>Track Your Progress</h1>
+        <p>Log your skin condition daily and see your journey</p>
 
         <div class="progress-form">
-            <input type="date" id="progressDate">
-            <textarea id="progressNotes" placeholder="How is your skin today?"></textarea>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="progressDate">
+            </div>
+
+            <div class="form-group">
+                <label>Rating</label>
+                <select id="progressRating">
+                    <option value="1">1 - Worse</option>
+                    <option value="2">2 - Bad</option>
+                    <option value="3" selected>3 - Same</option>
+                    <option value="4">4 - Better</option>
+                    <option value="5">5 - Great</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="progressNotes" placeholder="How is your skin today?"></textarea>
+            </div>
+
             <button id="addProgressBtn" class="btn-primary">Add Entry</button>
         </div>
 
-        <div id="progressList" class="progress-list"></div>
+        <div class="chart-container">
+            <h3>Progress Chart</h3>
+            <canvas id="progressChart"></canvas>
+        </div>
+
+        <div class="progress-list">
+            <h3>Your Entries</h3>
+            <div id="progressList"></div>
+        </div>
     </section>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
 

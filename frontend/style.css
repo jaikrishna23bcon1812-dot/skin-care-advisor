@@ -474,3 +474,133 @@ body {
         flex-direction: column;
     }
 }
+
+.progress-section {
+    padding: 60px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.progress-section h1 {
+    color: #333;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.progress-section>p {
+    color: #666;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.progress-form {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    max-width: 600px;
+    margin: 0 auto 40px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.progress-form .btn-primary {
+    width: 100%;
+}
+
+.chart-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 25px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+
+.chart-container h3 {
+    color: #d81b60;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.progress-list {
+    max-width: 800px;
+    margin: 40px auto;
+}
+
+.progress-list h3 {
+    color: #d81b60;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.progress-item {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.progress-item .info {
+    flex: 1;
+}
+
+.progress-item h4 {
+    color: #d81b60;
+    margin-bottom: 8px;
+}
+
+.progress-item p {
+    color: #666;
+    line-height: 1.5;
+}
+
+.progress-item .rating {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.progress-item button {
+    background: #e53935;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.progress-item button:hover {
+    background: #c62828;
+}
