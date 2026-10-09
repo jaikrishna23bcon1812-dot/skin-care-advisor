@@ -25,5 +25,26 @@ A full-stack AI-powered skincare web application that generates personalized ski
 **Database:** MongoDB Atlas, Mongoose
 **AI:** Groq API (Llama 3.3 70B)
 **Deployment:** Vercel (Frontend), Render (Backend)
+## 📸 Screenshots
+
+### 🏠 Landing Page
+![Landing Page](screenshots/homepage.png)
+
+### 📊 Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### 🤖 AI Skin Analysis
+![AI Analysis](screenshots/analysis.png)
+
+### 📈 Progress Tracker
+![Progress Tracker](screenshots/progress.png)
+
+### 🔐 Login Page
+![Login](screenshots/login.png)
+
+### 📝 Register Page
+![Register](screenshots/register.png)
+
+---
 
 ## 📂 Project Structure
