@@ -32,7 +32,7 @@ Keep it under 300 words.`;
                 "X-Title": "Skin Care Advisor"
             },
             body: JSON.stringify({
-                model: "google/gemma-4-26b-a4b-it:free",
+                model: "mistralai/mistral-7b-instruct:free",
                 messages: [
                     { role: "system", content: "You are a professional dermatologist." },
                     { role: "user", content: prompt }
