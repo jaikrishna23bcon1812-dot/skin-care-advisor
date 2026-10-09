@@ -23,33 +23,59 @@ Please include:
 
 Keep it under 300 words.`;
 
-        const apiResponse = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`,
-                "HTTP-Referer": "https://skin-care-advisor-frontend.vercel.app",
-                "X-Title": "Skin Care Advisor"
-            },
-            body: JSON.stringify({
-                model: "mistralai/mistral-7b-instruct:free",
-                messages: [
-                    { role: "system", content: "You are a professional dermatologist." },
-                    { role: "user", content: prompt }
-                ]
-            })
-        });
+        const models = [
+            "mistralai/mistral-7b-instruct:free",
+            "meta-llama/llama-3.2-3b-instruct:free",
+            "qwen/qwen-2.5-7b-instruct:free",
+            "microsoft/phi-3-mini-128k-instruct:free",
+            "google/gemma-2-9b-it:free"
+        ];
 
-        const data = await apiResponse.json();
+        let text = "";
+        let lastError = null;
 
-        console.log("OpenRouter response status:", apiResponse.status);
+        for (const modelName of models) {
+            try {
+                console.log("Trying model:", modelName);
 
-        if (!apiResponse.ok) {
-            console.log("OpenRouter API error:", JSON.stringify(data, null, 2));
-            return res.status(500).json({ error: "AI failed. Check console." });
+                const apiResponse = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "HTTP-Referer": "https://skin-care-advisor-frontend.vercel.app",
+                        "X-Title": "Skin Care Advisor"
+                    },
+                    body: JSON.stringify({
+                        model: modelName,
+                        messages: [
+                            { role: "system", content: "You are a professional dermatologist." },
+                            { role: "user", content: prompt }
+                        ]
+                    })
+                });
+
+                const data = await apiResponse.json();
+                console.log("Response status for", modelName, ":", apiResponse.status);
+
+                if (apiResponse.ok && data.choices && data.choices[0]) {
+                    text = data.choices[0].message.content;
+                    console.log("SUCCESS with model:", modelName);
+                    break;
+                } else {
+                    console.log("Failed with", modelName);
+                    lastError = data;
+                }
+            } catch (err) {
+                console.log("Error with", modelName, ":", err.message);
+                lastError = err;
+            }
         }
 
-        const text = data.choices[0].message.content;
+        if (!text) {
+            console.log("All models failed. Last error:", JSON.stringify(lastError, null, 2));
+            return res.status(500).json({ error: "All AI models are busy. Please try again in a minute." });
+        }
 
         let savedAnalysis = null;
         if (userId) {
