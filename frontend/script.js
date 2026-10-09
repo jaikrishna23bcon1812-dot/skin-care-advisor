@@ -1,7 +1,7 @@
 // AI Skin Care Advisor - Frontend Script
 // Connects to backend API at localhost:5000
 
-const API_URL = "https://skin-care-advisor.onrender.com/api";
+const API_URL = "https://skin-care-api.onrender.com/api";
 
 // ============ REGISTER ============
 const registerForm = document.getElementById("registerForm");
@@ -141,7 +141,7 @@ if (analyzeBtn) {
         analyzeBtn.textContent = "Generating...";
 
         try {
-            const response = await fetch("https://skin-care-advisor.onrender.com/api/analysis/generate", {
+            const response = await fetch("https://skin-care-api.onrender.com/api/analysis/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ concern, userId: user.id })
