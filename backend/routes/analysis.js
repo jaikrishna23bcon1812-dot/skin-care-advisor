@@ -10,8 +10,8 @@ router.post("/generate", async (req, res) => {
             return res.status(400).json({ error: "Please enter a skin concern" });
         }
 
-        const API_KEY = process.env.GROQ_API_KEY;
-        const url = "https://api.groq.com/openai/v1/chat/completions";
+        const API_KEY = process.env.OPENROUTER_API_KEY;
+        const url = "https://openrouter.ai/api/v1/chat/completions";
 
         const prompt = `You are a professional dermatologist. Create a detailed skincare routine for someone with the following concern: "${concern}".
 
@@ -27,25 +27,25 @@ Keep it under 300 words.`;
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`
+                "Authorization": `Bearer ${API_KEY}`,
+                "HTTP-Referer": "https://skin-care-advisor-frontend.vercel.app",
+                "X-Title": "Skin Care Advisor"
             },
             body: JSON.stringify({
-                model: "openai/gpt-oss-120b",
+                model: "meta-llama/llama-3.3-70b-instruct:free",
                 messages: [
                     { role: "system", content: "You are a professional dermatologist." },
                     { role: "user", content: prompt }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000
+                ]
             })
         });
 
         const data = await apiResponse.json();
 
-        console.log("Groq response status:", apiResponse.status);
+        console.log("OpenRouter response status:", apiResponse.status);
 
         if (!apiResponse.ok) {
-            console.log("Groq API error:", JSON.stringify(data, null, 2));
+            console.log("OpenRouter API error:", JSON.stringify(data, null, 2));
             return res.status(500).json({ error: "AI failed. Check console." });
         }
 
