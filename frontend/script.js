@@ -1,3 +1,30 @@
+// ===== TOAST NOTIFICATIONS =====
+function showToast(message, type = "info") {
+    let container = document.querySelector(".toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.className = "toast-container";
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "toast " + type;
+
+    const icons = { success: "✅", error: "❌", info: "ℹ️" };
+
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || "ℹ️"}</span>
+        <span class="toast-message">${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove("removing");
+        toast.classList.add("removing");
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
 
 // ===== DARK MODE TOGGLE =====
 (function () {
@@ -29,9 +56,8 @@ window.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
-// AI Skin Care Advisor - Frontend Script
-// Connects to backend API at localhost:5000
 
+// ===== AI SKIN CARE ADVISOR - MAIN SCRIPT =====
 const API_URL = "https://skin-care-api.onrender.com/api";
 
 // ============ REGISTER ============
@@ -45,12 +71,12 @@ if (registerForm) {
         const password = document.getElementById("regPassword").value.trim();
 
         if (name === "" || email === "" || password === "") {
-            alert("Please fill all fields");
+            showToast("Please fill all fields", "error");
             return;
         }
 
         if (password.length < 6) {
-            alert("Password must be at least 6 characters");
+            showToast("Password must be at least 6 characters", "error");
             return;
         }
 
@@ -64,16 +90,16 @@ if (registerForm) {
             const data = await response.json();
 
             if (!response.ok) {
-                alert(data.error || "Registration failed");
+                showToast(data.error || "Registration failed", "error");
                 return;
             }
 
-            alert("Account created successfully! Please login.");
-            window.location.href = "login.html";
+            showToast("Account created! Please login.", "success");
+            setTimeout(() => window.location.href = "login.html", 1000);
 
         } catch (error) {
             console.log(error);
-            alert("Cannot connect to server. Make sure backend is running.");
+            showToast("Cannot connect to server", "error");
         }
     });
 }
@@ -88,7 +114,7 @@ if (loginForm) {
         const password = document.getElementById("loginPassword").value.trim();
 
         if (email === "" || password === "") {
-            alert("Please fill all fields");
+            showToast("Please fill all fields", "error");
             return;
         }
 
@@ -102,19 +128,19 @@ if (loginForm) {
             const data = await response.json();
 
             if (!response.ok) {
-                alert(data.error || "Login failed");
+                showToast(data.error || "Login failed", "error");
                 return;
             }
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            alert("Login successful! Welcome " + data.user.name);
-            window.location.href = "dashboard.html";
+            showToast("Welcome " + data.user.name + "!", "success");
+            setTimeout(() => window.location.href = "dashboard.html", 1000);
 
         } catch (error) {
             console.log(error);
-            alert("Cannot connect to server. Make sure backend is running.");
+            showToast("Cannot connect to server", "error");
         }
     });
 }
@@ -126,8 +152,8 @@ if (dashboardSection) {
     const user = localStorage.getItem("user");
 
     if (!token || !user) {
-        alert("Please login first");
-        window.location.href = "login.html";
+        showToast("Please login first", "error");
+        setTimeout(() => window.location.href = "login.html", 800);
     } else {
         const userData = JSON.parse(user);
         const heading = dashboardSection.querySelector("h1");
@@ -143,8 +169,8 @@ document.addEventListener("click", function (e) {
         e.preventDefault();
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        alert("Logged out successfully");
-        window.location.href = "index.html";
+        showToast("Logged out", "info");
+        setTimeout(() => window.location.href = "index.html", 800);
     }
 });
 
@@ -156,20 +182,20 @@ if (analyzeBtn) {
         const resultBox = document.getElementById("analysisResult");
 
         if (concern === "") {
-            alert("Please enter your skin concern");
+            showToast("Please enter your skin concern", "error");
             return;
         }
 
         const user = JSON.parse(localStorage.getItem("user") || "null");
         if (!user) {
-            alert("Please login first");
-            window.location.href = "login.html";
+            showToast("Please login first", "error");
+            setTimeout(() => window.location.href = "login.html", 800);
             return;
         }
 
         resultBox.textContent = "Generating your personalized routine... Please wait 10-20 seconds.";
         analyzeBtn.disabled = true;
-        analyzeBtn.textContent = "Generating...";
+        analyzeBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
 
         try {
             const response = await fetch("https://skin-care-api.onrender.com/api/analysis/generate", {
@@ -184,11 +210,13 @@ if (analyzeBtn) {
                 resultBox.textContent = data.error || "Something went wrong";
             } else {
                 resultBox.textContent = data.routine;
+                showToast("Routine generated!", "success");
             }
 
         } catch (error) {
             console.log(error);
             resultBox.textContent = "Cannot connect to server. Make sure backend is running.";
+            showToast("Connection error", "error");
         } finally {
             analyzeBtn.disabled = false;
             analyzeBtn.textContent = "Get Routine";
@@ -196,20 +224,18 @@ if (analyzeBtn) {
     });
 }
 
-// ============ PROGRESS TRACKING =============
+// ============ PROGRESS TRACKING ============
 
-// Function to get user ID
 function getUserId() {
     const user = localStorage.getItem("user");
     if (!user) {
-        alert("Please login first");
-        window.location.href = "login.html";
+        showToast("Please login first", "error");
+        setTimeout(() => window.location.href = "login.html", 800);
         return null;
     }
     return JSON.parse(user).id;
 }
 
-// Initialize chart
 let progressChart;
 const ctx = document.getElementById("progressChart");
 
@@ -240,7 +266,6 @@ if (ctx) {
     });
 }
 
-// Load progress
 async function loadProgress() {
     const userId = getUserId();
     if (!userId) return;
@@ -253,7 +278,7 @@ async function loadProgress() {
         const data = await response.json();
 
         if (!response.ok) {
-            alert(data.error);
+            showToast(data.error || "Failed to load", "error");
             return;
         }
 
@@ -263,7 +288,6 @@ async function loadProgress() {
             return;
         }
 
-        // Update chart
         const labels = data.entries.map(e =>
             new Date(e.date).toLocaleDateString()
         );
@@ -274,7 +298,6 @@ async function loadProgress() {
         progressChart.update();
         chartContainer.style.display = "block";
 
-        // Update list
         progressList.innerHTML = data.entries
             .map(entry => `
         <div class="progress-item" id="progress-${entry._id}">
@@ -290,11 +313,10 @@ async function loadProgress() {
 
     } catch (error) {
         console.log(error);
-        alert("Error loading progress");
+        showToast("Error loading progress", "error");
     }
 }
 
-// Add progress
 const addProgressBtn = document.getElementById("addProgressBtn");
 if (addProgressBtn) {
     addProgressBtn.addEventListener("click", async function () {
@@ -306,7 +328,7 @@ if (addProgressBtn) {
         const notes = document.getElementById("progressNotes").value.trim();
 
         if (!date || !notes) {
-            alert("Please fill all fields");
+            showToast("Please fill all fields", "error");
             return;
         }
 
@@ -320,25 +342,22 @@ if (addProgressBtn) {
             const data = await response.json();
 
             if (!response.ok) {
-                alert(data.error);
+                showToast(data.error || "Failed to save", "error");
                 return;
             }
 
-            alert("Progress saved!");
-            // Clear form
+            showToast("Progress saved!", "success");
             document.getElementById("progressDate").value = "";
             document.getElementById("progressNotes").value = "";
-            // Reload progress
             loadProgress();
 
         } catch (error) {
             console.log(error);
-            alert("Error saving progress");
+            showToast("Error saving progress", "error");
         }
     });
 }
 
-// Delete progress
 async function deleteProgress(id) {
     if (!confirm("Delete this entry?")) return;
 
@@ -348,20 +367,77 @@ async function deleteProgress(id) {
         });
 
         if (!response.ok) {
-            alert("Error deleting");
+            showToast("Error deleting", "error");
             return;
         }
 
         document.getElementById(`progress-${id}`).remove();
+        showToast("Entry deleted", "info");
         progressChart.update();
 
     } catch (error) {
         console.log(error);
-        alert("Error deleting progress");
+        showToast("Error deleting progress", "error");
     }
 }
 
-// Load progress when page loads
 if (document.getElementById("progressList")) {
     loadProgress();
+}
+
+// ============ PROFILE PAGE ============
+const profileName = document.getElementById("profileName");
+const editProfileBtn = document.getElementById("editProfileBtn");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+const cancelProfileBtn = document.getElementById("cancelProfileBtn");
+
+if (profileName) {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    if (!user) {
+        showToast("Please login first", "error");
+        setTimeout(() => window.location.href = "login.html", 800);
+    } else {
+        profileName.value = user.name || "";
+        document.getElementById("profileEmail").value = user.email || "";
+        document.getElementById("profileMemberSince").value = "2026";
+        document.getElementById("avatarCircle").textContent = (user.name || "U")[0].toUpperCase();
+    }
+
+    editProfileBtn.addEventListener("click", function () {
+        profileName.disabled = false;
+        profileName.focus();
+        editProfileBtn.style.display = "none";
+        saveProfileBtn.style.display = "inline-block";
+        cancelProfileBtn.style.display = "inline-block";
+    });
+
+    cancelProfileBtn.addEventListener("click", function () {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        profileName.value = user.name;
+        profileName.disabled = true;
+        editProfileBtn.style.display = "inline-block";
+        saveProfileBtn.style.display = "none";
+        cancelProfileBtn.style.display = "none";
+    });
+
+    saveProfileBtn.addEventListener("click", function () {
+        const newName = profileName.value.trim();
+
+        if (newName.length < 2) {
+            showToast("Name must be at least 2 characters", "error");
+            return;
+        }
+
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        user.name = newName;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        profileName.disabled = true;
+        editProfileBtn.style.display = "inline-block";
+        saveProfileBtn.style.display = "none";
+        cancelProfileBtn.style.display = "none";
+
+        showToast("Profile updated!", "success");
+    });
 }
