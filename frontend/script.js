@@ -1,3 +1,34 @@
+
+// ===== DARK MODE TOGGLE =====
+(function () {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+        document.body.classList.add("dark-mode");
+    }
+})();
+
+window.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("themeToggle");
+    const icon = document.getElementById("themeIcon");
+
+    if (!btn || !icon) return;
+
+    if (document.body.classList.contains("dark-mode")) {
+        icon.textContent = "☀️";
+    }
+
+    btn.addEventListener("click", function () {
+        document.body.classList.toggle("dark-mode");
+
+        if (document.body.classList.contains("dark-mode")) {
+            icon.textContent = "☀️";
+            localStorage.setItem("theme", "dark");
+        } else {
+            icon.textContent = "🌙";
+            localStorage.setItem("theme", "light");
+        }
+    });
+});
 // AI Skin Care Advisor - Frontend Script
 // Connects to backend API at localhost:5000
 
