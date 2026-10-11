@@ -20,7 +20,6 @@ function showToast(message, type = "info") {
     container.appendChild(toast);
 
     setTimeout(() => {
-        toast.classList.remove("removing");
         toast.classList.add("removing");
         setTimeout(() => toast.remove(), 300);
     }, 3500);
@@ -385,59 +384,54 @@ if (document.getElementById("progressList")) {
     loadProgress();
 }
 
-// ============ PROFILE PAGE ============
-const profileName = document.getElementById("profileName");
-const editProfileBtn = document.getElementById("editProfileBtn");
-const saveProfileBtn = document.getElementById("saveProfileBtn");
-const cancelProfileBtn = document.getElementById("cancelProfileBtn");
+// ============ DASHBOARD STATS ============
+const statsGrid = document.querySelector(".stats-grid");
+if (statsGrid) {
+    loadStats();
+}
 
-if (profileName) {
+async function loadStats() {
     const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) return;
 
-    if (!user) {
-        showToast("Please login first", "error");
-        setTimeout(() => window.location.href = "login.html", 800);
-    } else {
-        profileName.value = user.name || "";
-        document.getElementById("profileEmail").value = user.email || "";
-        document.getElementById("profileMemberSince").value = "2026";
-        document.getElementById("avatarCircle").textContent = (user.name || "U")[0].toUpperCase();
-    }
+    try {
+        const response = await fetch(`${API_URL}/progress/stats/${user.id}`);
+        const data = await response.json();
 
-    editProfileBtn.addEventListener("click", function () {
-        profileName.disabled = false;
-        profileName.focus();
-        editProfileBtn.style.display = "none";
-        saveProfileBtn.style.display = "inline-block";
-        cancelProfileBtn.style.display = "inline-block";
-    });
-
-    cancelProfileBtn.addEventListener("click", function () {
-        const user = JSON.parse(localStorage.getItem("user") || "null");
-        profileName.value = user.name;
-        profileName.disabled = true;
-        editProfileBtn.style.display = "inline-block";
-        saveProfileBtn.style.display = "none";
-        cancelProfileBtn.style.display = "none";
-    });
-
-    saveProfileBtn.addEventListener("click", function () {
-        const newName = profileName.value.trim();
-
-        if (newName.length < 2) {
-            showToast("Name must be at least 2 characters", "error");
+        if (!response.ok) {
+            console.log("Failed to load stats");
             return;
         }
 
-        const user = JSON.parse(localStorage.getItem("user") || "null");
-        user.name = newName;
-        localStorage.setItem("user", JSON.stringify(user));
+        animateValue("statAnalyses", 0, data.totalAnalyses, 800);
+        animateValue("statEntries", 0, data.totalEntries, 800);
+        animateValue("statStreak", 0, data.streak, 800);
+        animateValue("statRating", 0, parseFloat(data.avgRating), 800, true);
 
-        profileName.disabled = true;
-        editProfileBtn.style.display = "inline-block";
-        saveProfileBtn.style.display = "none";
-        cancelProfileBtn.style.display = "none";
+    } catch (error) {
+        console.log(error);
+    }
+}
 
-        showToast("Profile updated!", "success");
-    });
+function animateValue(id, start, end, duration, isDecimal = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const value = start + (end - start) * progress;
+
+        el.textContent = isDecimal ? value.toFixed(1) : Math.floor(value);
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            el.textContent = isDecimal ? end.toFixed(1) : end;
+        }
+    }
+
+    requestAnimationFrame(update);
 }
