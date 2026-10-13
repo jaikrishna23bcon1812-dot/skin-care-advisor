@@ -223,7 +223,7 @@ if (analyzeBtn) {
     });
 }
 
-// ============ PROGRESS TRACKING ============
+// ============ PROGRESS TRACKING (ENHANCED) ============
 
 function getUserId() {
     const user = localStorage.getItem("user");
@@ -236,6 +236,7 @@ function getUserId() {
 }
 
 let progressChart;
+let currentChartType = "line";
 const ctx = document.getElementById("progressChart");
 
 if (ctx) {
@@ -247,9 +248,12 @@ if (ctx) {
                 label: "Skin Rating",
                 data: [],
                 borderColor: "#d81b60",
-                backgroundColor: "rgba(216, 27, 96, 0.1)",
-                borderWidth: 2,
-                fill: true
+                backgroundColor: "rgba(216, 27, 96, 0.15)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: "#d81b60",
+                pointRadius: 5
             }]
         },
         options: {
@@ -260,6 +264,9 @@ if (ctx) {
                     max: 5,
                     ticks: { stepSize: 1 }
                 }
+            },
+            plugins: {
+                legend: { display: false }
             }
         }
     });
@@ -282,38 +289,148 @@ async function loadProgress() {
         }
 
         if (!data.entries || data.entries.length === 0) {
-            progressList.innerHTML = "<p style='text-align:center;color:#666;'>No progress logged yet.</p>";
-            chartContainer.style.display = "none";
+            progressList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <h3>No entries yet</h3>
+                    <p>Start logging your skin journey by adding your first entry above!</p>
+                </div>
+            `;
+            if (chartContainer) chartContainer.style.display = "none";
+            updateSummaryStats([]);
             return;
         }
 
         const labels = data.entries.map(e =>
-            new Date(e.date).toLocaleDateString()
+            new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
         );
         const ratings = data.entries.map(e => e.rating);
 
         progressChart.data.labels = labels;
         progressChart.data.datasets[0].data = ratings;
         progressChart.update();
-        chartContainer.style.display = "block";
+        if (chartContainer) chartContainer.style.display = "block";
 
         progressList.innerHTML = data.entries
+            .slice()
+            .reverse()
             .map(entry => `
-        <div class="progress-item" id="progress-${entry._id}">
-          <div class="info">
-            <h4>${new Date(entry.date).toLocaleDateString()}</h4>
-            <p>${entry.notes}</p>
-          </div>
-          <div class="rating">${entry.rating} ⭐</div>
-          <button onclick="deleteProgress('${entry._id}')">Delete</button>
-        </div>
-      `)
+                <div class="progress-item" id="progress-${entry._id}">
+                    <div class="info">
+                        <h4>${new Date(entry.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</h4>
+                        <p>${entry.notes}</p>
+                    </div>
+                    <div class="rating">${entry.rating} ⭐</div>
+                    <button onclick="deleteProgress('${entry._id}')">Delete</button>
+                </div>
+            `)
             .join("");
+
+        updateSummaryStats(data.entries);
 
     } catch (error) {
         console.log(error);
         showToast("Error loading progress", "error");
     }
+}
+
+function updateSummaryStats(entries) {
+    // Streak calculation
+    let streak = 0;
+    if (entries.length > 0) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dates = entries.map(e => {
+            const d = new Date(e.date);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+        }).sort((a, b) => b - a);
+
+        const uniqueDates = [...new Set(dates)];
+        let expectedDate = today.getTime();
+
+        for (const date of uniqueDates) {
+            if (date === expectedDate) {
+                streak++;
+                expectedDate -= 86400000;
+            } else if (date === expectedDate + 86400000) {
+                streak++;
+                expectedDate = date - 86400000;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // This week average
+    const oneWeekAgo = Date.now() - 7 * 86400000;
+    const weekEntries = entries.filter(e => new Date(e.date).getTime() >= oneWeekAgo);
+    const weekAvg = weekEntries.length > 0
+        ? (weekEntries.reduce((sum, e) => sum + e.rating, 0) / weekEntries.length).toFixed(1)
+        : "0.0";
+
+    // Update UI
+    const streakEl = document.getElementById("streakValue");
+    const weekAvgEl = document.getElementById("weekAvg");
+    const totalEl = document.getElementById("totalCount");
+
+    if (streakEl) streakEl.textContent = streak;
+    if (weekAvgEl) weekAvgEl.textContent = weekAvg;
+    if (totalEl) totalEl.textContent = entries.length;
+}
+
+// Chart type toggle
+document.querySelectorAll(".chart-toggle-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+        const type = this.dataset.type;
+        if (type === currentChartType) return;
+
+        currentChartType = type;
+        document.querySelectorAll(".chart-toggle-btn").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+
+        progressChart.config.type = type;
+        progressChart.update();
+    });
+});
+
+// Export CSV
+const exportBtn = document.getElementById("exportBtn");
+if (exportBtn) {
+    exportBtn.addEventListener("click", async function () {
+        const userId = getUserId();
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${API_URL}/progress/${userId}`);
+            const data = await response.json();
+
+            if (!data.entries || data.entries.length === 0) {
+                showToast("No data to export", "error");
+                return;
+            }
+
+            let csv = "Date,Rating,Notes\n";
+            data.entries.forEach(entry => {
+                const cleanNotes = entry.notes.replace(/"/g, '""');
+                csv += `"${entry.date}",${entry.rating},"${cleanNotes}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `skincare-progress-${new Date().toISOString().split("T")[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            showToast("Data exported!", "success");
+
+        } catch (error) {
+            console.log(error);
+            showToast("Export failed", "error");
+        }
+    });
 }
 
 const addProgressBtn = document.getElementById("addProgressBtn");
@@ -372,7 +489,7 @@ async function deleteProgress(id) {
 
         document.getElementById(`progress-${id}`).remove();
         showToast("Entry deleted", "info");
-        progressChart.update();
+        loadProgress();
 
     } catch (error) {
         console.log(error);
@@ -436,10 +553,66 @@ function animateValue(id, start, end, duration, isDecimal = false) {
     requestAnimationFrame(update);
 }
 
+// ============ PROFILE PAGE ============
+const profileName = document.getElementById("profileName");
+const editProfileBtn = document.getElementById("editProfileBtn");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+const cancelProfileBtn = document.getElementById("cancelProfileBtn");
+
+if (profileName) {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    if (!user) {
+        showToast("Please login first", "error");
+        setTimeout(() => window.location.href = "login.html", 800);
+    } else {
+        profileName.value = user.name || "";
+        document.getElementById("profileEmail").value = user.email || "";
+        document.getElementById("profileMemberSince").value = "2026";
+        document.getElementById("avatarCircle").textContent = (user.name || "U")[0].toUpperCase();
+    }
+
+    editProfileBtn.addEventListener("click", function () {
+        profileName.disabled = false;
+        profileName.focus();
+        editProfileBtn.style.display = "none";
+        saveProfileBtn.style.display = "inline-block";
+        cancelProfileBtn.style.display = "inline-block";
+    });
+
+    cancelProfileBtn.addEventListener("click", function () {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        profileName.value = user.name;
+        profileName.disabled = true;
+        editProfileBtn.style.display = "inline-block";
+        saveProfileBtn.style.display = "none";
+        cancelProfileBtn.style.display = "none";
+    });
+
+    saveProfileBtn.addEventListener("click", function () {
+        const newName = profileName.value.trim();
+
+        if (newName.length < 2) {
+            showToast("Name must be at least 2 characters", "error");
+            return;
+        }
+
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        user.name = newName;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        profileName.disabled = true;
+        editProfileBtn.style.display = "inline-block";
+        saveProfileBtn.style.display = "none";
+        cancelProfileBtn.style.display = "none";
+
+        showToast("Profile updated!", "success");
+    });
+}
+
 // ============ SETTINGS PAGE ============
 const settingsName = document.getElementById("settingsName");
 if (settingsName) {
-    // Load user data
     const user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user) {
         showToast("Please login first", "error");
@@ -449,7 +622,6 @@ if (settingsName) {
         document.getElementById("settingsEmail").textContent = user.email || "Not set";
     }
 
-    // Dark mode toggle in settings
     const darkToggle = document.getElementById("settingsDarkMode");
     if (darkToggle) {
         darkToggle.checked = document.body.classList.contains("dark-mode");
@@ -468,7 +640,6 @@ if (settingsName) {
         });
     }
 
-    // Notification preferences (saved to localStorage)
     ["notifDaily", "notifWeekly", "notifProducts"].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -480,7 +651,6 @@ if (settingsName) {
         }
     });
 
-    // Change password
     const changePasswordBtn = document.getElementById("changePasswordBtn");
     if (changePasswordBtn) {
         changePasswordBtn.addEventListener("click", function () {
@@ -503,7 +673,6 @@ if (settingsName) {
                 return;
             }
 
-            // Note: Password change requires backend support
             showToast("Password change coming soon!", "info");
 
             document.getElementById("currentPassword").value = "";
@@ -512,7 +681,6 @@ if (settingsName) {
         });
     }
 
-    // Logout all devices
     const logoutAllBtn = document.getElementById("logoutAllBtn");
     if (logoutAllBtn) {
         logoutAllBtn.addEventListener("click", function () {

@@ -27,7 +27,29 @@
         <h1>Track Your Progress</h1>
         <p>Log your skin condition daily and see your journey</p>
 
+        <!-- Streak & Summary Banner -->
+        <div class="progress-summary">
+            <div class="summary-card">
+                <div class="summary-icon">🔥</div>
+                <div class="summary-value" id="streakValue">0</div>
+                <div class="summary-label">Day Streak</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">📅</div>
+                <div class="summary-value" id="weekAvg">0.0</div>
+                <div class="summary-label">This Week Avg</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">📊</div>
+                <div class="summary-value" id="totalCount">0</div>
+                <div class="summary-label">Total Entries</div>
+            </div>
+        </div>
+
+        <!-- Add Entry Form -->
         <div class="progress-form">
+            <h3 style="margin-bottom: 20px; color: var(--text-primary);">Add New Entry</h3>
+
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="progressDate">
@@ -52,13 +74,28 @@
             <button id="addProgressBtn" class="btn-primary">Add Entry</button>
         </div>
 
+        <!-- Charts -->
         <div class="chart-container">
-            <h3>Progress Chart</h3>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0;">Progress Chart</h3>
+                <div class="chart-type-toggle">
+                    <button class="chart-toggle-btn active" data-type="line">📈 Line</button>
+                    <button class="chart-toggle-btn" data-type="bar">📊 Bar</button>
+                </div>
+            </div>
             <canvas id="progressChart"></canvas>
         </div>
 
+        <!-- Entries List -->
         <div class="progress-list">
-            <h3>Your Entries</h3>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0;">Your Entries</h3>
+                <button id="exportBtn" class="btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">
+                    📤 Export CSV
+                </button>
+            </div>
             <div id="progressList"></div>
         </div>
     </section>
