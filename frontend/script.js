@@ -788,3 +788,31 @@ if (productsGrid) {
         });
     }
 }
+
+// ============ BACK TO TOP BUTTON ============
+(function () {
+    // Create the button
+    const btn = document.createElement("button");
+    btn.className = "back-to-top";
+    btn.innerHTML = "⬆️";
+    btn.title = "Back to top";
+    btn.setAttribute("aria-label", "Back to top");
+    document.body.appendChild(btn);
+
+    // Show/hide on scroll
+    window.addEventListener("scroll", function () {
+        if (window.scrollY > 400) {
+            btn.classList.add("visible");
+        } else {
+            btn.classList.remove("visible");
+        }
+    });
+
+    // Scroll to top on click
+    btn.addEventListener("click", function () {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
+})();
