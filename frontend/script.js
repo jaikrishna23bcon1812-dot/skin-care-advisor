@@ -435,3 +435,93 @@ function animateValue(id, start, end, duration, isDecimal = false) {
 
     requestAnimationFrame(update);
 }
+
+// ============ SETTINGS PAGE ============
+const settingsName = document.getElementById("settingsName");
+if (settingsName) {
+    // Load user data
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) {
+        showToast("Please login first", "error");
+        setTimeout(() => window.location.href = "login.html", 800);
+    } else {
+        settingsName.textContent = user.name || "Not set";
+        document.getElementById("settingsEmail").textContent = user.email || "Not set";
+    }
+
+    // Dark mode toggle in settings
+    const darkToggle = document.getElementById("settingsDarkMode");
+    if (darkToggle) {
+        darkToggle.checked = document.body.classList.contains("dark-mode");
+        darkToggle.addEventListener("change", function () {
+            if (this.checked) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme", "dark");
+                const icon = document.getElementById("themeIcon");
+                if (icon) icon.textContent = "☀️";
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme", "light");
+                const icon = document.getElementById("themeIcon");
+                if (icon) icon.textContent = "🌙";
+            }
+        });
+    }
+
+    // Notification preferences (saved to localStorage)
+    ["notifDaily", "notifWeekly", "notifProducts"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = localStorage.getItem(id) === "true";
+            el.addEventListener("change", function () {
+                localStorage.setItem(id, this.checked);
+                showToast("Preference saved", "success");
+            });
+        }
+    });
+
+    // Change password
+    const changePasswordBtn = document.getElementById("changePasswordBtn");
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener("click", function () {
+            const current = document.getElementById("currentPassword").value.trim();
+            const newPass = document.getElementById("newPassword").value.trim();
+            const confirm = document.getElementById("confirmPassword").value.trim();
+
+            if (!current || !newPass || !confirm) {
+                showToast("Please fill all fields", "error");
+                return;
+            }
+
+            if (newPass.length < 6) {
+                showToast("New password must be at least 6 characters", "error");
+                return;
+            }
+
+            if (newPass !== confirm) {
+                showToast("Passwords do not match", "error");
+                return;
+            }
+
+            // Note: Password change requires backend support
+            showToast("Password change coming soon!", "info");
+
+            document.getElementById("currentPassword").value = "";
+            document.getElementById("newPassword").value = "";
+            document.getElementById("confirmPassword").value = "";
+        });
+    }
+
+    // Logout all devices
+    const logoutAllBtn = document.getElementById("logoutAllBtn");
+    if (logoutAllBtn) {
+        logoutAllBtn.addEventListener("click", function () {
+            if (!confirm("Logout from all devices?")) return;
+
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            showToast("Logged out from all devices", "success");
+            setTimeout(() => window.location.href = "index.html", 1000);
+        });
+    }
+}

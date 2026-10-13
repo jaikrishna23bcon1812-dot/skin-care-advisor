@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - AI Skin Care Advisor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">SkinCare AI</div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="analysis.html">Analysis</a>
+            <a href="routine.html">Routine</a>
+            <a href="progress.html">Progress</a>
+            <a href="profile.html">Profile</a>
+            <a href="settings.html">Settings</a>
+            <a href="#" id="logoutBtn">Logout</a>
+            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
+        </div>
+    </nav>
+
+    <section class="settings-section">
+        <h1>Settings</h1>
+        <p>Manage your account preferences</p>
+
+        <!-- Account Section -->
+        <div class="settings-card">
+            <div class="settings-header">
+                <div class="settings-icon">👤</div>
+                <div>
+                    <h3>Account</h3>
+                    <p>Manage your personal information</p>
+                </div>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div>
+                        <strong>Name</strong>
+                        <p id="settingsName">Loading...</p>
+                    </div>
+                    <a href="profile.html" class="btn-secondary">Edit</a>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <strong>Email</strong>
+                        <p id="settingsEmail">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Section -->
+        <div class="settings-card">
+            <div class="settings-header">
+                <div class="settings-icon">🔒</div>
+                <div>
+                    <h3>Change Password</h3>
+                    <p>Update your account password</p>
+                </div>
+            </div>
+            <div class="settings-body">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="At least 6 characters">
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Re-enter new password">
+                </div>
+                <button id="changePasswordBtn" class="btn-primary">Update Password</button>
+            </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="settings-card">
+            <div class="settings-header">
+                <div class="settings-icon">🔔</div>
+                <div>
+                    <h3>Notifications</h3>
+                    <p>Choose what updates you receive</p>
+                </div>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div>
+                        <strong>Daily Routine Reminders</strong>
+                        <p>Get reminded to follow your routine</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifDaily">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <strong>Weekly Progress Reports</strong>
+                        <p>See your skin progress summary</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifWeekly">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <strong>Product Recommendations</strong>
+                        <p>Get personalized product suggestions</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifProducts">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance Section -->
+        <div class="settings-card">
+            <div class="settings-header">
+                <div class="settings-icon">🎨</div>
+                <div>
+                    <h3>Appearance</h3>
+                    <p>Customize how the app looks</p>
+                </div>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div>
+                        <strong>Dark Mode</strong>
+                        <p>Switch between light and dark themes</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="settingsDarkMode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-card danger-zone">
+            <div class="settings-header">
+                <div class="settings-icon">⚠️</div>
+                <div>
+                    <h3>Danger Zone</h3>
+                    <p>Irreversible actions - proceed with caution</p>
+                </div>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div>
+                        <strong>Logout from All Devices</strong>
+                        <p>Sign out everywhere you're logged in</p>
+                    </div>
+                    <button id="logoutAllBtn" class="btn-danger">Logout All</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
