@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalogue - AI Skin Care Advisor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">SkinCare AI</div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="analysis.html">Analysis</a>
+            <a href="routine.html">Routine</a>
+            <a href="progress.html">Progress</a>
+            <a href="products.html">Products</a>
+            <a href="profile.html">Profile</a>
+            <a href="settings.html">Settings</a>
+            <a href="#" id="logoutBtn">Logout</a>
+            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
+        </div>
+    </nav>
+
+    <section class="products-section">
+        <h1>Product Catalogue</h1>
+        <p>Curated skincare products for Indian skin</p>
+
+        <!-- Search Bar -->
+        <div class="products-search">
+            <input type="text" id="searchInput" placeholder="🔍 Search products...">
+        </div>
+
+        <!-- Category Filter -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Category</label>
+                <div class="filter-chips" id="categoryFilter">
+                    <button class="filter-chip active" data-value="all">All</button>
+                    <button class="filter-chip" data-value="Cleanser">Cleansers</button>
+                    <button class="filter-chip" data-value="Serum">Serums</button>
+                    <button class="filter-chip" data-value="Moisturizer">Moisturizers</button>
+                    <button class="filter-chip" data-value="Sunscreen">Sunscreens</button>
+                    <button class="filter-chip" data-value="Treatment">Treatments</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Skin Type</label>
+                <div class="filter-chips" id="skinTypeFilter">
+                    <button class="filter-chip active" data-value="all">All</button>
+                    <button class="filter-chip" data-value="oily">Oily</button>
+                    <button class="filter-chip" data-value="dry">Dry</button>
+                    <button class="filter-chip" data-value="combination">Combination</button>
+                    <button class="filter-chip" data-value="sensitive">Sensitive</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="products-grid" id="productsGrid">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading products...</p>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="noProducts" class="empty-state" style="display:none;">
+            <div class="empty-state-icon">🔍</div>
+            <h3>No products found</h3>
+            <p>Try changing the filters above</p>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

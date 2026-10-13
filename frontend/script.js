@@ -693,3 +693,98 @@ if (settingsName) {
         });
     }
 }
+
+// ============ PRODUCTS PAGE ============
+const productsGrid = document.getElementById("productsGrid");
+if (productsGrid) {
+    let allProducts = [];
+    let currentCategory = "all";
+    let currentSkinType = "all";
+    let searchTerm = "";
+
+    loadProducts();
+
+    async function loadProducts() {
+        try {
+            const response = await fetch(`${API_URL}/progress/products/list`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                productsGrid.innerHTML = '<p style="text-align:center;color:red;">Failed to load products</p>';
+                return;
+            }
+
+            allProducts = data.products;
+            renderProducts();
+
+        } catch (error) {
+            console.log(error);
+            productsGrid.innerHTML = '<p style="text-align:center;color:red;">Cannot connect to server</p>';
+        }
+    }
+
+    function renderProducts() {
+        const filtered = allProducts.filter(p => {
+            const matchCategory = currentCategory === "all" || p.category === currentCategory;
+            const matchSkinType = currentSkinType === "all" || p.skinTypes.includes(currentSkinType) || p.skinTypes.includes("all");
+            const matchSearch = p.name.toLowerCase().includes(searchTerm) || p.brand.toLowerCase().includes(searchTerm);
+            return matchCategory && matchSkinType && matchSearch;
+        });
+
+        if (filtered.length === 0) {
+            productsGrid.style.display = "none";
+            document.getElementById("noProducts").style.display = "block";
+            return;
+        }
+
+        productsGrid.style.display = "grid";
+        document.getElementById("noProducts").style.display = "none";
+
+        productsGrid.innerHTML = filtered.map(p => `
+            <div class="product-card">
+                <span class="product-category">${p.category}</span>
+                <h3>${p.name}</h3>
+                <div class="product-brand">${p.brand}</div>
+                <p class="product-description">${p.description}</p>
+                <div class="product-skin-types">
+                    ${p.skinTypes.map(t => `<span class="skin-tag">${t}</span>`).join("")}
+                </div>
+                <div class="product-footer">
+                    <span class="product-price">${p.price}</span>
+                    <a href="${p.link}" target="_blank" class="product-buy-btn">
+                        Buy →
+                    </a>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    // Category filter
+    document.querySelectorAll("#categoryFilter .filter-chip").forEach(btn => {
+        btn.addEventListener("click", function () {
+            document.querySelectorAll("#categoryFilter .filter-chip").forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+            currentCategory = this.dataset.value;
+            renderProducts();
+        });
+    });
+
+    // Skin type filter
+    document.querySelectorAll("#skinTypeFilter .filter-chip").forEach(btn => {
+        btn.addEventListener("click", function () {
+            document.querySelectorAll("#skinTypeFilter .filter-chip").forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+            currentSkinType = this.dataset.value;
+            renderProducts();
+        });
+    });
+
+    // Search
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            searchTerm = this.value.toLowerCase().trim();
+            renderProducts();
+        });
+    }
+}
