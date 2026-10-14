@@ -2237,3 +2237,203 @@ select:focus-visible {
         scroll-behavior: auto !important;
     }
 }
+
+/* ==========================================
+   PHOTO UPLOAD / ANALYSIS TABS
+   ========================================== */
+
+.analysis-tabs {
+    display: inline-flex;
+    background: var(--bg-hover);
+    padding: 5px;
+    border-radius: 30px;
+    margin: 30px auto 40px;
+    gap: 5px;
+}
+
+.analysis-tab {
+    padding: 12px 28px;
+    border: none;
+    background: transparent;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    transition: 0.3s;
+    font-family: inherit;
+}
+
+.analysis-tab.active {
+    background: white;
+    color: #d81b60;
+    box-shadow: 0 4px 15px rgba(216, 27, 96, 0.15);
+}
+
+body.dark-mode .analysis-tab.active {
+    background: #2a2a3e;
+}
+
+.analysis-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.analysis-panel.active {
+    display: block;
+}
+
+.panel-desc {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    font-size: 1rem;
+}
+
+/* Upload area */
+.photo-upload-area {
+    max-width: 450px;
+    margin: 0 auto 30px;
+    border: 3px dashed var(--border);
+    border-radius: 20px;
+    padding: 40px 20px;
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: 0.3s;
+    position: relative;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-upload-area:hover,
+.photo-upload-area.dragover {
+    border-color: #d81b60;
+    background: rgba(216, 27, 96, 0.03);
+}
+
+.upload-placeholder {
+    text-align: center;
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+.upload-placeholder h3 {
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-size: 1.15rem;
+}
+
+.upload-placeholder p {
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.upload-placeholder small {
+    color: var(--text-light);
+    font-size: 0.8rem;
+}
+
+.upload-preview {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+.upload-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 15px;
+    object-fit: cover;
+}
+
+.remove-photo {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #e53935;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+}
+
+.remove-photo:hover {
+    background: #c62828;
+    transform: scale(1.1);
+}
+
+#analyzePhotoBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.photo-analysis-result {
+    text-align: left;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(216, 27, 96, 0.05), rgba(123, 31, 162, 0.05));
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+
+.photo-analysis-result h3 {
+    color: #d81b60;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+.photo-analysis-result p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+body.dark-mode .photo-upload-area {
+    background: #1a1a2e;
+}
+
+body.dark-mode .photo-upload-area:hover {
+    background: rgba(216, 27, 96, 0.08);
+}
+
+@media (max-width: 768px) {
+    .analysis-tabs {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .analysis-tab {
+        flex: 1;
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+
+    .photo-upload-area {
+        padding: 30px 15px;
+        min-height: 240px;
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+    }
+}

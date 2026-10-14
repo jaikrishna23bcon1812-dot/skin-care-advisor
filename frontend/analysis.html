@@ -27,13 +27,51 @@
 
     <section class="analysis-section">
         <h1>AI Skin Analysis</h1>
-        <p>Describe your skin concern and get a personalized routine</p>
+        <p>Choose how you'd like to analyze your skin</p>
 
-        <div class="concern-input">
-            <input type="text" id="concernInput" placeholder="e.g., acne, oily skin, dry skin, dark spots" />
-            <button id="analyzeBtn" class="btn-primary">Get Routine</button>
+        <!-- Tab Switcher -->
+        <div class="analysis-tabs">
+            <button class="analysis-tab active" data-mode="text">
+                📝 Type Concern
+            </button>
+            <button class="analysis-tab" data-mode="photo">
+                📸 Upload Photo
+            </button>
         </div>
 
+        <!-- Mode 1: Text Input -->
+        <div class="analysis-panel active" id="textMode">
+            <p class="panel-desc">Describe your skin concern and get a personalized routine</p>
+            <div class="concern-input">
+                <input type="text" id="concernInput" placeholder="e.g., acne, oily skin, dry skin, dark spots" />
+                <button id="analyzeBtn" class="btn-primary">Get Routine</button>
+            </div>
+        </div>
+
+        <!-- Mode 2: Photo Upload -->
+        <div class="analysis-panel" id="photoMode">
+            <p class="panel-desc">Upload a clear, well-lit photo of your face for AI analysis</p>
+
+            <div class="photo-upload-area" id="photoUploadArea">
+                <input type="file" id="photoInput" accept="image/*" hidden />
+                <div class="upload-placeholder" id="uploadPlaceholder">
+                    <div class="upload-icon">📸</div>
+                    <h3>Click to Upload Photo</h3>
+                    <p>or drag and drop</p>
+                    <small>JPG, PNG up to 5MB</small>
+                </div>
+                <div class="upload-preview" id="uploadPreview" style="display:none;">
+                    <img id="previewImage" alt="Preview" />
+                    <button class="remove-photo" id="removePhoto">✕</button>
+                </div>
+            </div>
+
+            <button id="analyzePhotoBtn" class="btn-primary" disabled>
+                Analyze Photo
+            </button>
+        </div>
+
+        <!-- Result Box -->
         <div id="analysisResult" class="result-box"></div>
     </section>
 

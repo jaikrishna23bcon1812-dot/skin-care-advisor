@@ -816,3 +816,158 @@ if (productsGrid) {
         });
     });
 })();
+
+// ============ PHOTO UPLOAD ANALYSIS ============
+const analysisTabs = document.querySelectorAll(".analysis-tab");
+const textMode = document.getElementById("textMode");
+const photoMode = document.getElementById("photoMode");
+const photoUploadArea = document.getElementById("photoUploadArea");
+const photoInput = document.getElementById("photoInput");
+const uploadPlaceholder = document.getElementById("uploadPlaceholder");
+const uploadPreview = document.getElementById("uploadPreview");
+const previewImage = document.getElementById("previewImage");
+const removePhoto = document.getElementById("removePhoto");
+const analyzePhotoBtn = document.getElementById("analyzePhotoBtn");
+
+if (analysisTabs.length > 0) {
+    let uploadedImageBase64 = null;
+
+    // Tab switching
+    analysisTabs.forEach(tab => {
+        tab.addEventListener("click", function () {
+            const mode = this.dataset.mode;
+
+            analysisTabs.forEach(t => t.classList.remove("active"));
+            this.classList.add("active");
+
+            if (mode === "text") {
+                textMode.classList.add("active");
+                photoMode.classList.remove("active");
+            } else {
+                photoMode.classList.add("active");
+                textMode.classList.remove("active");
+            }
+
+            // Clear result when switching
+            document.getElementById("analysisResult").textContent = "";
+        });
+    });
+
+    // Click to upload
+    photoUploadArea.addEventListener("click", function (e) {
+        if (e.target.id === "removePhoto") return;
+        if (uploadedImageBase64) return; // already uploaded
+        photoInput.click();
+    });
+
+    // File selected
+    photoInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (file) handlePhoto(file);
+    });
+
+    // Drag and drop
+    photoUploadArea.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        this.classList.add("dragover");
+    });
+
+    photoUploadArea.addEventListener("dragleave", function () {
+        this.classList.remove("dragover");
+    });
+
+    photoUploadArea.addEventListener("drop", function (e) {
+        e.preventDefault();
+        this.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith("image/")) {
+            handlePhoto(file);
+        }
+    });
+
+    function handlePhoto(file) {
+        // Validate
+        if (!file.type.startsWith("image/")) {
+            showToast("Please upload an image file", "error");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showToast("Image too large. Max 5MB", "error");
+            return;
+        }
+
+        // Convert to base64
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            uploadedImageBase64 = e.target.result;
+            previewImage.src = uploadedImageBase64;
+            uploadPlaceholder.style.display = "none";
+            uploadPreview.style.display = "flex";
+            analyzePhotoBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Remove photo
+    if (removePhoto) {
+        removePhoto.addEventListener("click", function (e) {
+            e.stopPropagation();
+            uploadedImageBase64 = null;
+            photoInput.value = "";
+            uploadPlaceholder.style.display = "block";
+            uploadPreview.style.display = "none";
+            analyzePhotoBtn.disabled = true;
+        });
+    }
+
+    // Analyze photo
+    if (analyzePhotoBtn) {
+        analyzePhotoBtn.addEventListener("click", async function () {
+            if (!uploadedImageBase64) {
+                showToast("Please upload a photo first", "error");
+                return;
+            }
+
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            if (!user) {
+                showToast("Please login first", "error");
+                setTimeout(() => window.location.href = "login.html", 800);
+                return;
+            }
+
+            const resultBox = document.getElementById("analysisResult");
+            resultBox.textContent = "Analyzing your photo with AI... This may take 20-40 seconds.";
+            analyzePhotoBtn.disabled = true;
+            analyzePhotoBtn.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
+
+            try {
+                const response = await fetch("https://skin-care-api.onrender.com/api/analysis/analyze-photo", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        image: uploadedImageBase64,
+                        userId: user.id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    resultBox.textContent = data.error || "Analysis failed. Try again.";
+                } else {
+                    resultBox.textContent = data.routine;
+                    showToast("Analysis complete!", "success");
+                }
+
+            } catch (error) {
+                console.log(error);
+                resultBox.textContent = "Cannot connect to server. Please try again.";
+                showToast("Connection error", "error");
+            } finally {
+                analyzePhotoBtn.disabled = false;
+                analyzePhotoBtn.textContent = "Analyze Photo";
+            }
+        });
+    }
+}
