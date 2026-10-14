@@ -125,7 +125,6 @@ DON'T: Use hot water
 If irritation persists, consult a dermatologist for patch testing.`;
     }
 
-    // Default routine for other concerns
     return `**General Skincare Routine** (Indian skin)
 
 **1. Morning Routine**
@@ -156,6 +155,30 @@ DON'T: Touch your face frequently
 Consistency for 8-12 weeks is key. Consult a dermatologist for specific concerns.`;
 }
 
+// Fallback for photo analysis
+function getPhotoFallback() {
+    return `**Photo Analysis**
+
+**1. Skin Type Assessment**
+Based on general appearance, a consultation with our AI vision is temporarily unavailable. Here's a general guide.
+
+**2. Morning Routine**
+- Cleanser: Cetaphil Gentle Skin Cleanser
+- Moisturizer: Neutrogena Hydro Boost Water Gel
+- Sunscreen: La Roche-Posay Anthelios UV Protect SPF 50+
+
+**3. Night Routine**
+- Cleanser: Same as morning
+- Treatment: The Ordinary Niacinamide 10% + Zinc 1%
+- Moisturizer: CeraVe Moisturizing Cream
+
+**4. Key Recommendation**
+For accurate photo analysis, try again in a few minutes or use the "Type Concern" mode to describe your skin for a personalized routine.
+
+**Note:** This is general skincare advice, not medical diagnosis. Consult a dermatologist for specific concerns.`;
+}
+
+// ============ TEXT-BASED ROUTINE GENERATION ============
 router.post("/generate", async (req, res) => {
     try {
         const { concern, userId } = req.body;
@@ -176,7 +199,6 @@ Keep it under 300 words.`;
 
         let text = "";
 
-        // Try OpenRouter with multiple models
         const models = [
             "mistralai/mistral-7b-instruct:free",
             "meta-llama/llama-3.2-3b-instruct:free",
@@ -217,9 +239,8 @@ Keep it under 300 words.`;
             }
         }
 
-        // If all AI providers failed, use the fallback routine
         if (!text) {
-            console.log("All AI providers failed. Using fallback routine.");
+            console.log("All AI models failed. Using fallback routine.");
             text = getFallbackRoutine(concern);
         }
 
@@ -240,7 +261,6 @@ Keep it under 300 words.`;
 
     } catch (error) {
         console.log("Server error:", error.message);
-        // Even on error, return fallback
         try {
             const fallback = getFallbackRoutine(req.body.concern || "general");
             res.json({
@@ -253,6 +273,7 @@ Keep it under 300 words.`;
         }
     }
 });
+
 // ============ PHOTO ANALYSIS ============
 router.post("/analyze-photo", async (req, res) => {
     try {
@@ -261,6 +282,8 @@ router.post("/analyze-photo", async (req, res) => {
         if (!image) {
             return res.status(400).json({ error: "Please upload a photo" });
         }
+
+        console.log("Photo received. Size:", Math.round(image.length / 1024), "KB");
 
         const prompt = `You are a professional dermatologist analyzing a face photo. Based on the image, provide:
 
@@ -272,18 +295,16 @@ router.post("/analyze-photo", async (req, res) => {
 
 Format the response with these exact headings and keep it under 250 words. Be specific but not medical. This is general skincare advice, not medical diagnosis.`;
 
-        // Try OpenRouter vision models
+        let text = "";
+
         const models = [
-            "openai/gpt-4o-mini",
-            "google/gemini-flash-1.5",
-            "anthropic/claude-3-haiku",
-            "meta-llama/llama-3.2-90b-vision-instruct"
+            "meta-llama/llama-3.2-11b-vision-instruct:free",
+            "qwen/qwen-2-vl-7b-instruct:free",
+            "google/gemini-flash-1.5-8b-exp:free"
         ];
 
-        let text = "";
-        let lastError = null;
-
         for (const modelName of models) {
+            if (text) break;
             try {
                 console.log("Trying vision model:", modelName);
 
@@ -315,42 +336,19 @@ Format the response with these exact headings and keep it under 250 words. Be sp
                 if (apiResponse.ok && data.choices && data.choices[0]) {
                     text = data.choices[0].message.content;
                     console.log("SUCCESS with vision model:", modelName);
-                    break;
                 } else {
-                    console.log("Failed:", JSON.stringify(data).substring(0, 200));
-                    lastError = data;
+                    console.log("Vision model failed:", JSON.stringify(data).substring(0, 300));
                 }
             } catch (e) {
                 console.log("Error with", modelName, ":", e.message);
-                lastError = e;
             }
         }
 
-        // If all vision models fail, use fallback
         if (!text) {
-            console.log("All vision models failed. Using text-based fallback.");
-            text = `**Photo Analysis Unavailable**
-
-Our AI vision service is temporarily unavailable. Here's a general skincare guide:
-
-**1. Skin Type Assessment**
-Please use our "Type Concern" mode for a detailed analysis based on your description.
-
-**2. General Morning Routine**
-- Cleanser: Cetaphil Gentle Skin Cleanser
-- Moisturizer: Neutrogena Hydro Boost Water Gel
-- Sunscreen: La Roche-Posay Anthelios SPF 50+
-
-**3. General Night Routine**
-- Cleanser: Same as morning
-- Treatment: The Ordinary Niacinamide 10% + Zinc 1%
-- Moisturizer: CeraVe Moisturizing Cream
-
-**4. Key Recommendation**
-For accurate photo-based analysis, try again in a few minutes or use the "Type Concern" mode to describe your skin.`;
+            console.log("All vision models failed. Using fallback.");
+            text = getPhotoFallback();
         }
 
-        // Save to database
         let savedAnalysis = null;
         if (userId) {
             savedAnalysis = await Analysis.create({
@@ -368,7 +366,12 @@ For accurate photo-based analysis, try again in a few minutes or use the "Type C
 
     } catch (error) {
         console.log("Server error:", error.message);
-        res.status(500).json({ error: "Analysis failed. Try again." });
+        res.json({
+            message: "Photo analyzed",
+            routine: getPhotoFallback(),
+            analysisId: null
+        });
     }
 });
+
 module.exports = router;

@@ -173,7 +173,7 @@ document.addEventListener("click", function (e) {
     }
 });
 
-// ============ AI ANALYSIS ============
+// ============ AI ANALYSIS (TEXT MODE) ============
 const analyzeBtn = document.getElementById("analyzeBtn");
 if (analyzeBtn) {
     analyzeBtn.addEventListener("click", async function () {
@@ -197,7 +197,7 @@ if (analyzeBtn) {
         analyzeBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
 
         try {
-            const response = await fetch("https://skin-care-api.onrender.com/api/analysis/generate", {
+            const response = await fetch(API_URL + "/analysis/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ concern, userId: user.id })
@@ -214,7 +214,7 @@ if (analyzeBtn) {
 
         } catch (error) {
             console.log(error);
-            resultBox.textContent = "Cannot connect to server. Make sure backend is running.";
+            resultBox.textContent = "Cannot connect to server. Please try again.";
             showToast("Connection error", "error");
         } finally {
             analyzeBtn.disabled = false;
@@ -223,8 +223,201 @@ if (analyzeBtn) {
     });
 }
 
-// ============ PROGRESS TRACKING (ENHANCED) ============
+// ============ PHOTO UPLOAD ANALYSIS ============
+const analysisTabs = document.querySelectorAll(".analysis-tab");
+const textMode = document.getElementById("textMode");
+const photoMode = document.getElementById("photoMode");
+const photoUploadArea = document.getElementById("photoUploadArea");
+const photoInput = document.getElementById("photoInput");
+const uploadPlaceholder = document.getElementById("uploadPlaceholder");
+const uploadPreview = document.getElementById("uploadPreview");
+const previewImage = document.getElementById("previewImage");
+const removePhoto = document.getElementById("removePhoto");
+const analyzePhotoBtn = document.getElementById("analyzePhotoBtn");
 
+if (analysisTabs.length > 0) {
+    let uploadedImageBase64 = null;
+
+    // Tab switching
+    analysisTabs.forEach(tab => {
+        tab.addEventListener("click", function () {
+            const mode = this.dataset.mode;
+
+            analysisTabs.forEach(t => t.classList.remove("active"));
+            this.classList.add("active");
+
+            if (mode === "text") {
+                textMode.classList.add("active");
+                photoMode.classList.remove("active");
+            } else {
+                photoMode.classList.add("active");
+                textMode.classList.remove("active");
+            }
+
+            document.getElementById("analysisResult").textContent = "";
+        });
+    });
+
+    // Click to upload
+    photoUploadArea.addEventListener("click", function (e) {
+        if (e.target.id === "removePhoto") return;
+        if (uploadedImageBase64) return;
+        photoInput.click();
+    });
+
+    // File selected
+    photoInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (file) handlePhoto(file);
+    });
+
+    // Drag and drop
+    photoUploadArea.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        this.classList.add("dragover");
+    });
+
+    photoUploadArea.addEventListener("dragleave", function () {
+        this.classList.remove("dragover");
+    });
+
+    photoUploadArea.addEventListener("drop", function (e) {
+        e.preventDefault();
+        this.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith("image/")) {
+            handlePhoto(file);
+        }
+    });
+
+    function handlePhoto(file) {
+        // Validate type
+        if (!file.type.startsWith("image/")) {
+            showToast("Please upload an image file", "error");
+            return;
+        }
+
+        // Allow up to 10MB input (will be resized)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast("Image too large. Max 10MB", "error");
+            return;
+        }
+
+        // Read file and resize
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                // Resize to max 600px
+                const canvas = document.createElement("canvas");
+                const MAX_SIZE = 600;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height = Math.round((height * MAX_SIZE) / width);
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width = Math.round((width * MAX_SIZE) / height);
+                        height = MAX_SIZE;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert to JPEG with 60% quality
+                uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.6);
+
+                const sizeKB = Math.round(uploadedImageBase64.length / 1024);
+                console.log("Resized image size:", sizeKB, "KB");
+
+                previewImage.src = uploadedImageBase64;
+                uploadPlaceholder.style.display = "none";
+                uploadPreview.style.display = "flex";
+                analyzePhotoBtn.disabled = false;
+
+                if (sizeKB > 500) {
+                    showToast("Image too large. Try a smaller photo.", "error");
+                    analyzePhotoBtn.disabled = true;
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Remove photo
+    if (removePhoto) {
+        removePhoto.addEventListener("click", function (e) {
+            e.stopPropagation();
+            uploadedImageBase64 = null;
+            photoInput.value = "";
+            uploadPlaceholder.style.display = "block";
+            uploadPreview.style.display = "none";
+            analyzePhotoBtn.disabled = true;
+        });
+    }
+
+    // Analyze photo
+    if (analyzePhotoBtn) {
+        analyzePhotoBtn.addEventListener("click", async function () {
+            if (!uploadedImageBase64) {
+                showToast("Please upload a photo first", "error");
+                return;
+            }
+
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            if (!user) {
+                showToast("Please login first", "error");
+                setTimeout(() => window.location.href = "login.html", 800);
+                return;
+            }
+
+            const resultBox = document.getElementById("analysisResult");
+            resultBox.textContent = "Analyzing your photo with AI... This may take 20-40 seconds.";
+            analyzePhotoBtn.disabled = true;
+            analyzePhotoBtn.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
+
+            try {
+                const response = await fetch(API_URL + "/analysis/analyze-photo", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        image: uploadedImageBase64,
+                        userId: user.id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    resultBox.textContent = data.error || "Analysis failed. Try again.";
+                    showToast(data.error || "Analysis failed", "error");
+                } else {
+                    resultBox.textContent = data.routine;
+                    showToast("Analysis complete!", "success");
+                }
+
+            } catch (error) {
+                console.log(error);
+                resultBox.textContent = "Cannot connect to server. Please try again.";
+                showToast("Connection error", "error");
+            } finally {
+                analyzePhotoBtn.disabled = false;
+                analyzePhotoBtn.textContent = "Analyze Photo";
+            }
+        });
+    }
+}
+
+// ============ PROGRESS TRACKING ============
 function getUserId() {
     const user = localStorage.getItem("user");
     if (!user) {
@@ -335,7 +528,6 @@ async function loadProgress() {
 }
 
 function updateSummaryStats(entries) {
-    // Streak calculation
     let streak = 0;
     if (entries.length > 0) {
         const today = new Date();
@@ -362,14 +554,12 @@ function updateSummaryStats(entries) {
         }
     }
 
-    // This week average
     const oneWeekAgo = Date.now() - 7 * 86400000;
     const weekEntries = entries.filter(e => new Date(e.date).getTime() >= oneWeekAgo);
     const weekAvg = weekEntries.length > 0
         ? (weekEntries.reduce((sum, e) => sum + e.rating, 0) / weekEntries.length).toFixed(1)
         : "0.0";
 
-    // Update UI
     const streakEl = document.getElementById("streakValue");
     const weekAvgEl = document.getElementById("weekAvg");
     const totalEl = document.getElementById("totalCount");
@@ -379,7 +569,6 @@ function updateSummaryStats(entries) {
     if (totalEl) totalEl.textContent = entries.length;
 }
 
-// Chart type toggle
 document.querySelectorAll(".chart-toggle-btn").forEach(btn => {
     btn.addEventListener("click", function () {
         const type = this.dataset.type;
@@ -394,7 +583,6 @@ document.querySelectorAll(".chart-toggle-btn").forEach(btn => {
     });
 });
 
-// Export CSV
 const exportBtn = document.getElementById("exportBtn");
 if (exportBtn) {
     exportBtn.addEventListener("click", async function () {
@@ -759,7 +947,6 @@ if (productsGrid) {
         `).join("");
     }
 
-    // Category filter
     document.querySelectorAll("#categoryFilter .filter-chip").forEach(btn => {
         btn.addEventListener("click", function () {
             document.querySelectorAll("#categoryFilter .filter-chip").forEach(b => b.classList.remove("active"));
@@ -769,7 +956,6 @@ if (productsGrid) {
         });
     });
 
-    // Skin type filter
     document.querySelectorAll("#skinTypeFilter .filter-chip").forEach(btn => {
         btn.addEventListener("click", function () {
             document.querySelectorAll("#skinTypeFilter .filter-chip").forEach(b => b.classList.remove("active"));
@@ -779,7 +965,6 @@ if (productsGrid) {
         });
     });
 
-    // Search
     const searchInput = document.getElementById("searchInput");
     if (searchInput) {
         searchInput.addEventListener("input", function () {
@@ -791,7 +976,6 @@ if (productsGrid) {
 
 // ============ BACK TO TOP BUTTON ============
 (function () {
-    // Create the button
     const btn = document.createElement("button");
     btn.className = "back-to-top";
     btn.innerHTML = "⬆️";
@@ -799,7 +983,6 @@ if (productsGrid) {
     btn.setAttribute("aria-label", "Back to top");
     document.body.appendChild(btn);
 
-    // Show/hide on scroll
     window.addEventListener("scroll", function () {
         if (window.scrollY > 400) {
             btn.classList.add("visible");
@@ -808,7 +991,6 @@ if (productsGrid) {
         }
     });
 
-    // Scroll to top on click
     btn.addEventListener("click", function () {
         window.scrollTo({
             top: 0,
@@ -816,158 +998,3 @@ if (productsGrid) {
         });
     });
 })();
-
-// ============ PHOTO UPLOAD ANALYSIS ============
-const analysisTabs = document.querySelectorAll(".analysis-tab");
-const textMode = document.getElementById("textMode");
-const photoMode = document.getElementById("photoMode");
-const photoUploadArea = document.getElementById("photoUploadArea");
-const photoInput = document.getElementById("photoInput");
-const uploadPlaceholder = document.getElementById("uploadPlaceholder");
-const uploadPreview = document.getElementById("uploadPreview");
-const previewImage = document.getElementById("previewImage");
-const removePhoto = document.getElementById("removePhoto");
-const analyzePhotoBtn = document.getElementById("analyzePhotoBtn");
-
-if (analysisTabs.length > 0) {
-    let uploadedImageBase64 = null;
-
-    // Tab switching
-    analysisTabs.forEach(tab => {
-        tab.addEventListener("click", function () {
-            const mode = this.dataset.mode;
-
-            analysisTabs.forEach(t => t.classList.remove("active"));
-            this.classList.add("active");
-
-            if (mode === "text") {
-                textMode.classList.add("active");
-                photoMode.classList.remove("active");
-            } else {
-                photoMode.classList.add("active");
-                textMode.classList.remove("active");
-            }
-
-            // Clear result when switching
-            document.getElementById("analysisResult").textContent = "";
-        });
-    });
-
-    // Click to upload
-    photoUploadArea.addEventListener("click", function (e) {
-        if (e.target.id === "removePhoto") return;
-        if (uploadedImageBase64) return; // already uploaded
-        photoInput.click();
-    });
-
-    // File selected
-    photoInput.addEventListener("change", function (e) {
-        const file = e.target.files[0];
-        if (file) handlePhoto(file);
-    });
-
-    // Drag and drop
-    photoUploadArea.addEventListener("dragover", function (e) {
-        e.preventDefault();
-        this.classList.add("dragover");
-    });
-
-    photoUploadArea.addEventListener("dragleave", function () {
-        this.classList.remove("dragover");
-    });
-
-    photoUploadArea.addEventListener("drop", function (e) {
-        e.preventDefault();
-        this.classList.remove("dragover");
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith("image/")) {
-            handlePhoto(file);
-        }
-    });
-
-    function handlePhoto(file) {
-        // Validate
-        if (!file.type.startsWith("image/")) {
-            showToast("Please upload an image file", "error");
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-            showToast("Image too large. Max 5MB", "error");
-            return;
-        }
-
-        // Convert to base64
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            uploadedImageBase64 = e.target.result;
-            previewImage.src = uploadedImageBase64;
-            uploadPlaceholder.style.display = "none";
-            uploadPreview.style.display = "flex";
-            analyzePhotoBtn.disabled = false;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // Remove photo
-    if (removePhoto) {
-        removePhoto.addEventListener("click", function (e) {
-            e.stopPropagation();
-            uploadedImageBase64 = null;
-            photoInput.value = "";
-            uploadPlaceholder.style.display = "block";
-            uploadPreview.style.display = "none";
-            analyzePhotoBtn.disabled = true;
-        });
-    }
-
-    // Analyze photo
-    if (analyzePhotoBtn) {
-        analyzePhotoBtn.addEventListener("click", async function () {
-            if (!uploadedImageBase64) {
-                showToast("Please upload a photo first", "error");
-                return;
-            }
-
-            const user = JSON.parse(localStorage.getItem("user") || "null");
-            if (!user) {
-                showToast("Please login first", "error");
-                setTimeout(() => window.location.href = "login.html", 800);
-                return;
-            }
-
-            const resultBox = document.getElementById("analysisResult");
-            resultBox.textContent = "Analyzing your photo with AI... This may take 20-40 seconds.";
-            analyzePhotoBtn.disabled = true;
-            analyzePhotoBtn.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
-
-            try {
-                const response = await fetch("https://skin-care-api.onrender.com/api/analysis/analyze-photo", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        image: uploadedImageBase64,
-                        userId: user.id
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    resultBox.textContent = data.error || "Analysis failed. Try again.";
-                } else {
-                    resultBox.textContent = data.routine;
-                    showToast("Analysis complete!", "success");
-                }
-
-            } catch (error) {
-                console.log(error);
-                resultBox.textContent = "Cannot connect to server. Please try again.";
-                showToast("Connection error", "error");
-            } finally {
-                analyzePhotoBtn.disabled = false;
-                analyzePhotoBtn.textContent = "Analyze Photo";
-            }
-        });
-    }
-}
