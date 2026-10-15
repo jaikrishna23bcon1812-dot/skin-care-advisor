@@ -20,6 +20,7 @@ app.use("/api/analysis", require("./routes/analysis"));
 app.use("/api/progress", require("./routes/progress"));
 app.use("/api/reminder", require("./routes/reminder"));
 app.use("/api/comparison", require("./routes/comparison"));
+app.use("/api/community", require("./routes/community"));
 
 // ============ SERVER STARTUP ============
 const PORT = process.env.PORT || 5000;

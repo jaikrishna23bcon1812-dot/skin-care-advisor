@@ -3049,3 +3049,349 @@ body.dark-mode .lang-toggle:hover {
     background: #f06292;
     color: #1a1a2e;
 }
+
+/* ==========================================
+   COMMUNITY PAGE
+   ========================================== */
+
+.community-section {
+    padding: 60px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.community-section h1 {
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.25rem;
+}
+
+.community-section > p {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.share-routine-banner {
+    background: linear-gradient(135deg, rgba(216, 27, 96, 0.05), rgba(123, 31, 162, 0.05));
+    border-radius: 20px;
+    padding: 25px 30px;
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    border: 2px dashed rgba(216, 27, 96, 0.2);
+}
+
+.share-routine-banner h3 {
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.share-routine-banner p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.community-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.post-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+    transition: 0.3s;
+}
+
+.post-card:hover {
+    box-shadow: 0 10px 35px rgba(216, 27, 96, 0.1);
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.post-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d81b60, #7b1fa2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+.post-user-info {
+    flex: 1;
+}
+
+.post-user-info h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.post-user-info span {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.post-title {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+}
+
+.post-concern {
+    display: inline-block;
+    background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+    color: #d81b60;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.post-routine {
+    background: var(--bg-hover);
+    padding: 18px;
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.post-actions {
+    display: flex;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-light);
+    flex-wrap: wrap;
+}
+
+.post-action-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+.post-action-btn:hover {
+    border-color: #d81b60;
+    color: #d81b60;
+    background: rgba(216, 27, 96, 0.05);
+}
+
+.post-action-btn.liked {
+    background: #d81b60;
+    color: white;
+    border-color: #d81b60;
+}
+
+.post-action-btn.delete {
+    margin-left: auto;
+    color: #e53935;
+    border-color: rgba(229, 57, 53, 0.3);
+}
+
+.post-action-btn.delete:hover {
+    background: #e53935;
+    color: white;
+}
+
+.comments-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+    display: none;
+}
+
+.comments-section.expanded {
+    display: block;
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f8bbd0, #7b1fa2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-content strong {
+    color: #d81b60;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.comment-content p {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.comment-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.comment-form input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.comment-form input:focus {
+    outline: none;
+    border-color: #d81b60;
+}
+
+.comment-form button {
+    background: linear-gradient(135deg, #d81b60, #7b1fa2);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.modal-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h3 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+body.dark-mode .post-card,
+body.dark-mode .modal-card {
+    background: #1a1a2e;
+}
+
+body.dark-mode .post-routine {
+    background: #16213e;
+}
+
+body.dark-mode .post-concern {
+    background: linear-gradient(135deg, #2a1a3e, #3a1f5e);
+    color: #f06292;
+}
+
+@media (max-width: 768px) {
+    .community-section {
+        padding: 30px 20px;
+    }
+    .share-routine-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+}

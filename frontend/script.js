@@ -1372,3 +1372,246 @@ if (emailReminderToggle) {
         });
     }
 }
+
+// ============ COMMUNITY FEED ============
+const communityFeed = document.getElementById("communityFeed");
+
+if (communityFeed) {
+    loadCommunityPosts();
+
+    const openShareModal = document.getElementById("openShareModal");
+    const closeShareModal = document.getElementById("closeShareModal");
+    const shareModal = document.getElementById("shareModal");
+
+    if (openShareModal) {
+        openShareModal.addEventListener("click", function() {
+            shareModal.style.display = "flex";
+        });
+    }
+
+    if (closeShareModal) {
+        closeShareModal.addEventListener("click", function() {
+            shareModal.style.display = "none";
+        });
+    }
+
+    if (shareModal) {
+        shareModal.addEventListener("click", function(e) {
+            if (e.target === shareModal) {
+                shareModal.style.display = "none";
+            }
+        });
+    }
+
+    const submitShare = document.getElementById("submitShare");
+    if (submitShare) {
+        submitShare.addEventListener("click", async function() {
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            if (!user) {
+                showToast("Please login first", "error");
+                return;
+            }
+            const title = document.getElementById("shareTitle").value.trim();
+            const concern = document.getElementById("shareConcern").value.trim();
+            const routine = document.getElementById("shareRoutine").value.trim();
+            if (!title || !concern || !routine) {
+                showToast("Please fill all fields", "error");
+                return;
+            }
+            submitShare.disabled = true;
+            submitShare.innerHTML = '<span class="loading-spinner"></span> Sharing...';
+            try {
+                const response = await fetch(`${API_URL}/community/add`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: user.id, title, concern, routine })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast("Routine shared!", "success");
+                    shareModal.style.display = "none";
+                    document.getElementById("shareTitle").value = "";
+                    document.getElementById("shareConcern").value = "";
+                    document.getElementById("shareRoutine").value = "";
+                    loadCommunityPosts();
+                } else {
+                    showToast(data.error || "Failed to share", "error");
+                }
+            } catch (error) {
+                console.log(error);
+                showToast("Cannot connect to server", "error");
+            } finally {
+                submitShare.disabled = false;
+                submitShare.textContent = "Share with Community";
+            }
+        });
+    }
+
+    async function loadCommunityPosts() {
+        try {
+            const response = await fetch(`${API_URL}/community/posts`);
+            const data = await response.json();
+            if (!response.ok || !data.posts || data.posts.length === 0) {
+                communityFeed.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💬</div>
+                        <h3>No posts yet</h3>
+                        <p>Be the first to share your skincare routine!</p>
+                    </div>
+                `;
+                return;
+            }
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            const userId = user ? user.id : null;
+            communityFeed.innerHTML = data.posts.map(post => {
+                const isLiked = userId && post.likes.includes(userId);
+                const isOwn = userId && post.userId === userId;
+                const timeAgo = getTimeAgo(post.createdAt);
+                const initial = post.userName ? post.userName[0].toUpperCase() : "U";
+                return `
+                    <div class="post-card" data-id="${post._id}">
+                        <div class="post-header">
+                            <div class="post-avatar">${initial}</div>
+                            <div class="post-user-info">
+                                <h4>${post.userName}</h4>
+                                <span>${timeAgo}</span>
+                            </div>
+                        </div>
+                        <h3 class="post-title">${escapeHtml(post.title)}</h3>
+                        <span class="post-concern">${escapeHtml(post.concern)}</span>
+                        <div class="post-routine">${escapeHtml(post.routine)}</div>
+                        <div class="post-actions">
+                            <button class="post-action-btn ${isLiked ? "liked" : ""}" onclick="toggleLike('${post._id}')">
+                                ${isLiked ? "❤️" : "🤍"} <span>${post.likes.length}</span>
+                            </button>
+                            <button class="post-action-btn" onclick="toggleComments('${post._id}')">
+                                💬 <span>${post.comments.length}</span>
+                            </button>
+                            ${isOwn ? `<button class="post-action-btn delete" onclick="deletePost('${post._id}')">🗑️ Delete</button>` : ""}
+                        </div>
+                        <div class="comments-section" id="comments-${post._id}">
+                            <div id="comments-list-${post._id}">
+                                ${post.comments.length === 0 ? '<p style="color: #999; font-size: 0.9rem; text-align: center; padding: 10px 0;">No comments yet</p>' : ""}
+                                ${post.comments.map(c => `
+                                    <div class="comment-item">
+                                        <div class="comment-avatar">${c.userName[0].toUpperCase()}</div>
+                                        <div class="comment-content">
+                                            <strong>${c.userName}</strong>
+                                            <p>${escapeHtml(c.text)}</p>
+                                        </div>
+                                    </div>
+                                `).join("")}
+                            </div>
+                            <div class="comment-form">
+                                <input type="text" id="comment-input-${post._id}" placeholder="Add a comment..." maxlength="500">
+                                <button onclick="addComment('${post._id}')">Post</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        } catch (error) {
+            console.log(error);
+            communityFeed.innerHTML = '<p style="text-align:center;color:red;">Failed to load posts</p>';
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        if (seconds < 60) return "just now";
+        if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+        if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+        if (seconds < 604800) return Math.floor(seconds / 86400) + "d ago";
+        return new Date(date).toLocaleDateString('en-IN');
+    }
+
+    window.toggleLike = async function(postId) {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) {
+            showToast("Please login first", "error");
+            return;
+        }
+        try {
+            const response = await fetch(`${API_URL}/community/like/${postId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id })
+            });
+            if (response.ok) {
+                loadCommunityPosts();
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    window.toggleComments = function(postId) {
+        const section = document.getElementById("comments-" + postId);
+        if (section) {
+            section.classList.toggle("expanded");
+        }
+    };
+
+    window.addComment = async function(postId) {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) {
+            showToast("Please login first", "error");
+            return;
+        }
+        const input = document.getElementById("comment-input-" + postId);
+        const text = input.value.trim();
+        if (!text) {
+            showToast("Please write a comment", "error");
+            return;
+        }
+        try {
+            const response = await fetch(`${API_URL}/community/comment/${postId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id, text })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                showToast("Comment added", "success");
+                input.value = "";
+                loadCommunityPosts();
+                setTimeout(() => {
+                    const section = document.getElementById("comments-" + postId);
+                    if (section) section.classList.add("expanded");
+                }, 100);
+            } else {
+                showToast(data.error || "Failed to comment", "error");
+            }
+        } catch (error) {
+            console.log(error);
+            showToast("Cannot connect to server", "error");
+        }
+    };
+
+    window.deletePost = async function(postId) {
+        if (!confirm("Delete this post?")) return;
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) return;
+        try {
+            const response = await fetch(`${API_URL}/community/post/${postId}?userId=${user.id}`, {
+                method: "DELETE"
+            });
+            if (response.ok) {
+                showToast("Post deleted", "info");
+                loadCommunityPosts();
+            } else {
+                const data = await response.json();
+                showToast(data.error || "Failed to delete", "error");
+            }
+        } catch (error) {
+            console.log(error);
+            showToast("Cannot connect to server", "error");
+        }
+    };
+}
