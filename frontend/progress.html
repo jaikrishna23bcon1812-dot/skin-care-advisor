@@ -13,15 +13,16 @@
     <nav class="navbar">
         <div class="logo">SkinCare AI</div>
         <div class="nav-links">
-            <a href="dashboard.html">Dashboard</a>
-            <a href="analysis.html">Analysis</a>
-            <a href="routine.html">Routine</a>
-            <a href="progress.html">Progress</a>
-            <a href="compare.html">Compare</a>
-            <a href="products.html">Products</a>
-            <a href="profile.html">Profile</a>
-            <a href="settings.html">Settings</a>
-            <a href="#" id="logoutBtn">Logout</a>
+            <a href="dashboard.html" data-i18n="dashboard">Dashboard</a>
+            <a href="analysis.html" data-i18n="analysis">Analysis</a>
+            <a href="routine.html" data-i18n="routine">Routine</a>
+            <a href="progress.html" data-i18n="progress">Progress</a>
+            <a href="compare.html" data-i18n="compare">Compare</a>
+            <a href="products.html" data-i18n="products">Products</a>
+            <a href="profile.html" data-i18n="profile">Profile</a>
+            <a href="settings.html" data-i18n="settings">Settings</a>
+            <a href="#" id="logoutBtn" data-i18n="logout">Logout</a>
+            <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">हिं</button>
             <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
         </div>
     </nav>
@@ -100,6 +101,7 @@
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="translations.js"></script>
     <script src="script.js"></script>
 </body>
 

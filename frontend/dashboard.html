@@ -13,65 +13,67 @@
     <nav class="navbar">
         <div class="logo">SkinCare AI</div>
         <div class="nav-links">
-            <a href="dashboard.html">Dashboard</a>
-            <a href="analysis.html">Analysis</a>
-            <a href="routine.html">Routine</a>
-            <a href="progress.html">Progress</a>
-            <a href="compare.html">Compare</a>
-            <a href="products.html">Products</a>
-            <a href="profile.html">Profile</a>
-            <a href="settings.html">Settings</a>
-            <a href="#" id="logoutBtn">Logout</a>
+            <a href="dashboard.html" data-i18n="dashboard">Dashboard</a>
+            <a href="analysis.html" data-i18n="analysis">Analysis</a>
+            <a href="routine.html" data-i18n="routine">Routine</a>
+            <a href="progress.html" data-i18n="progress">Progress</a>
+            <a href="compare.html" data-i18n="compare">Compare</a>
+            <a href="products.html" data-i18n="products">Products</a>
+            <a href="profile.html" data-i18n="profile">Profile</a>
+            <a href="settings.html" data-i18n="settings">Settings</a>
+            <a href="#" id="logoutBtn" data-i18n="logout">Logout</a>
+            <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">हिं</button>
             <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
         </div>
     </nav>
 
     <section class="dashboard-section">
-        <h1>Welcome Back!</h1>
+        <h1 data-i18n="welcome_back">Welcome Back!</h1>
 
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">🤖</div>
                 <div class="stat-value" id="statAnalyses">0</div>
-                <div class="stat-label">AI Analyses</div>
+                <div class="stat-label" data-i18n="ai_analyses">AI Analyses</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
                 <div class="stat-value" id="statEntries">0</div>
-                <div class="stat-label">Progress Entries</div>
+                <div class="stat-label" data-i18n="progress_entries">Progress Entries</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🔥</div>
                 <div class="stat-value" id="statStreak">0</div>
-                <div class="stat-label">Day Streak</div>
+                <div class="stat-label" data-i18n="day_streak">Day Streak</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">⭐</div>
                 <div class="stat-value" id="statRating">0</div>
-                <div class="stat-label">Avg Rating</div>
+                <div class="stat-label" data-i18n="avg_rating">Avg Rating</div>
             </div>
         </div>
 
-        <h2 class="section-title">Quick Actions</h2>
+        <h2 class="section-title" data-i18n="quick_actions">Quick Actions</h2>
         <div class="dashboard-grid">
             <div class="dashboard-card">
-                <h3>Skin Analysis</h3>
-                <p>Upload a photo to analyze your skin</p>
-                <a href="analysis.html" class="btn-primary">Start Analysis</a>
+                <h3 data-i18n="skin_analysis">Skin Analysis</h3>
+                <p data-i18n="upload_photo_analyze">Upload a photo to analyze your skin</p>
+                <a href="analysis.html" class="btn-primary" data-i18n="start_analysis">Start Analysis</a>
             </div>
             <div class="dashboard-card">
-                <h3>My Routine</h3>
-                <p>View your personalized routine</p>
-                <a href="routine.html" class="btn-primary">View Routine</a>
+                <h3 data-i18n="my_routine">My Routine</h3>
+                <p data-i18n="view_personalized">View your personalized routine</p>
+                <a href="routine.html" class="btn-primary" data-i18n="view_routine">View Routine</a>
             </div>
             <div class="dashboard-card">
-                <h3>Progress</h3>
-                <p>Track your skin journey</p>
-                <a href="progress.html" class="btn-primary">View Progress</a>
+                <h3 data-i18n="progress">Progress</h3>
+                <p data-i18n="track_journey">Track your skin journey</p>
+                <a href="progress.html" class="btn-primary" data-i18n="view_progress">View Progress</a>
             </div>
         </div>
     </section>
 
+    <script src="translations.js"></script>
     <script src="script.js"></script>
 </body>
 

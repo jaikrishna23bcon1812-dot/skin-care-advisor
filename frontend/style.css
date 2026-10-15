@@ -3014,3 +3014,38 @@ body.dark-mode .settings-body input[type="time"] {
     color: #f5f5f5;
     border-color: #2a2a3e;
 }
+
+/* ===== LANGUAGE TOGGLE ===== */
+.lang-toggle {
+    background: transparent;
+    border: 2px solid #d81b60;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #d81b60;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+.lang-toggle:hover {
+    background: #d81b60;
+    color: white;
+    transform: rotate(-5deg);
+}
+
+body.dark-mode .lang-toggle {
+    border-color: #f06292;
+    color: #f06292;
+}
+
+body.dark-mode .lang-toggle:hover {
+    background: #f06292;
+    color: #1a1a2e;
+}
