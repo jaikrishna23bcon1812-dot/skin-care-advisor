@@ -238,7 +238,6 @@ const analyzePhotoBtn = document.getElementById("analyzePhotoBtn");
 if (analysisTabs.length > 0) {
     let uploadedImageBase64 = null;
 
-    // Tab switching
     analysisTabs.forEach(tab => {
         tab.addEventListener("click", function () {
             const mode = this.dataset.mode;
@@ -258,20 +257,17 @@ if (analysisTabs.length > 0) {
         });
     });
 
-    // Click to upload
     photoUploadArea.addEventListener("click", function (e) {
         if (e.target.id === "removePhoto") return;
         if (uploadedImageBase64) return;
         photoInput.click();
     });
 
-    // File selected
     photoInput.addEventListener("change", function (e) {
         const file = e.target.files[0];
         if (file) handlePhoto(file);
     });
 
-    // Drag and drop
     photoUploadArea.addEventListener("dragover", function (e) {
         e.preventDefault();
         this.classList.add("dragover");
@@ -291,24 +287,20 @@ if (analysisTabs.length > 0) {
     });
 
     function handlePhoto(file) {
-        // Validate type
         if (!file.type.startsWith("image/")) {
             showToast("Please upload an image file", "error");
             return;
         }
 
-        // Allow up to 10MB input (will be resized)
         if (file.size > 10 * 1024 * 1024) {
             showToast("Image too large. Max 10MB", "error");
             return;
         }
 
-        // Read file and resize
         const reader = new FileReader();
         reader.onload = function (e) {
             const img = new Image();
             img.onload = function () {
-                // Resize to max 600px
                 const canvas = document.createElement("canvas");
                 const MAX_SIZE = 600;
                 let width = img.width;
@@ -332,7 +324,6 @@ if (analysisTabs.length > 0) {
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // Convert to JPEG with 60% quality
                 uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.6);
 
                 const sizeKB = Math.round(uploadedImageBase64.length / 1024);
@@ -353,7 +344,6 @@ if (analysisTabs.length > 0) {
         reader.readAsDataURL(file);
     }
 
-    // Remove photo
     if (removePhoto) {
         removePhoto.addEventListener("click", function (e) {
             e.stopPropagation();
@@ -365,7 +355,6 @@ if (analysisTabs.length > 0) {
         });
     }
 
-    // Analyze photo
     if (analyzePhotoBtn) {
         analyzePhotoBtn.addEventListener("click", async function () {
             if (!uploadedImageBase64) {
@@ -972,6 +961,267 @@ if (productsGrid) {
             renderProducts();
         });
     }
+}
+
+// ============ BEFORE/AFTER COMPARISON ============
+const beforeUploadArea = document.getElementById("beforeUploadArea");
+
+if (beforeUploadArea) {
+    let beforeImageData = null;
+    let afterImageData = null;
+
+    const beforeInput = document.getElementById("beforeInput");
+    const afterInput = document.getElementById("afterInput");
+    const beforePreview = document.getElementById("beforePreview");
+    const afterPreview = document.getElementById("afterPreview");
+    const beforePlaceholder = document.getElementById("beforePlaceholder");
+    const afterPlaceholder = document.getElementById("afterPlaceholder");
+    const afterUploadArea = document.getElementById("afterUploadArea");
+    const saveBtn = document.getElementById("saveComparisonBtn");
+
+    function resizeImage(file, maxSize = 800) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement("canvas");
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height = Math.round((height * maxSize) / width);
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width = Math.round((width * maxSize) / height);
+                            height = maxSize;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL("image/jpeg", 0.7));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    beforeUploadArea.addEventListener("click", () => beforeInput.click());
+    afterUploadArea.addEventListener("click", () => afterInput.click());
+
+    beforeInput.addEventListener("change", async function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            beforeImageData = await resizeImage(file);
+            beforePreview.src = beforeImageData;
+            beforePreview.style.display = "block";
+            beforePlaceholder.style.display = "none";
+            checkReadyToSave();
+        } catch (err) {
+            showToast("Failed to process image", "error");
+        }
+    });
+
+    afterInput.addEventListener("change", async function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            afterImageData = await resizeImage(file);
+            afterPreview.src = afterImageData;
+            afterPreview.style.display = "block";
+            afterPlaceholder.style.display = "none";
+            checkReadyToSave();
+        } catch (err) {
+            showToast("Failed to process image", "error");
+        }
+    });
+
+    function checkReadyToSave() {
+        saveBtn.disabled = !(beforeImageData && afterImageData);
+    }
+
+    saveBtn.addEventListener("click", async function () {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) {
+            showToast("Please login first", "error");
+            return;
+        }
+
+        const beforeDate = document.getElementById("beforeDateLabel").value.trim() || "Day 1";
+        const afterDate = document.getElementById("afterDateLabel").value.trim() || "Today";
+        const notes = document.getElementById("comparisonNotes").value.trim();
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+
+        try {
+            const response = await fetch(`${API_URL}/comparison/add`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: user.id,
+                    beforeImage: beforeImageData,
+                    afterImage: afterImageData,
+                    beforeDate,
+                    afterDate,
+                    notes
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast("Comparison saved!", "success");
+
+                beforeImageData = null;
+                afterImageData = null;
+                beforePreview.style.display = "none";
+                afterPreview.style.display = "none";
+                beforePlaceholder.style.display = "block";
+                afterPlaceholder.style.display = "block";
+                beforeInput.value = "";
+                afterInput.value = "";
+                document.getElementById("comparisonNotes").value = "";
+                saveBtn.disabled = true;
+
+                loadComparisons();
+            } else {
+                showToast(data.error || "Failed to save", "error");
+            }
+        } catch (error) {
+            console.log(error);
+            showToast("Cannot connect to server", "error");
+        } finally {
+            saveBtn.textContent = "Save Comparison";
+        }
+    });
+
+    async function loadComparisons() {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) return;
+
+        const list = document.getElementById("comparisonsList");
+
+        try {
+            const response = await fetch(`${API_URL}/comparison/${user.id}`);
+            const data = await response.json();
+
+            if (!response.ok || !data.comparisons || data.comparisons.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📸</div>
+                        <h3>No comparisons yet</h3>
+                        <p>Upload your first before/after pair above!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = data.comparisons.map(c => `
+                <div class="comparison-item" data-id="${c._id}">
+                                        <div class="comparison-item" data-id="${c._id}">
+                    <div class="comparison-header">
+                        <h3>${c.title || "My Skin Journey"}</h3>
+                        <span class="date-created">
+                            Created ${new Date(c.createdAt).toLocaleDateString('en-IN')}
+                        </span>
+                        <button class="comparison-delete-btn" onclick="deleteComparison('${c._id}')">
+                            Delete
+                        </button>
+                    </div>
+
+                    <div class="comparison-slider" data-id="${c._id}">
+                        <img class="before-img" src="${c.beforeImage}" alt="Before" />
+                        <img class="after-img" src="${c.afterImage}" alt="After" style="clip-path: inset(0 0 0 50%);" />
+                        <div class="slider-handle" style="left: 50%;"></div>
+                        <span class="slider-label before-label">${c.beforeDate}</span>
+                        <span class="slider-label after-label">${c.afterDate}</span>
+                    </div>
+
+                    ${c.notes ? `<p class="comparison-notes">"${c.notes}"</p>` : ""}
+                </div>
+            `).join("");
+
+            document.querySelectorAll(".comparison-slider").forEach(setupSlider);
+
+        } catch (error) {
+            console.log(error);
+            list.innerHTML = '<p style="text-align:center;color:red;">Failed to load comparisons</p>';
+        }
+    }
+
+    function setupSlider(slider) {
+        const afterImg = slider.querySelector(".after-img");
+        const handle = slider.querySelector(".slider-handle");
+        let isDragging = false;
+
+        function setPosition(x) {
+            const rect = slider.getBoundingClientRect();
+            let percent = ((x - rect.left) / rect.width) * 100;
+            percent = Math.max(0, Math.min(100, percent));
+
+            afterImg.style.clipPath = `inset(0 0 0 ${percent}%)`;
+            handle.style.left = percent + "%";
+        }
+
+        slider.addEventListener("mousedown", function (e) {
+            isDragging = true;
+            setPosition(e.clientX);
+        });
+
+        slider.addEventListener("touchstart", function (e) {
+            isDragging = true;
+            setPosition(e.touches[0].clientX);
+        });
+
+        window.addEventListener("mousemove", function (e) {
+            if (isDragging) setPosition(e.clientX);
+        });
+
+        window.addEventListener("touchmove", function (e) {
+            if (isDragging) setPosition(e.touches[0].clientX);
+        });
+
+        window.addEventListener("mouseup", function () {
+            isDragging = false;
+        });
+
+        window.addEventListener("touchend", function () {
+            isDragging = false;
+        });
+    }
+
+    window.deleteComparison = async function (id) {
+        if (!confirm("Delete this comparison?")) return;
+
+        try {
+            const response = await fetch(`${API_URL}/comparison/${id}`, {
+                method: "DELETE"
+            });
+
+            if (response.ok) {
+                showToast("Comparison deleted", "info");
+                loadComparisons();
+            }
+        } catch (error) {
+            console.log(error);
+            showToast("Error deleting", "error");
+        }
+    };
+
+    loadComparisons();
 }
 
 // ============ BACK TO TOP BUTTON ============

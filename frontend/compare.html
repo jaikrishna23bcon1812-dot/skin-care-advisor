@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Before/After Comparison - AI Skin Care Advisor</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">SkinCare AI</div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="analysis.html">Analysis</a>
+            <a href="routine.html">Routine</a>
+            <a href="progress.html">Progress</a>
+            <a href="compare.html">Compare</a>
+            <a href="products.html">Products</a>
+            <a href="profile.html">Profile</a>
+            <a href="settings.html">Settings</a>
+            <a href="#" id="logoutBtn">Logout</a>
+            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
+        </div>
+    </nav>
+
+    <section class="compare-section">
+        <h1>Before/After Comparison</h1>
+        <p>Upload two photos and see your skin transformation</p>
+
+        <div class="comparison-upload-card">
+            <h3>📸 Create New Comparison</h3>
+
+            <div class="upload-two-grid">
+                <div class="upload-box-wrapper">
+                    <label>Before Photo</label>
+                    <div class="mini-upload-area" id="beforeUploadArea" data-side="before">
+                        <input type="file" id="beforeInput" accept="image/*" hidden>
+                        <div class="mini-upload-content" id="beforePlaceholder">
+                            <div class="mini-icon">📷</div>
+                            <p>Click to upload</p>
+                        </div>
+                        <img id="beforePreview" style="display:none;" alt="Before">
+                    </div>
+                    <input type="text" id="beforeDateLabel" placeholder="Label (e.g., Day 1)" value="Day 1">
+                </div>
+
+                <div class="upload-box-wrapper">
+                    <label>After Photo</label>
+                    <div class="mini-upload-area" id="afterUploadArea" data-side="after">
+                        <input type="file" id="afterInput" accept="image/*" hidden>
+                        <div class="mini-upload-content" id="afterPlaceholder">
+                            <div class="mini-icon">📷</div>
+                            <p>Click to upload</p>
+                        </div>
+                        <img id="afterPreview" style="display:none;" alt="After">
+                    </div>
+                    <input type="text" id="afterDateLabel" placeholder="Label (e.g., Day 30)" value="Today">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label>Notes (optional)</label>
+                <input type="text" id="comparisonNotes" placeholder="e.g., 30 days of consistent routine">
+            </div>
+
+            <button id="saveComparisonBtn" class="btn-primary" disabled style="width: 100%; margin-top: 15px;">
+                Save Comparison
+            </button>
+        </div>
+
+        <div class="saved-comparisons">
+            <h2 class="section-title">My Comparisons</h2>
+            <div id="comparisonsList"></div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -2437,3 +2437,556 @@ body.dark-mode .photo-upload-area:hover {
         font-size: 2.5rem;
     }
 }
+
+/* ==========================================
+   BEFORE/AFTER COMPARISON
+   ========================================== */
+
+.compare-section {
+    padding: 60px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.compare-section h1 {
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.25rem;
+}
+
+.compare-section>p {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.comparison-upload-card {
+    background: var(--bg-card);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+    margin-bottom: 50px;
+}
+
+.comparison-upload-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.upload-two-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.upload-box-wrapper label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.mini-upload-area {
+    position: relative;
+    background: var(--bg-hover);
+    border: 2px dashed var(--border);
+    border-radius: 15px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.mini-upload-area:hover {
+    border-color: #d81b60;
+    background: rgba(216, 27, 96, 0.05);
+}
+
+.mini-upload-content {
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.mini-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    opacity: 0.6;
+}
+
+.mini-upload-content p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.mini-upload-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 13px;
+}
+
+.upload-box-wrapper input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.saved-comparisons {
+    margin-top: 30px;
+}
+
+.comparison-item {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.comparison-header h3 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.comparison-header .date-created {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.comparison-delete-btn {
+    background: #e53935;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.comparison-delete-btn:hover {
+    background: #c62828;
+}
+
+/* Slider container */
+.comparison-slider {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    aspect-ratio: 4 / 3;
+    border-radius: 15px;
+    overflow: hidden;
+    user-select: none;
+    cursor: ew-resize;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.comparison-slider img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.comparison-slider .after-img {
+    z-index: 2;
+}
+
+.comparison-slider .before-img {
+    z-index: 1;
+}
+
+.slider-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: white;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.slider-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    border: 3px solid #d81b60;
+}
+
+.slider-handle::after {
+    content: '⇄';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    color: #d81b60;
+    font-weight: bold;
+    z-index: 1;
+}
+
+.slider-label {
+    position: absolute;
+    top: 15px;
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+}
+
+.slider-label.before-label {
+    left: 15px;
+}
+
+.slider-label.after-label {
+    right: 15px;
+}
+
+.comparison-notes {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+body.dark-mode .mini-upload-area {
+    background: #1a1a2e;
+}
+
+body.dark-mode .comparison-item {
+    background: #1a1a2e;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .compare-section {
+        padding: 30px 20px;
+    }
+
+    .upload-two-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mini-upload-area {
+        height: 180px;
+    }
+
+    .comparison-slider {
+        aspect-ratio: 1 / 1;
+    }
+}
+
+/* ==========================================
+   BEFORE/AFTER COMPARISON
+   ========================================== */
+
+.compare-section {
+    padding: 60px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.compare-section h1 {
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.25rem;
+}
+
+.compare-section>p {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.comparison-upload-card {
+    background: var(--bg-card);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+    margin-bottom: 50px;
+}
+
+.comparison-upload-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.upload-two-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.upload-box-wrapper label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.mini-upload-area {
+    position: relative;
+    background: var(--bg-hover);
+    border: 2px dashed var(--border);
+    border-radius: 15px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.mini-upload-area:hover {
+    border-color: #d81b60;
+    background: rgba(216, 27, 96, 0.05);
+}
+
+.mini-upload-content {
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.mini-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    opacity: 0.6;
+}
+
+.mini-upload-content p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.mini-upload-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 13px;
+}
+
+.upload-box-wrapper input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.saved-comparisons {
+    margin-top: 30px;
+}
+
+.comparison-item {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.comparison-header h3 {
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+}
+
+.comparison-header .date-created {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.comparison-delete-btn {
+    background: #e53935;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.comparison-delete-btn:hover {
+    background: #c62828;
+}
+
+.comparison-slider {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    aspect-ratio: 4 / 3;
+    border-radius: 15px;
+    overflow: hidden;
+    user-select: none;
+    cursor: ew-resize;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.comparison-slider img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.comparison-slider .after-img {
+    z-index: 2;
+}
+
+.comparison-slider .before-img {
+    z-index: 1;
+}
+
+.slider-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: white;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.slider-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    border: 3px solid #d81b60;
+}
+
+.slider-handle::after {
+    content: '⇄';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    color: #d81b60;
+    font-weight: bold;
+    z-index: 1;
+}
+
+.slider-label {
+    position: absolute;
+    top: 15px;
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+}
+
+.slider-label.before-label {
+    left: 15px;
+}
+
+.slider-label.after-label {
+    right: 15px;
+}
+
+.comparison-notes {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+body.dark-mode .mini-upload-area {
+    background: #1a1a2e;
+}
+
+body.dark-mode .comparison-item {
+    background: #1a1a2e;
+}
+
+@media (max-width: 768px) {
+    .compare-section {
+        padding: 30px 20px;
+    }
+
+    .upload-two-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mini-upload-area {
+        height: 180px;
+    }
+
+    .comparison-slider {
+        aspect-ratio: 1 / 1;
+    }
+}
