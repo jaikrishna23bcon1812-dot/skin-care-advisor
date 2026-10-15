@@ -1,22 +1,24 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        trim: true
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    age: Number,
+    skinType: String,
+    profilePhoto: String,
+    isAdmin: { type: Boolean, default: false },
+    reminderEnabled: {
+        type: Boolean,
+        default: false
     },
-    email: {
+    reminderTime: {
         type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true
+        default: "09:00"
     },
-    password: {
-        type: String,
-        required: true,
-        minlength: 6
+    lastReminderSent: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true });
 
