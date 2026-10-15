@@ -124,6 +124,44 @@
 
         <div class="settings-card">
             <div class="settings-header">
+                <div class="settings-icon">📧</div>
+                <div>
+                    <h3>Email Reminders</h3>
+                    <p>Get daily routine reminders to your inbox</p>
+                </div>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div>
+                        <strong>Daily Reminder</strong>
+                        <p>Receive a daily email with your skincare routine</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="emailReminderToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="settings-row" id="reminderTimeRow" style="display:none;">
+                    <div>
+                        <strong>Reminder Time</strong>
+                        <p>When should we send your reminder?</p>
+                    </div>
+                    <input type="time" id="reminderTimeInput" value="09:00" style="padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; color: var(--text-primary); background: var(--bg-card);">
+                </div>
+
+                <div class="settings-row">
+                    <div>
+                        <strong>Test Email</strong>
+                        <p>Send a test reminder to your email</p>
+                    </div>
+                    <button id="testEmailBtn" class="btn-secondary">Send Test</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-header">
                 <div class="settings-icon">🎨</div>
                 <div>
                     <h3>Appearance</h3>

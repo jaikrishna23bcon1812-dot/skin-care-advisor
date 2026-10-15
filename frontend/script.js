@@ -1248,3 +1248,127 @@ if (beforeUploadArea) {
         });
     });
 })();
+
+// ============ EMAIL REMINDERS (SETTINGS) ============
+const emailReminderToggle = document.getElementById("emailReminderToggle");
+
+if (emailReminderToggle) {
+    const reminderTimeRow = document.getElementById("reminderTimeRow");
+    const reminderTimeInput = document.getElementById("reminderTimeInput");
+    const testEmailBtn = document.getElementById("testEmailBtn");
+
+    async function loadReminderPreferences() {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) return;
+
+        try {
+            const response = await fetch(`${API_URL}/reminder/preferences/${user.id}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                emailReminderToggle.checked = data.reminderEnabled;
+                reminderTimeInput.value = data.reminderTime || "09:00";
+
+                if (data.reminderEnabled) {
+                    reminderTimeRow.style.display = "flex";
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    loadReminderPreferences();
+
+    emailReminderToggle.addEventListener("change", async function() {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user) return;
+
+        const enabled = this.checked;
+
+        try {
+            const response = await fetch(`${API_URL}/reminder/preferences`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: user.id,
+                    reminderEnabled: enabled,
+                    reminderTime: reminderTimeInput.value
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                if (enabled) {
+                    reminderTimeRow.style.display = "flex";
+                    showToast("Daily reminders enabled!", "success");
+                } else {
+                    reminderTimeRow.style.display = "none";
+                    showToast("Reminders disabled", "info");
+                }
+            } else {
+                showToast(data.error || "Failed to save", "error");
+                this.checked = !enabled;
+            }
+        } catch (error) {
+            console.log(error);
+            showToast("Cannot connect to server", "error");
+            this.checked = !enabled;
+        }
+    });
+
+    if (reminderTimeInput) {
+        reminderTimeInput.addEventListener("change", async function() {
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            if (!user) return;
+
+            try {
+                const response = await fetch(`${API_URL}/reminder/preferences`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        reminderTime: this.value
+                    })
+                });
+
+                if (response.ok) {
+                    showToast("Reminder time updated", "success");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    if (testEmailBtn) {
+        testEmailBtn.addEventListener("click", async function() {
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            if (!user) return;
+
+            testEmailBtn.disabled = true;
+            testEmailBtn.innerHTML = '<span class="loading-spinner"></span> Sending...';
+
+            try {
+                const response = await fetch(`${API_URL}/reminder/test/${user.id}`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast("Test email sent! Check your inbox.", "success");
+                } else {
+                    showToast(data.error || "Failed to send", "error");
+                }
+            } catch (error) {
+                console.log(error);
+                showToast("Cannot connect to server", "error");
+            } finally {
+                testEmailBtn.disabled = false;
+                testEmailBtn.textContent = "Send Test";
+            }
+        });
+    }
+}
