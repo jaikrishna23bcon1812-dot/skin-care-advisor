@@ -2868,6 +2868,8 @@ body.dark-mode .comparison-item {
     background: #c62828;
 }
 
+/* Also expose as .img-comparison-container for semantic clarity */
+.img-comparison-container,
 .comparison-slider {
     position: relative;
     width: 100%;
@@ -2877,8 +2879,43 @@ body.dark-mode .comparison-item {
     border-radius: 15px;
     overflow: hidden;
     user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;        /* prevent page scroll while dragging on mobile */
     cursor: ew-resize;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+.img-comparison-container:hover,
+.comparison-slider:hover {
+    box-shadow: 0 16px 40px rgba(216, 27, 96, 0.18);
+}
+
+/* .img-comp-overlay and .img-comp-slider for standard API naming */
+.img-comp-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.img-comp-overlay img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+
+.img-comp-slider {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 4px;
+    background: white;
+    z-index: 10;
+    cursor: ew-resize;
+    box-shadow: 0 0 12px rgba(216, 27, 96, 0.5);
 }
 
 .comparison-slider img {
@@ -2907,7 +2944,13 @@ body.dark-mode .comparison-item {
     background: white;
     z-index: 10;
     pointer-events: none;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 12px rgba(216, 27, 96, 0.5), 0 0 4px rgba(0,0,0,0.4);
+    transition: box-shadow 0.2s ease;
+}
+
+.comparison-slider:active .slider-handle,
+.comparison-slider.dragging .slider-handle {
+    box-shadow: 0 0 24px rgba(216, 27, 96, 0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 
 .slider-handle::before {
@@ -2915,13 +2958,20 @@ body.dark-mode .comparison-item {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
+    transform: translate(-50%, -50%) scale(1);
+    width: 48px;
+    height: 48px;
     background: white;
     border-radius: 50%;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     border: 3px solid #d81b60;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.comparison-slider:active .slider-handle::before,
+.comparison-slider.dragging .slider-handle::before {
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 6px 28px rgba(216, 27, 96, 0.4);
 }
 
 .slider-handle::after {
@@ -2934,6 +2984,7 @@ body.dark-mode .comparison-item {
     color: #d81b60;
     font-weight: bold;
     z-index: 1;
+    pointer-events: none;
 }
 
 .slider-label {
@@ -3217,6 +3268,38 @@ body.dark-mode .lang-toggle:hover {
     background: #d81b60;
     color: white;
     border-color: #d81b60;
+}
+
+/* Heartbeat micro-animation for optimistic like feedback */
+@keyframes likeHeartbeat {
+    0%   { transform: scale(1); }
+    25%  { transform: scale(1.35); }
+    50%  { transform: scale(0.92); }
+    75%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+.post-action-btn.like-pop {
+    animation: likeHeartbeat 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ── Chart.js colour tokens — read via getComputedStyle ── */
+body:not(.dark-mode) {
+    --chart-grid-color  : rgba(0, 0, 0, 0.06);
+    --chart-tick-color  : rgba(0, 0, 0, 0.50);
+    --chart-tooltip-bg  : #ffffff;
+    --chart-tooltip-text: #1a1a1a;
+    --chart-fill-start  : rgba(216, 27, 96, 0.22);
+    --chart-fill-end    : rgba(216, 27, 96, 0.01);
+}
+
+body.dark-mode {
+    --chart-grid-color  : rgba(255, 255, 255, 0.08);
+    --chart-tick-color  : rgba(255, 255, 255, 0.55);
+    --chart-tooltip-bg  : #1e1e2e;
+    --chart-tooltip-text: #f5f5f5;
+    --chart-fill-start  : rgba(216, 27, 96, 0.40);
+    --chart-fill-end    : rgba(216, 27, 96, 0.02);
 }
 
 .post-action-btn.delete {

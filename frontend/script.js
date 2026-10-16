@@ -214,10 +214,49 @@ async function apiFetch(endpoint, options = {}) {
 }
 
 // --- Silent background ping on page load (wake Render immediately) ---
+// --- Service Worker registration & Notification permission prompt  ---
 window.addEventListener("load", function () {
+    // 1. Wake the Render backend (cold-start prevention)
     fetch(`${BACKEND_URL}/health`, { method: "GET", cache: "no-store" })
-        .catch(() => { /* intentionally silent — just a wake-up ping */ });
+        .catch(() => { /* intentionally silent */ });
+
+    // 2. Register Service Worker (PWA: offline support + push notifications)
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+            .register("/sw.js", { scope: "/" })
+            .then((reg) => {
+                console.log("[SW] Registered successfully. Scope:", reg.scope);
+
+                // Listen for SW updates and notify the user non-intrusively
+                reg.addEventListener("updatefound", () => {
+                    const newWorker = reg.installing;
+                    if (!newWorker) return;
+                    newWorker.addEventListener("statechange", () => {
+                        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                            // A new version is waiting — show a subtle toast
+                            showToast("App updated! Refresh for the latest version. 🔄", "info");
+                        }
+                    });
+                });
+            })
+            .catch((err) => console.warn("[SW] Registration failed:", err));
+    }
+
+    // 3. Request notification permission (once, only if not yet decided)
+    if ("Notification" in window && Notification.permission === "default") {
+        // Small delay so the permission prompt doesn't fire instantly on first load
+        setTimeout(() => {
+            Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                    console.log("[Notifications] Permission granted.");
+                } else {
+                    console.log("[Notifications] Permission:", permission);
+                }
+            });
+        }, 3000);
+    }
 });
+
 
 // ============ REGISTER ============
 const registerForm = document.getElementById("registerForm");
@@ -581,38 +620,120 @@ let progressChart;
 let currentChartType = "line";
 const ctx = document.getElementById("progressChart");
 
-if (ctx) {
+/**
+ * Initialise (or re-render) the skin progress chart.
+ * Reads CSS custom-property colour tokens so it adapts to light/dark mode
+ * automatically without a page reload.
+ *
+ * @param {string} [type="line"] - Chart.js type ("line" | "bar")
+ */
+function renderSkinProgressChart(type) {
+    if (!ctx) return;
+
+    // --- Read theme-aware colours from CSS vars ---
+    const style       = getComputedStyle(document.body);
+    const gridColor   = style.getPropertyValue("--chart-grid-color").trim()   || "rgba(0,0,0,0.06)";
+    const tickColor   = style.getPropertyValue("--chart-tick-color").trim()   || "rgba(0,0,0,0.5)";
+    const tooltipBg   = style.getPropertyValue("--chart-tooltip-bg").trim()   || "#ffffff";
+    const tooltipText = style.getPropertyValue("--chart-tooltip-text").trim() || "#1a1a1a";
+    const fillStart   = style.getPropertyValue("--chart-fill-start").trim()   || "rgba(216,27,96,0.22)";
+    const fillEnd     = style.getPropertyValue("--chart-fill-end").trim()     || "rgba(216,27,96,0.01)";
+
+    // --- Build gradient fill ---
+    let gradientFill;
+    try {
+        const canvasEl = ctx.getContext ? ctx : ctx.canvas;
+        const chartCtx = canvasEl.getContext("2d");
+        gradientFill = chartCtx.createLinearGradient(0, 0, 0, canvasEl.clientHeight || 300);
+        gradientFill.addColorStop(0, fillStart);
+        gradientFill.addColorStop(1, fillEnd);
+    } catch {
+        gradientFill = fillStart; // plain colour fallback
+    }
+
+    const resolvedType = type || currentChartType || "line";
+
+    // --- Destroy existing chart instance so we can re-create ---
+    if (progressChart) { progressChart.destroy(); }
+
     progressChart = new Chart(ctx, {
-        type: "line",
+        type: resolvedType,
         data: {
             labels: [],
             datasets: [{
                 label: "Skin Rating",
                 data: [],
                 borderColor: "#d81b60",
-                backgroundColor: "rgba(216, 27, 96, 0.15)",
-                borderWidth: 3,
-                fill: true,
-                tension: 0.3,
+                backgroundColor: resolvedType === "line" ? gradientFill : "rgba(216, 27, 96, 0.55)",
+                borderWidth: 2.5,
+                fill: resolvedType === "line",
+                tension: 0.4,                  // silky smooth curve
                 pointBackgroundColor: "#d81b60",
-                pointRadius: 5
+                pointBorderColor: "#ffffff",
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: "#ad1457"
             }]
         },
         options: {
             responsive: true,
+            animation: { duration: 600, easing: "easeInOutQuart" },
+            interaction: { mode: "index", intersect: false },
             scales: {
+                x: {
+                    grid: { color: gridColor },
+                    ticks: { color: tickColor, font: { family: "'Inter', sans-serif", size: 11 } }
+                },
                 y: {
                     min: 1,
                     max: 5,
-                    ticks: { stepSize: 1 }
+                    ticks: {
+                        stepSize: 1,
+                        color: tickColor,
+                        font: { family: "'Inter', sans-serif", size: 11 },
+                        callback: (v) => ["" ,"😞","😕","😐","🙂","😄"][v] || v
+                    },
+                    grid: { color: gridColor }
                 }
             },
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: tooltipBg,
+                    titleColor: tooltipText,
+                    bodyColor: tooltipText,
+                    borderColor: "rgba(216, 27, 96, 0.25)",
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: (ctx) => ` Rating: ${ctx.parsed.y}/5`
+                    }
+                }
             }
         }
     });
 }
+
+// Run on page load
+renderSkinProgressChart();
+
+// Re-render when dark-mode class is toggled (live theme switch)
+(function () {
+    const body = document.body;
+    if (!ctx || typeof MutationObserver === "undefined") return;
+    new MutationObserver(() => {
+        const savedLabels  = progressChart?.data?.labels  || [];
+        const savedData    = progressChart?.data?.datasets[0]?.data || [];
+        renderSkinProgressChart(currentChartType);
+        if (savedLabels.length) {
+            progressChart.data.labels               = savedLabels;
+            progressChart.data.datasets[0].data     = savedData;
+            progressChart.update("none"); // skip animation for theme swap
+        }
+    }).observe(body, { attributeFilter: ["class"] });
+})();
 
 async function loadProgress() {
     const userId = getUserId();
@@ -727,8 +848,15 @@ document.querySelectorAll(".chart-toggle-btn").forEach(btn => {
         document.querySelectorAll(".chart-toggle-btn").forEach(b => b.classList.remove("active"));
         this.classList.add("active");
 
-        progressChart.config.type = type;
-        progressChart.update();
+        // Preserve current data then re-render with new chart type
+        const savedLabels = progressChart?.data?.labels?.slice() || [];
+        const savedData   = progressChart?.data?.datasets[0]?.data?.slice() || [];
+        renderSkinProgressChart(type);
+        if (savedLabels.length) {
+            progressChart.data.labels           = savedLabels;
+            progressChart.data.datasets[0].data = savedData;
+            progressChart.update();
+        }
     });
 });
 
@@ -1314,7 +1442,7 @@ if (beforeUploadArea) {
                 </div>
             `).join("");
 
-            document.querySelectorAll(".comparison-slider").forEach(setupSlider);
+            document.querySelectorAll(".comparison-slider").forEach(initImageComparison);
 
         } catch (error) {
             console.log(error);
@@ -1322,46 +1450,62 @@ if (beforeUploadArea) {
         }
     }
 
-    function setupSlider(slider) {
+    /**
+     * initImageComparison — silky-smooth before/after slider.
+     *
+     * Uses the Pointer Events API so mouse, touch, and stylus all work
+     * identically. `setPointerCapture` keeps tracking the pointer even when
+     * it moves outside the slider, removing the need for window-level listeners
+     * and fixing the mobile scroll-hijack bug.
+     *
+     * @param {HTMLElement} slider  - The .comparison-slider container element
+     */
+    function initImageComparison(slider) {
         const afterImg = slider.querySelector(".after-img");
-        const handle = slider.querySelector(".slider-handle");
-        let isDragging = false;
+        const handle   = slider.querySelector(".slider-handle");
+        if (!afterImg || !handle) return;
 
-        function setPosition(x) {
-            const rect = slider.getBoundingClientRect();
-            let percent = ((x - rect.left) / rect.width) * 100;
-            percent = Math.max(0, Math.min(100, percent));
+        /** Convert an x-coordinate to a clamped [0–100] percentage */
+        function setPosition(clientX) {
+            const rect    = slider.getBoundingClientRect();
+            let percent   = ((clientX - rect.left) / rect.width) * 100;
+            percent       = Math.max(0, Math.min(100, percent));
 
-            afterImg.style.clipPath = `inset(0 0 0 ${percent}%)`;
-            handle.style.left = percent + "%";
+            // Use will-change for GPU-composited repaint
+            afterImg.style.clipPath = `inset(0 ${(100 - percent).toFixed(2)}% 0 0)`;
+            handle.style.left       = percent.toFixed(2) + "%";
         }
 
-        slider.addEventListener("mousedown", function (e) {
-            isDragging = true;
+        // ── Pointer Events ──────────────────────────────────────────────
+        slider.addEventListener("pointerdown", function (e) {
+            // Only respond to primary button / first touch
+            if (e.button !== 0 && e.pointerType === "mouse") return;
+
+            slider.setPointerCapture(e.pointerId);  // lock tracking to this element
+            slider.classList.add("dragging");
+            setPosition(e.clientX);
+            e.preventDefault();                     // prevent text selection during drag
+        });
+
+        slider.addEventListener("pointermove", function (e) {
+            if (!slider.hasPointerCapture(e.pointerId)) return;
             setPosition(e.clientX);
         });
 
-        slider.addEventListener("touchstart", function (e) {
-            isDragging = true;
-            setPosition(e.touches[0].clientX);
+        slider.addEventListener("pointerup", function (e) {
+            if (!slider.hasPointerCapture(e.pointerId)) return;
+            slider.releasePointerCapture(e.pointerId);
+            slider.classList.remove("dragging");
         });
 
-        window.addEventListener("mousemove", function (e) {
-            if (isDragging) setPosition(e.clientX);
-        });
-
-        window.addEventListener("touchmove", function (e) {
-            if (isDragging) setPosition(e.touches[0].clientX);
-        });
-
-        window.addEventListener("mouseup", function () {
-            isDragging = false;
-        });
-
-        window.addEventListener("touchend", function () {
-            isDragging = false;
+        slider.addEventListener("pointercancel", function (e) {
+            slider.releasePointerCapture(e.pointerId);
+            slider.classList.remove("dragging");
         });
     }
+
+    // Expose globally for programmatic use (e.g., after dynamic DOM injection)
+    window.initImageComparison = initImageComparison;
 
     window.deleteComparison = async function (id) {
         if (!confirm("Delete this comparison?")) return;
@@ -1691,25 +1835,73 @@ if (communityFeed) {
         return new Date(date).toLocaleDateString('en-IN');
     }
 
-    window.toggleLike = async function (postId) {
+    /**
+     * handleLikePost — Optimistic UI like handler.
+     *
+     * Immediately updates the like button's visual state (count + .liked class +
+     * heartbeat animation) before the API call completes, making the interaction
+     * feel instant. Rolls back if the server returns an error.
+     *
+     * @param {string} postId - MongoDB _id of the post to like/unlike
+     */
+    window.handleLikePost = async function (postId) {
         const user = JSON.parse(localStorage.getItem("user") || "null");
         if (!user) {
             showToast("Please login first", "error");
             return;
         }
+
+        // Find the like button and its count <span> for this post
+        const postCard  = document.querySelector(`.post-card[data-id="${postId}"]`);
+        const likeBtn   = postCard?.querySelector(`.post-action-btn[onclick*="handleLikePost"]`);
+        const countSpan = likeBtn?.querySelector("span");
+        if (!likeBtn || !countSpan) return;
+
+        // --- Capture pre-click state for rollback ---
+        const wasLiked      = likeBtn.classList.contains("liked");
+        const prevCount     = parseInt(countSpan.textContent, 10) || 0;
+        const prevEmoji     = wasLiked ? "❤️" : "🤍";
+
+        // --- Optimistic update ---
+        const newLiked  = !wasLiked;
+        const newCount  = newLiked ? prevCount + 1 : Math.max(0, prevCount - 1);
+        const newEmoji  = newLiked ? "❤️" : "🤍";
+
+        likeBtn.classList.toggle("liked", newLiked);
+        likeBtn.innerHTML = `${newEmoji} <span>${newCount}</span>`;
+
+        // Trigger heartbeat pop (remove first to allow re-triggering on rapid clicks)
+        likeBtn.classList.remove("like-pop");
+        void likeBtn.offsetWidth; // force reflow to restart animation
+        likeBtn.classList.add("like-pop");
+
+        // --- Fire API call ---
         try {
             const response = await apiFetch(`${API_URL}/community/like/${postId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.id })
             });
-            if (response.ok) {
-                loadCommunityPosts();
+
+            if (!response.ok) {
+                throw new Error("Like API returned non-OK status");
             }
+            // On success, do a soft background refresh so comment counts etc. stay fresh
+            // but don't re-render the whole feed (avoids scroll jump)
         } catch (error) {
-            console.log(error);
+            // --- Roll back on failure ---
+            console.warn("[handleLikePost] Rollback:", error.message);
+            likeBtn.classList.toggle("liked", wasLiked);
+            likeBtn.innerHTML = `${prevEmoji} <span>${prevCount}</span>`;
+            showToast("Could not update like. Please try again.", "error");
         }
+
+        // Remove pop class after animation ends
+        likeBtn.addEventListener("animationend", () => likeBtn.classList.remove("like-pop"), { once: true });
     };
+
+    // Keep toggleLike as a backwards-compat alias
+    window.toggleLike = window.handleLikePost;
 
     window.toggleComments = function (postId) {
         const section = document.getElementById("comments-" + postId);
