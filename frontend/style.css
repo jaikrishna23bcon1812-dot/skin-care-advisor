@@ -3386,6 +3386,343 @@ body.dark-mode .post-concern {
     color: #f06292;
 }
 
+/* ============ COMMUNITY PAGE ============ */
+.community-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.community-section h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.community-section > p {
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* Share Banner */
+.share-routine-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #f8bbd9, #fce4ec);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 30px;
+    gap: 16px;
+}
+
+.share-routine-banner h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ad1457;
+    margin-bottom: 4px;
+}
+
+.share-routine-banner p {
+    color: #c2185b;
+    font-size: 0.9rem;
+}
+
+/* Feed */
+.community-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Post Card */
+.post-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.post-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f06292, #e91e8c);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.post-user-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+}
+
+.post-user-info span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.post-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 10px 0;
+}
+
+.post-concern {
+    display: inline-block;
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    color: #ad1457;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+}
+
+.post-routine {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin-bottom: 16px;
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+/* Post Actions */
+.post-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.post-action-btn {
+    background: #f5f5f5;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.post-action-btn:hover {
+    background: #ffe0f0;
+    color: #d81b60;
+    transform: scale(1.03);
+}
+
+.post-action-btn.liked {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.post-action-btn.delete {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.post-action-btn.delete:hover {
+    background: #ffccbc;
+}
+
+/* Comments */
+.comments-section {
+    display: none;
+    margin-top: 16px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 16px;
+}
+
+.comments-section.expanded {
+    display: block;
+}
+
+.comment-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+
+.comment-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ba68c8, #9c27b0);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.comment-content strong {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-right: 6px;
+}
+
+.comment-content p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin: 3px 0 0 0;
+    line-height: 1.5;
+}
+
+.comment-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.comment-form input {
+    flex: 1;
+    padding: 8px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    background: var(--bg-secondary, #f5f5f5);
+    color: var(--text-primary);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.comment-form input:focus {
+    border-color: #f06292;
+}
+
+.comment-form button {
+    background: linear-gradient(135deg, #f06292, #d81b60);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    transition: opacity 0.2s;
+}
+
+.comment-form button:hover {
+    opacity: 0.85;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 25px 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+body.dark-mode .post-card,
+body.dark-mode .modal-card {
+    background: #1a1a2e;
+}
+
+body.dark-mode .post-routine {
+    background: #16213e;
+}
+
+body.dark-mode .post-concern {
+    background: linear-gradient(135deg, #2a1a3e, #3a1f5e);
+    color: #f06292;
+}
+
 @media (max-width: 768px) {
     .community-section {
         padding: 30px 20px;

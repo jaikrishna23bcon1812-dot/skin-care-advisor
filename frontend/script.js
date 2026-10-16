@@ -1280,7 +1280,7 @@ if (emailReminderToggle) {
 
     loadReminderPreferences();
 
-    emailReminderToggle.addEventListener("change", async function() {
+    emailReminderToggle.addEventListener("change", async function () {
         const user = JSON.parse(localStorage.getItem("user") || "null");
         if (!user) return;
 
@@ -1319,7 +1319,7 @@ if (emailReminderToggle) {
     });
 
     if (reminderTimeInput) {
-        reminderTimeInput.addEventListener("change", async function() {
+        reminderTimeInput.addEventListener("change", async function () {
             const user = JSON.parse(localStorage.getItem("user") || "null");
             if (!user) return;
 
@@ -1343,7 +1343,7 @@ if (emailReminderToggle) {
     }
 
     if (testEmailBtn) {
-        testEmailBtn.addEventListener("click", async function() {
+        testEmailBtn.addEventListener("click", async function () {
             const user = JSON.parse(localStorage.getItem("user") || "null");
             if (!user) return;
 
@@ -1384,19 +1384,19 @@ if (communityFeed) {
     const shareModal = document.getElementById("shareModal");
 
     if (openShareModal) {
-        openShareModal.addEventListener("click", function() {
+        openShareModal.addEventListener("click", function () {
             shareModal.style.display = "flex";
         });
     }
 
     if (closeShareModal) {
-        closeShareModal.addEventListener("click", function() {
+        closeShareModal.addEventListener("click", function () {
             shareModal.style.display = "none";
         });
     }
 
     if (shareModal) {
-        shareModal.addEventListener("click", function(e) {
+        shareModal.addEventListener("click", function (e) {
             if (e.target === shareModal) {
                 shareModal.style.display = "none";
             }
@@ -1405,7 +1405,7 @@ if (communityFeed) {
 
     const submitShare = document.getElementById("submitShare");
     if (submitShare) {
-        submitShare.addEventListener("click", async function() {
+        submitShare.addEventListener("click", async function () {
             const user = JSON.parse(localStorage.getItem("user") || "null");
             if (!user) {
                 showToast("Please login first", "error");
@@ -1531,7 +1531,7 @@ if (communityFeed) {
         return new Date(date).toLocaleDateString('en-IN');
     }
 
-    window.toggleLike = async function(postId) {
+    window.toggleLike = async function (postId) {
         const user = JSON.parse(localStorage.getItem("user") || "null");
         if (!user) {
             showToast("Please login first", "error");
@@ -1551,14 +1551,14 @@ if (communityFeed) {
         }
     };
 
-    window.toggleComments = function(postId) {
+    window.toggleComments = function (postId) {
         const section = document.getElementById("comments-" + postId);
         if (section) {
             section.classList.toggle("expanded");
         }
     };
 
-    window.addComment = async function(postId) {
+    window.addComment = async function (postId) {
         const user = JSON.parse(localStorage.getItem("user") || "null");
         if (!user) {
             showToast("Please login first", "error");
@@ -1594,7 +1594,7 @@ if (communityFeed) {
         }
     };
 
-    window.deletePost = async function(postId) {
+    window.deletePost = async function (postId) {
         if (!confirm("Delete this post?")) return;
         const user = JSON.parse(localStorage.getItem("user") || "null");
         if (!user) return;
