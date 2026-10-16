@@ -25,6 +25,63 @@ function showToast(message, type = "info") {
     }, 3500);
 }
 
+// ===== SKELETON LOADERS =====
+/**
+ * Show or hide a skeleton shimmer loader inside a container element.
+ *
+ * @param {string} containerId  - The `id` of the target DOM element.
+ * @param {boolean} show        - true = inject skeleton, false = remove it.
+ * @param {object} [options]    - Optional customisation.
+ * @param {number} [options.lines=4]      - Number of skeleton text lines to render.
+ * @param {boolean} [options.card=true]   - Wrap skeleton in a `.skeleton-card` block.
+ * @param {boolean} [options.box=false]   - Prepend a `.skeleton-box` block placeholder.
+ *
+ * @example
+ *   toggleSkeleton("routineResult", true);           // show
+ *   toggleSkeleton("routineResult", false);          // hide & restore
+ *   toggleSkeleton("routineResult", true, { lines: 3, box: true });
+ */
+function toggleSkeleton(containerId, show, options = {}) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+
+    const SKELETON_ATTR  = "data-skeleton-active";
+    const SAVED_HTML_KEY = "data-skeleton-saved-html";
+
+    if (show) {
+        // Prevent stacking duplicates
+        if (el.getAttribute(SKELETON_ATTR) === "true") return;
+
+        // Persist original content
+        el.setAttribute(SAVED_HTML_KEY, el.innerHTML);
+        el.setAttribute(SKELETON_ATTR, "true");
+
+        const { lines = 4, card = true, box = false } = options;
+
+        const widths = ["w-100", "w-80", "w-60", "w-40"];
+        const textLines = Array.from({ length: lines }, (_, i) =>
+            `<span class="skeleton-text ${widths[i % widths.length]}"></span>`
+        ).join("\n");
+
+        const boxHTML  = box  ? `<span class="skeleton-box" style="min-height:80px;"></span>` : "";
+        const inner    = `${boxHTML}${textLines}`;
+        const skeleton = card
+            ? `<div class="skeleton-card">${inner}</div>`
+            : inner;
+
+        el.innerHTML = skeleton;
+
+    } else {
+        if (el.getAttribute(SKELETON_ATTR) !== "true") return;
+
+        // Restore original content
+        const saved = el.getAttribute(SAVED_HTML_KEY) || "";
+        el.innerHTML = saved;
+        el.removeAttribute(SKELETON_ATTR);
+        el.removeAttribute(SAVED_HTML_KEY);
+    }
+}
+
 // ===== DARK MODE TOGGLE =====
 (function () {
     const saved = localStorage.getItem("theme");
@@ -58,6 +115,109 @@ window.addEventListener("DOMContentLoaded", function () {
 
 // ===== AI SKIN CARE ADVISOR - MAIN SCRIPT =====
 const API_URL = "https://skin-care-api.onrender.com/api";
+const BACKEND_URL = "https://skin-care-api.onrender.com";
+
+// ============ COLD-START HANDLER (Render Free Tier Wake-Up) ============
+
+// --- Build modal DOM once, inject into body ---
+(function buildColdStartModal() {
+    const overlay = document.createElement("div");
+    overlay.id = "coldStartOverlay";
+    overlay.className = "cold-start-overlay hidden";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Waking up AI Engine");
+    overlay.innerHTML = `
+        <div class="cold-start-card">
+            <div class="cs-spinner-wrap">
+                <div class="cs-spinner"></div>
+                <div class="cs-spinner-icon">🧴</div>
+            </div>
+            <p class="cs-title">Waking Up AI Engine...</p>
+            <p class="cs-subtitle">
+                The backend is on Render's free tier and goes to sleep after inactivity.
+                It usually wakes up in <strong>30–50 seconds</strong>. Hang tight!
+            </p>
+            <div class="cs-progress-track">
+                <div class="cs-progress-fill" id="csProgressFill"></div>
+            </div>
+            <p class="cs-elapsed" id="csElapsed">Elapsed: 0s</p>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+})();
+
+// --- Cold-start modal controller ---
+const _cs = {
+    overlay:      null,
+    progressFill: null,
+    elapsedEl:    null,
+    timer:        null,
+    seconds:      0,
+
+    _init() {
+        if (!this.overlay) {
+            this.overlay      = document.getElementById("coldStartOverlay");
+            this.progressFill = document.getElementById("csProgressFill");
+            this.elapsedEl    = document.getElementById("csElapsed");
+        }
+    },
+
+    show() {
+        this._init();
+        this.seconds = 0;
+        this.overlay.classList.remove("hidden");
+        this.progressFill.style.width = "0%";
+        this.elapsedEl.textContent = "Elapsed: 0s";
+
+        this.timer = setInterval(() => {
+            this.seconds++;
+            this.elapsedEl.textContent = `Elapsed: ${this.seconds}s`;
+            // Ease toward 95% asymptotically (never reaches 100 while waiting)
+            const pct = 95 * (1 - Math.exp(-this.seconds / 30));
+            this.progressFill.style.width = pct.toFixed(1) + "%";
+        }, 1000);
+    },
+
+    hide() {
+        this._init();
+        clearInterval(this.timer);
+        this.timer = null;
+        // Flash to 100% then dismiss
+        this.progressFill.style.width = "100%";
+        setTimeout(() => {
+            this.overlay.classList.add("hidden");
+            this.progressFill.style.width = "0%";
+        }, 300);
+    }
+};
+
+// --- Wrapped fetch helper ---
+async function apiFetch(endpoint, options = {}) {
+    const url = endpoint.startsWith("http") ? endpoint : `${API_URL}${endpoint}`;
+    const SLOW_THRESHOLD_MS = 2000;
+    let modalShown = false;
+    let slowTimer = null;
+
+    slowTimer = setTimeout(() => {
+        modalShown = true;
+        _cs.show();
+    }, SLOW_THRESHOLD_MS);
+
+    try {
+        const response = await fetch(url, options);
+        return response;
+    } finally {
+        clearTimeout(slowTimer);
+        if (modalShown) _cs.hide();
+    }
+}
+
+// --- Silent background ping on page load (wake Render immediately) ---
+window.addEventListener("load", function () {
+    fetch(`${BACKEND_URL}/health`, { method: "GET", cache: "no-store" })
+        .catch(() => { /* intentionally silent — just a wake-up ping */ });
+});
 
 // ============ REGISTER ============
 const registerForm = document.getElementById("registerForm");
@@ -80,7 +240,7 @@ if (registerForm) {
         }
 
         try {
-            const response = await fetch(API_URL + "/auth/register", {
+            const response = await apiFetch(API_URL + "/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, password })
@@ -118,7 +278,7 @@ if (loginForm) {
         }
 
         try {
-            const response = await fetch(API_URL + "/auth/login", {
+            const response = await apiFetch(API_URL + "/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password })
@@ -197,7 +357,7 @@ if (analyzeBtn) {
         analyzeBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
 
         try {
-            const response = await fetch(API_URL + "/analysis/generate", {
+            const response = await apiFetch(API_URL + "/analysis/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ concern, userId: user.id })
@@ -375,7 +535,7 @@ if (analysisTabs.length > 0) {
             analyzePhotoBtn.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
 
             try {
-                const response = await fetch(API_URL + "/analysis/analyze-photo", {
+                const response = await apiFetch(API_URL + "/analysis/analyze-photo", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -462,7 +622,7 @@ async function loadProgress() {
     const chartContainer = document.querySelector(".chart-container");
 
     try {
-        const response = await fetch(`${API_URL}/progress/${userId}`);
+        const response = await apiFetch(`${API_URL}/progress/${userId}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -579,7 +739,7 @@ if (exportBtn) {
         if (!userId) return;
 
         try {
-            const response = await fetch(`${API_URL}/progress/${userId}`);
+            const response = await apiFetch(`${API_URL}/progress/${userId}`);
             const data = await response.json();
 
             if (!data.entries || data.entries.length === 0) {
@@ -626,7 +786,7 @@ if (addProgressBtn) {
         }
 
         try {
-            const response = await fetch(`${API_URL}/progress/add`, {
+            const response = await apiFetch(`${API_URL}/progress/add`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId, date, rating, notes })
@@ -655,7 +815,7 @@ async function deleteProgress(id) {
     if (!confirm("Delete this entry?")) return;
 
     try {
-        const response = await fetch(`${API_URL}/progress/${id}`, {
+        const response = await apiFetch(`${API_URL}/progress/${id}`, {
             method: "DELETE"
         });
 
@@ -689,7 +849,7 @@ async function loadStats() {
     if (!user) return;
 
     try {
-        const response = await fetch(`${API_URL}/progress/stats/${user.id}`);
+        const response = await apiFetch(`${API_URL}/progress/stats/${user.id}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -883,7 +1043,7 @@ if (productsGrid) {
 
     async function loadProducts() {
         try {
-            const response = await fetch(`${API_URL}/progress/products/list`);
+            const response = await apiFetch(`${API_URL}/progress/products/list`);
             const data = await response.json();
 
             if (!response.ok) {
@@ -1067,7 +1227,7 @@ if (beforeUploadArea) {
         saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
 
         try {
-            const response = await fetch(`${API_URL}/comparison/add`, {
+            const response = await apiFetch(`${API_URL}/comparison/add`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -1115,7 +1275,7 @@ if (beforeUploadArea) {
         const list = document.getElementById("comparisonsList");
 
         try {
-            const response = await fetch(`${API_URL}/comparison/${user.id}`);
+            const response = await apiFetch(`${API_URL}/comparison/${user.id}`);
             const data = await response.json();
 
             if (!response.ok || !data.comparisons || data.comparisons.length === 0) {
@@ -1207,7 +1367,7 @@ if (beforeUploadArea) {
         if (!confirm("Delete this comparison?")) return;
 
         try {
-            const response = await fetch(`${API_URL}/comparison/${id}`, {
+            const response = await apiFetch(`${API_URL}/comparison/${id}`, {
                 method: "DELETE"
             });
 
@@ -1262,7 +1422,7 @@ if (emailReminderToggle) {
         if (!user) return;
 
         try {
-            const response = await fetch(`${API_URL}/reminder/preferences/${user.id}`);
+            const response = await apiFetch(`${API_URL}/reminder/preferences/${user.id}`);
             const data = await response.json();
 
             if (response.ok) {
@@ -1287,7 +1447,7 @@ if (emailReminderToggle) {
         const enabled = this.checked;
 
         try {
-            const response = await fetch(`${API_URL}/reminder/preferences`, {
+            const response = await apiFetch(`${API_URL}/reminder/preferences`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -1324,7 +1484,7 @@ if (emailReminderToggle) {
             if (!user) return;
 
             try {
-                const response = await fetch(`${API_URL}/reminder/preferences`, {
+                const response = await apiFetch(`${API_URL}/reminder/preferences`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -1351,7 +1511,7 @@ if (emailReminderToggle) {
             testEmailBtn.innerHTML = '<span class="loading-spinner"></span> Sending...';
 
             try {
-                const response = await fetch(`${API_URL}/reminder/test/${user.id}`, {
+                const response = await apiFetch(`${API_URL}/reminder/test/${user.id}`, {
                     method: "POST"
                 });
 
@@ -1421,7 +1581,7 @@ if (communityFeed) {
             submitShare.disabled = true;
             submitShare.innerHTML = '<span class="loading-spinner"></span> Sharing...';
             try {
-                const response = await fetch(`${API_URL}/community/add`, {
+                const response = await apiFetch(`${API_URL}/community/add`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ userId: user.id, title, concern, routine })
@@ -1449,7 +1609,7 @@ if (communityFeed) {
 
     async function loadCommunityPosts() {
         try {
-            const response = await fetch(`${API_URL}/community/posts`);
+            const response = await apiFetch(`${API_URL}/community/posts`);
             const data = await response.json();
             if (!response.ok || !data.posts || data.posts.length === 0) {
                 communityFeed.innerHTML = `
@@ -1538,7 +1698,7 @@ if (communityFeed) {
             return;
         }
         try {
-            const response = await fetch(`${API_URL}/community/like/${postId}`, {
+            const response = await apiFetch(`${API_URL}/community/like/${postId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.id })
@@ -1571,7 +1731,7 @@ if (communityFeed) {
             return;
         }
         try {
-            const response = await fetch(`${API_URL}/community/comment/${postId}`, {
+            const response = await apiFetch(`${API_URL}/community/comment/${postId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.id, text })
@@ -1599,7 +1759,7 @@ if (communityFeed) {
         const user = JSON.parse(localStorage.getItem("user") || "null");
         if (!user) return;
         try {
-            const response = await fetch(`${API_URL}/community/post/${postId}?userId=${user.id}`, {
+            const response = await apiFetch(`${API_URL}/community/post/${postId}?userId=${user.id}`, {
                 method: "DELETE"
             });
             if (response.ok) {

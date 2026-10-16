@@ -1,6 +1,64 @@
-const express = require("express");
-const router = express.Router();
+const express  = require("express");
+const router   = express.Router();
 const Analysis = require("../models/Analysis");
+
+// ============ AI RESPONSE SANITIZER ============
+/**
+ * Strips markdown code fences (```json ... ```) and any conversational
+ * filler text, then extracts the first valid JSON substring.
+ * Returns the cleaned string, or null if no valid JSON could be found.
+ *
+ * @param {string} rawText - Raw LLM output
+ * @returns {string|null}
+ */
+function sanitizeAIResponse(rawText) {
+    if (!rawText || typeof rawText !== "string") return null;
+
+    let text = rawText.trim();
+
+    // 1. Strip ```json ... ``` or ``` ... ``` fences (greedy, multiline)
+    text = text.replace(/```(?:json)?\s*([\s\S]*?)```/gi, "$1").trim();
+
+    // 2. Strip leading/trailing non-JSON prose by extracting first { } block
+    const jsonStart = text.indexOf("{");
+    const jsonEnd   = text.lastIndexOf("}");
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        text = text.slice(jsonStart, jsonEnd + 1);
+    }
+
+    // 3. Validate
+    try {
+        JSON.parse(text);
+        return text;
+    } catch {
+        return null;
+    }
+}
+
+// ============ STRUCTURED JSON FALLBACK ROUTINE ============
+// Returned when the AI API fails/rate-limits AND a JSON response is expected.
+const FALLBACK_ROUTINE_OBJECT = {
+    skinType: "Combination",
+    concerns: ["Uneven texture", "Mild dullness"],
+    morningRoutine: [
+        { step: 1, type: "Cleanser",    product: "Cetaphil Gentle Skin Cleanser",             note: "Use lukewarm water" },
+        { step: 2, type: "Serum",       product: "Minimalist Vitamin C 10% Face Serum",        note: "Apply before moisturizer" },
+        { step: 3, type: "Moisturizer", product: "Neutrogena Hydro Boost Water Gel",            note: "Pat in gently" },
+        { step: 4, type: "Sunscreen",   product: "Aqualogica Radiance+ Dewy Sunscreen SPF 50+", note: "Apply every morning — non-negotiable" }
+    ],
+    nightRoutine: [
+        { step: 1, type: "Cleanser",    product: "Cetaphil Gentle Skin Cleanser",      note: "Double-cleanse if wearing SPF" },
+        { step: 2, type: "Treatment",   product: "The Ordinary Niacinamide 10% + Zinc", note: "Helps regulate oil and fade marks" },
+        { step: 3, type: "Moisturizer", product: "CeraVe Moisturizing Cream",           note: "Use a slightly thicker layer at night" }
+    ],
+    keyTips: [
+        "Consistency for 8–12 weeks is essential for visible results.",
+        "Never skip sunscreen — it prevents further pigmentation.",
+        "Introduce actives one at a time to avoid irritation."
+    ],
+    disclaimer: "This is general skincare advice, not a medical diagnosis. Consult a dermatologist for persistent concerns.",
+    isFallback: true
+};
 
 // Fallback routines for common skin concerns
 function getFallbackRoutine(concern) {
@@ -227,12 +285,33 @@ Keep it under 300 words.`;
                     })
                 });
 
-                const data = await apiResponse.json();
-                console.log("Status for", modelName, ":", apiResponse.status);
+                let rawContent = null;
+                try {
+                    const data = await apiResponse.json();
+                    console.log("Status for", modelName, ":", apiResponse.status);
 
-                if (apiResponse.ok && data.choices && data.choices[0]) {
-                    text = data.choices[0].message.content;
-                    console.log("SUCCESS with", modelName);
+                    if (apiResponse.ok && data.choices && data.choices[0]) {
+                        rawContent = data.choices[0].message.content;
+                    }
+                } catch (jsonErr) {
+                    console.log("Failed to parse API JSON for", modelName, ":", jsonErr.message);
+                }
+
+                if (rawContent) {
+                    // Try to parse as structured JSON first (some models return JSON)
+                    const sanitized = sanitizeAIResponse(rawContent);
+                    if (sanitized) {
+                        try {
+                            text = JSON.parse(sanitized); // parsed object
+                            console.log("SUCCESS (JSON) with", modelName);
+                        } catch {
+                            text = rawContent; // plain text fallback
+                            console.log("SUCCESS (text) with", modelName);
+                        }
+                    } else {
+                        text = rawContent; // plain text, no JSON wrapper
+                        console.log("SUCCESS (plain text) with", modelName);
+                    }
                 }
             } catch (e) {
                 console.log("Error with", modelName, ":", e.message);
@@ -246,11 +325,15 @@ Keep it under 300 words.`;
 
         let savedAnalysis = null;
         if (userId) {
-            savedAnalysis = await Analysis.create({
-                userId,
-                concern,
-                result: text
-            });
+            try {
+                savedAnalysis = await Analysis.create({
+                    userId,
+                    concern,
+                    result: typeof text === "string" ? text : JSON.stringify(text)
+                });
+            } catch (dbErr) {
+                console.log("DB save error (non-fatal):", dbErr.message);
+            }
         }
 
         res.json({
@@ -260,17 +343,15 @@ Keep it under 300 words.`;
         });
 
     } catch (error) {
-        console.log("Server error:", error.message);
-        try {
-            const fallback = getFallbackRoutine(req.body.concern || "general");
-            res.json({
-                message: "Routine generated",
-                routine: fallback,
-                analysisId: null
-            });
-        } catch (e) {
-            res.status(500).json({ error: "Something went wrong." });
-        }
+        // Outermost catch: never return 500 — send a structured fallback instead
+        console.error("[/generate] Unhandled error:", error.message);
+        const textFallback = getFallbackRoutine(req.body?.concern || "general");
+        res.json({
+            message: "Routine generated",
+            routine: textFallback,
+            analysisId: null,
+            isFallback: true
+        });
     }
 });
 
@@ -330,14 +411,25 @@ Format the response with these exact headings and keep it under 250 words. Be sp
                     })
                 });
 
-                const data = await apiResponse.json();
-                console.log("Vision model status for", modelName, ":", apiResponse.status);
+                let rawContent = null;
+                try {
+                    const data = await apiResponse.json();
+                    console.log("Vision model status for", modelName, ":", apiResponse.status);
 
-                if (apiResponse.ok && data.choices && data.choices[0]) {
-                    text = data.choices[0].message.content;
-                    console.log("SUCCESS with vision model:", modelName);
-                } else {
-                    console.log("Vision model failed:", JSON.stringify(data).substring(0, 300));
+                    if (apiResponse.ok && data.choices && data.choices[0]) {
+                        rawContent = data.choices[0].message.content;
+                        console.log("SUCCESS with vision model:", modelName);
+                    } else {
+                        console.log("Vision model failed:", JSON.stringify(data).substring(0, 300));
+                    }
+                } catch (jsonErr) {
+                    console.log("Failed to parse vision API JSON for", modelName, ":", jsonErr.message);
+                }
+
+                if (rawContent) {
+                    // Vision models return plain text; run through sanitizer just in case
+                    const sanitized = sanitizeAIResponse(rawContent);
+                    text = sanitized ? rawContent : rawContent; // always use raw for vision
                 }
             } catch (e) {
                 console.log("Error with", modelName, ":", e.message);
@@ -351,11 +443,15 @@ Format the response with these exact headings and keep it under 250 words. Be sp
 
         let savedAnalysis = null;
         if (userId) {
-            savedAnalysis = await Analysis.create({
-                userId,
-                concern: "Photo Analysis",
-                result: text
-            });
+            try {
+                savedAnalysis = await Analysis.create({
+                    userId,
+                    concern: "Photo Analysis",
+                    result: typeof text === "string" ? text : JSON.stringify(text)
+                });
+            } catch (dbErr) {
+                console.log("DB save error (non-fatal):", dbErr.message);
+            }
         }
 
         res.json({
@@ -365,11 +461,13 @@ Format the response with these exact headings and keep it under 250 words. Be sp
         });
 
     } catch (error) {
-        console.log("Server error:", error.message);
+        // Outermost catch: never return 500 — send fallback instead
+        console.error("[/analyze-photo] Unhandled error:", error.message);
         res.json({
             message: "Photo analyzed",
             routine: getPhotoFallback(),
-            analysisId: null
+            analysisId: null,
+            isFallback: true
         });
     }
 });
