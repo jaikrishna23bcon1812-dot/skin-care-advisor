@@ -164,6 +164,63 @@
 
         <div class="settings-card">
             <div class="settings-header">
+                <div class="settings-icon">🔔</div>
+                <div>
+                    <h3>Push Notifications</h3>
+                    <p>Get browser notifications for reminders</p>
+                </div>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div>
+                        <strong>Enable Notifications</strong>
+                        <p>Allow browser notifications for reminders</p>
+                    </div>
+                    <button id="enableNotificationsBtn" class="btn-primary">Enable</button>
+                </div>
+
+                <div class="settings-row" id="notifStatusRow" style="display:none;">
+                    <div>
+                        <strong>Status</strong>
+                        <p id="notifStatusText">Enabled</p>
+                    </div>
+                    <span id="notifStatusIcon" style="font-size: 1.5rem;">✅</span>
+                </div>
+
+                <div class="settings-row">
+                    <div>
+                        <strong>Routine Reminder</strong>
+                        <p>Get notified to follow your routine</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="routineNotifToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="settings-row">
+                    <div>
+                        <strong>Progress Reminder</strong>
+                        <p>Get reminded to log your progress</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="progressNotifToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="settings-row">
+                    <div>
+                        <strong>Test Notification</strong>
+                        <p>Send a test notification to yourself</p>
+                    </div>
+                    <button id="testNotificationBtn" class="btn-secondary">Send Test</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-header">
                 <div class="settings-icon">🎨</div>
                 <div>
                     <h3>Appearance</h3>

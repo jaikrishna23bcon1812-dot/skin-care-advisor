@@ -1615,3 +1615,138 @@ if (communityFeed) {
         }
     };
 }
+
+// ============ PUSH NOTIFICATIONS ============
+const enableNotificationsBtn = document.getElementById("enableNotificationsBtn");
+
+if (enableNotificationsBtn) {
+    const notifStatusRow = document.getElementById("notifStatusRow");
+    const notifStatusText = document.getElementById("notifStatusText");
+    const notifStatusIcon = document.getElementById("notifStatusIcon");
+    const routineNotifToggle = document.getElementById("routineNotifToggle");
+    const progressNotifToggle = document.getElementById("progressNotifToggle");
+    const testNotificationBtn = document.getElementById("testNotificationBtn");
+
+    // Check if browser supports notifications
+    const supportsNotifications = "Notification" in window;
+
+    function updateNotificationUI() {
+        if (!supportsNotifications) {
+            enableNotificationsBtn.textContent = "Not Supported";
+            enableNotificationsBtn.disabled = true;
+            return;
+        }
+
+        const permission = Notification.permission;
+
+        if (permission === "granted") {
+            enableNotificationsBtn.textContent = "Enabled";
+            enableNotificationsBtn.disabled = true;
+            enableNotificationsBtn.style.background = "#4caf50";
+            notifStatusRow.style.display = "flex";
+            notifStatusText.textContent = "Notifications are enabled";
+            notifStatusIcon.textContent = "✅";
+        } else if (permission === "denied") {
+            enableNotificationsBtn.textContent = "Blocked";
+            enableNotificationsBtn.disabled = true;
+            enableNotificationsBtn.style.background = "#e53935";
+            notifStatusRow.style.display = "flex";
+            notifStatusText.textContent = "Notifications are blocked. Enable in browser settings.";
+            notifStatusIcon.textContent = "🚫";
+        } else {
+            enableNotificationsBtn.textContent = "Enable";
+            enableNotificationsBtn.disabled = false;
+            notifStatusRow.style.display = "none";
+        }
+    }
+
+    updateNotificationUI();
+
+    // Request permission
+    enableNotificationsBtn.addEventListener("click", async function() {
+        if (!supportsNotifications) return;
+
+        try {
+            const permission = await Notification.requestPermission();
+            updateNotificationUI();
+
+            if (permission === "granted") {
+                showToast("Notifications enabled!", "success");
+                new Notification("SkinCare AI", {
+                    body: "Notifications are now enabled!",
+                    icon: "/favicon.svg"
+                });
+            } else if (permission === "denied") {
+                showToast("Notifications blocked. Enable in browser settings.", "error");
+            }
+        } catch (error) {
+            console.log(error);
+            showToast("Failed to enable notifications", "error");
+        }
+    });
+
+    // Routine reminder toggle
+    if (routineNotifToggle) {
+        routineNotifToggle.checked = localStorage.getItem("routineNotif") === "true";
+        routineNotifToggle.addEventListener("change", function() {
+            localStorage.setItem("routineNotif", this.checked);
+            showToast(this.checked ? "Routine reminders ON" : "Routine reminders OFF", "info");
+        });
+    }
+
+    // Progress reminder toggle
+    if (progressNotifToggle) {
+        progressNotifToggle.checked = localStorage.getItem("progressNotif") === "true";
+        progressNotifToggle.addEventListener("change", function() {
+            localStorage.setItem("progressNotif", this.checked);
+            showToast(this.checked ? "Progress reminders ON" : "Progress reminders OFF", "info");
+        });
+    }
+
+    // Test notification
+    if (testNotificationBtn) {
+        testNotificationBtn.addEventListener("click", function() {
+            if (Notification.permission !== "granted") {
+                showToast("Enable notifications first", "error");
+                return;
+            }
+
+            new Notification("SkinCare AI - Test", {
+                body: "This is a test notification! Your reminders are working.",
+                icon: "/favicon.svg",
+                badge: "/favicon.svg"
+            });
+
+            showToast("Test notification sent!", "success");
+        });
+    }
+
+    // Auto reminder scheduler (checks every 60 seconds)
+    if (Notification.permission === "granted") {
+        setInterval(() => {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const today = now.toDateString();
+            const lastNotified = localStorage.getItem("lastNotifiedDate");
+
+            // Send routine reminder at 9 AM (once per day)
+            if (localStorage.getItem("routineNotif") === "true" && hours === 9 && minutes === 0 && lastNotified !== today) {
+                new Notification("🌿 Time for Your Routine!", {
+                    body: "Don't forget your morning skincare routine!",
+                    icon: "/favicon.svg"
+                });
+                localStorage.setItem("lastNotifiedDate", today);
+            }
+
+            // Send progress reminder at 9 PM (once per day)
+            if (localStorage.getItem("progressNotif") === "true" && hours === 21 && minutes === 0 && lastNotified !== today + "-pm") {
+                new Notification("📊 Log Your Progress", {
+                    body: "How is your skin today? Take a moment to log it!",
+                    icon: "/favicon.svg"
+                });
+                localStorage.setItem("lastNotifiedDate", today + "-pm");
+            }
+        }, 60000); // checks every minute
+    }
+}
