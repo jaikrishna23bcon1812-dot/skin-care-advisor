@@ -2,168 +2,213 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Skin Care Advisor - Personalized Routines Powered by AI</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10b981" />
+    <meta name="description" content="AI Skin Care Advisor - Personalized skincare routines and ingredient analysis" />
+    <title>AI Skin Care Advisor</title>
+
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="logo">SkinCare AI</div>
-        <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How it Works</a>
-            <a href="login.html" data-i18n="login">Login</a>
-            <a href="community.html">Community</a>
-            <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">हिं</button>
-            <a href="register.html" class="btn-primary">Get Started Free</a>
-            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
-        </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-modern">
-        <div class="hero-badge">
-            ✨ Powered by Advanced AI
-        </div>
-        <h1 class="hero-title">
-            Your Personal <span class="gradient-text">AI Skin Care</span> Advisor
-        </h1>
-        <p class="hero-subtitle">
-            Get a personalized skincare routine in seconds. Just describe your concern and let AI craft the perfect
-            regimen for Indian skin.
-        </p>
-        <div class="hero-cta">
-            <a href="register.html" class="btn-primary btn-large">
-                Get Your Free Routine →
-            </a>
-            <a href="login.html" class="btn-secondary btn-large">
-                I Have an Account
-            </a>
-        </div>
-        <div class="hero-stats-mini">
-            <div class="mini-stat">
-                <strong>10,000+</strong>
-                <span>Routines Generated</span>
+    <!-- Cold Start Server Awakening Modal -->
+    <div id="coldStartModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="spinner"></div>
+            <h3>Connecting to Cloud Server</h3>
+            <p id="coldStartStatus">Waking up the server from standby. This may take a few seconds...</p>
+            <div class="progress-track">
+                <div id="coldStartProgress" class="progress-fill"></div>
             </div>
-            <div class="mini-stat">
-                <strong>4.9★</strong>
-                <span>User Rating</span>
-            </div>
-            <div class="mini-stat">
-                <strong>50+</strong>
-                <span>Skin Concerns</span>
-            </div>
+            <div class="timer-display">Elapsed: <span id="coldStartTimer">0</span>s</div>
         </div>
-    </section>
+    </div>
 
-    <!-- Features Section -->
-    <section class="features-modern" id="features">
-        <div class="section-header">
-            <h2>Everything You Need</h2>
-            <p>Powered by AI, designed for real results</p>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <span class="brand-icon">✨</span>
+                <h1>SkinCare AI</h1>
+            </div>
+            <nav class="app-nav">
+                <a href="#analyzer">Advisor</a>
+                <a href="#routineTracker">Streak</a>
+                <a href="#ingredientChecker">Checker</a>
+                <a href="#community">Community</a>
+            </nav>
         </div>
-        <div class="features-modern-grid">
-            <div class="feature-modern-card">
-                <div class="feature-icon-wrap">🤖</div>
-                <h3>AI Skin Analysis</h3>
-                <p>Describe your skin concern and get a personalized routine instantly using advanced AI.</p>
-            </div>
-            <div class="feature-modern-card">
-                <div class="feature-icon-wrap">🧴</div>
-                <h3>Personalized Routines</h3>
-                <p>Morning and night routines tailored to your specific skin type and concerns.</p>
-            </div>
-            <div class="feature-modern-card">
-                <div class="feature-icon-wrap">🛍️</div>
-                <h3>Product Suggestions</h3>
-                <p>Curated product recommendations available in the Indian market.</p>
-            </div>
-            <div class="feature-modern-card">
-                <div class="feature-icon-wrap">📊</div>
-                <h3>Progress Tracking</h3>
-                <p>Log your skin journey daily with visual charts and see real improvement over time.</p>
-            </div>
-            <div class="feature-modern-card">
-                <div class="feature-icon-wrap">🌙</div>
-                <h3>Dark Mode</h3>
-                <p>Beautiful light and dark themes. Save your preference automatically.</p>
-            </div>
-            <div class="feature-modern-card">
-                <div class="feature-icon-wrap">🔒</div>
-                <h3>Secure & Private</h3>
-                <p>Your data is encrypted and protected with JWT authentication.</p>
-            </div>
-        </div>
-    </section>
+    </header>
 
-    <!-- How It Works -->
-    <section class="how-it-works" id="how-it-works">
-        <div class="section-header">
-            <h2>How It Works</h2>
-            <p>Get your personalized routine in 3 simple steps</p>
-        </div>
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-number">1</div>
-                <h3>Sign Up Free</h3>
-                <p>Create your account in 30 seconds. No credit card required.</p>
-            </div>
-            <div class="step-arrow">→</div>
-            <div class="step-card">
-                <div class="step-number">2</div>
-                <h3>Describe Concern</h3>
-                <p>Tell us about your skin — acne, dryness, pigmentation, or anything else.</p>
-            </div>
-            <div class="step-arrow">→</div>
-            <div class="step-card">
-                <div class="step-number">3</div>
-                <h3>Get Your Routine</h3>
-                <p>Receive your personalized morning and night routine instantly.</p>
-            </div>
-        </div>
-    </section>
+    <main class="main-container">
+        <!-- Section 1: AI Advisor Input -->
+        <section id="analyzer" class="card">
+            <h2>Personalized Skin Analysis</h2>
+            <p class="section-desc">Select your skin profile to generate an AI-tailored morning and night routine.</p>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-        <h2>Ready to Transform Your Skin?</h2>
-        <p>Join thousands of users who've found their perfect routine</p>
-        <a href="register.html" class="btn-primary btn-large">
-            Start Free - No Credit Card
-        </a>
-    </section>
+            <form id="skinForm" class="skin-form" onsubmit="handleAnalyze(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="skinType">Skin Type</label>
+                        <select id="skinType" required>
+                            <option value="oily">Oily</option>
+                            <option value="dry">Dry</option>
+                            <option value="combination" selected>Combination</option>
+                            <option value="sensitive">Sensitive</option>
+                            <option value="normal">Normal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="primaryConcern">Primary Concern</label>
+                        <select id="primaryConcern" required>
+                            <option value="acne">Acne & Breakouts</option>
+                            <option value="hyperpigmentation">Hyperpigmentation & Dark Spots</option>
+                            <option value="aging">Fine Lines & Aging</option>
+                            <option value="dryness">Barrier Repair & Dryness</option>
+                            <option value="redness">Redness & Rosacea</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" id="submitAnalysisBtn" class="primary-btn">Generate AI Routine</button>
+            </form>
+        </section>
 
-    <!-- Footer -->
-    <footer class="footer-modern">
-        <div class="footer-grid">
-            <div>
-                <div class="logo" style="margin-bottom: 15px;">SkinCare AI</div>
-                <p style="color: #666;">AI-powered skincare routines for healthier, happier skin.</p>
+        <!-- Section 2: AI Results & Routine Output -->
+        <section id="routineResults" class="card hidden">
+            <div class="results-header">
+                <div>
+                    <h2 id="routineTitle">Your Tailored Skincare Regimen</h2>
+                    <p id="routineSubtitle" class="section-desc">Scientifically curated for your barrier and goals.</p>
+                </div>
+                <button id="exportPdfBtn" class="action-btn" onclick="exportRoutinePDF()">📄 Export Routine
+                    (PDF)</button>
             </div>
-            <div>
-                <h4>Product</h4>
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="register.html">Sign Up</a>
+
+            <!-- Skeleton Placeholder -->
+            <div id="resultsSkeleton" class="skeleton-wrapper hidden">
+                <div class="skeleton-box skeleton-title"></div>
+                <div class="skeleton-box skeleton-text"></div>
+                <div class="skeleton-box skeleton-card"></div>
+                <div class="skeleton-box skeleton-card"></div>
             </div>
-            <div>
-                <h4>Account</h4>
-                <a href="login.html">Login</a>
-                <a href="register.html">Register</a>
+
+            <!-- Real Content Display -->
+            <div id="resultsContent">
+                <div class="routine-columns">
+                    <div class="routine-block">
+                        <h3>☀️ Morning (AM) Routine</h3>
+                        <ul id="amStepsList" class="steps-list"></ul>
+                    </div>
+                    <div class="routine-block">
+                        <h3>🌙 Evening (PM) Routine</h3>
+                        <ul id="pmStepsList" class="steps-list"></ul>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Skin Barrier & Hydration Forecast</h3>
+                    <canvas id="skinMetricsChart" width="400" height="200"></canvas>
+                </div>
             </div>
-            <div>
-                <h4>Built With</h4>
-                <p style="color: #666;">HTML · CSS · JavaScript<br>Node.js · MongoDB · AI</p>
+        </section>
+
+        <!-- Section 3: Before/After Comparison Slider -->
+        <section class="card">
+            <h2>Progress Comparison</h2>
+            <p class="section-desc">Track visual transformations over a 30-day consistent regimen.</p>
+
+            <div class="img-comparison-container" id="beforeAfterSlider">
+                <img src="https://images.unsplash.com/photo-1512290900672-1f41b41df26e?auto=format&fit=crop&w=800&q=80"
+                    alt="After Routine" />
+                <div class="img-comp-overlay">
+                    <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80"
+                        alt="Before Routine" />
+                </div>
+                <div class="img-comp-slider"></div>
             </div>
-        </div>
-        <div class="footer-bottom">
-            <p>© 2026 AI Skin Care Advisor. Built with 💗 by Jaikrishna Dadheech.</p>
-        </div>
+        </section>
+
+        <!-- Section 4: Daily Routine & Streak Tracker -->
+        <section class="card" id="routineTracker">
+            <div class="tracker-header">
+                <div>
+                    <h2>Daily Skincare Streak</h2>
+                    <p class="section-desc">Log your completed daily steps to build consistency.</p>
+                </div>
+                <div class="streak-badge">
+                    <span>🔥</span>
+                    <span id="streakCount">0</span> Days
+                </div>
+            </div>
+
+            <div class="tracker-checklist">
+                <label class="check-container">
+                    <input type="checkbox" id="checkAM" onchange="handleRoutineCheck('am')" />
+                    <span class="check-label">☀️ Morning (AM) Routine Completed</span>
+                </label>
+                <label class="check-container">
+                    <input type="checkbox" id="checkPM" onchange="handleRoutineCheck('pm')" />
+                    <span class="check-label">🌙 Evening (PM) Routine Completed</span>
+                </label>
+            </div>
+            <div id="trackerStatusMsg" class="tracker-msg"></div>
+        </section>
+
+        <!-- Section 5: Ingredient Comedogenic & Safety Checker -->
+        <section class="card" id="ingredientChecker">
+            <h2>🔍 Ingredient Safety & Pore-Clogging Scanner</h2>
+            <p class="section-desc">Paste an ingredient deck separated by commas to scan for comedogenic ratings and
+                irritants.</p>
+
+            <div class="checker-input-group">
+                <textarea id="ingredientInput" rows="3"
+                    placeholder="Aqua, Glycerin, Isopropyl Myristate, Niacinamide, Fragrance..."></textarea>
+                <button class="primary-btn scan-btn" onclick="analyzeIngredients()">Scan Ingredients</button>
+            </div>
+            <div id="checkerResults" class="checker-results hidden"></div>
+        </section>
+
+        <!-- Section 6: Community Feed -->
+        <section class="card" id="community">
+            <h2>Community Transformations</h2>
+            <p class="section-desc">Real journeys shared by users following AI regimens.</p>
+
+            <div class="feed-grid">
+                <article class="post-card">
+                    <h4>Barrier Repair — 4 Weeks</h4>
+                    <p>"Cutting harsh foaming washes and switching to ceramides restored my dry patches completely."</p>
+                    <div class="post-meta">
+                        <span>Posted by @alex_skin</span>
+                        <button class="like-btn"
+                            onclick="handleLikePost('post-101', this, this.querySelector('.like-count'))">
+                            ❤️ <span class="like-count">24</span>
+                        </button>
+                    </div>
+                </article>
+
+                <article class="post-card">
+                    <h4>BHA + Niacinamide Consistency</h4>
+                    <p>"My T-zone oiliness is fully stabilized. Never skip daily SPF!"</p>
+                    <div class="post-meta">
+                        <span>Posted by @claire_glow</span>
+                        <button class="like-btn"
+                            onclick="handleLikePost('post-102', this, this.querySelector('.like-count'))">
+                            ❤️ <span class="like-count">47</span>
+                        </button>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
     </footer>
 
-    <script src="translations.js"></script>
     <script src="script.js"></script>
 </body>
 
