@@ -1,0 +1,21 @@
+{
+    "name": "AI Skin Care Advisor",
+    "short_name": "SkinCareAI",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#10b981",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "https://images.unsplash.com/photo-1512290900672-1f41b41df26e?auto=format&fit=crop&w=192&q=80",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://images.unsplash.com/photo-1512290900672-1f41b41df26e?auto=format&fit=crop&w=512&q=80",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
