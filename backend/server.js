@@ -29,6 +29,11 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth", authLimiter);
 
+// Root route for friendly service discovery
+app.get("/", (req, res) => {
+    res.json({ message: "AI Skin Care Advisor API is running", health: "/health" });
+});
+
 // Health check endpoint for Render cold starts
 app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });

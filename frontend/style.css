@@ -3324,7 +3324,7 @@ body.dark-mode .lang-toggle:hover {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     z-index: 9999;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     padding: 20px;
@@ -3654,7 +3654,7 @@ body.dark-mode .post-concern {
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(4px);
     z-index: 1000;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     padding: 20px;
@@ -3829,29 +3829,30 @@ body.dark-mode .post-concern {
    COLD START MODAL & WAKE-UP HANDLER
    ========================================== */
 
-.cold-start-modal-overlay,
-.cold-start-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999;
-    padding: 20px;
-    opacity: 1;
-    transition: opacity 0.3s ease;
+.hidden {
+  display: none !important;
 }
 
-.cold-start-modal-overlay.hidden,
-.cold-start-overlay.hidden {
-    display: none !important;
+.cold-start-modal-overlay,
+.modal-overlay,
+.cold-start-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.cold-start-modal-overlay:not(.hidden),
+.modal-overlay:not(.hidden),
+.cold-start-overlay:not(.hidden),
+.cold-start-modal-overlay.active,
+.modal-overlay.active {
+  display: flex !important;
 }
 
 .cold-start-card {
