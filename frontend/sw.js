@@ -1,13 +1,12 @@
 // ============================================================
 //  AI Skin Care Advisor — Service Worker
-//  Strategy : Cache-First for static assets, Network-First
-//             for navigation, Network-Only for API calls.
+//  Strategy : Stale-While-Revalidate for local static assets,
+//             Bypass cache completely for /api/ and /health endpoints.
 // ============================================================
 
-const CACHE_NAME    = "skincare-ai-v1";
-const CACHE_VERSION = 1;
+const CACHE_NAME = "skincare-advisor-v4";
 
-// Core assets to pre-cache on install
+// Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [
     "/",
     "/index.html",
@@ -29,24 +28,23 @@ const PRECACHE_ASSETS = [
 ];
 
 // ── INSTALL ────────────────────────────────────────────────
-// Pre-cache all static shell assets so the app works offline
-// immediately after the first visit.
+// Pre-cache core application shell assets
 self.addEventListener("install", (event) => {
-    console.log("[SW] Install — caching core assets");
+    console.log("[SW] Install — caching core assets for", CACHE_NAME);
 
     event.waitUntil(
         caches
             .open(CACHE_NAME)
             .then((cache) => cache.addAll(PRECACHE_ASSETS))
-            .then(() => self.skipWaiting())   // activate immediately, don't wait for tabs to close
+            .then(() => self.skipWaiting()) // activate immediately
             .catch((err) => console.error("[SW] Pre-cache failed:", err))
     );
 });
 
 // ── ACTIVATE ───────────────────────────────────────────────
-// Delete any old cache versions that don't match CACHE_NAME.
+// Delete all caches that do not match "skincare-advisor-v4"
 self.addEventListener("activate", (event) => {
-    console.log("[SW] Activate — purging old caches");
+    console.log("[SW] Activate — deleting stale caches not matching", CACHE_NAME);
 
     event.waitUntil(
         caches
@@ -61,78 +59,76 @@ self.addEventListener("activate", (event) => {
                         })
                 )
             )
-            .then(() => self.clients.claim())  // take control of existing clients straight away
+            .then(() => self.clients.claim())
     );
 });
 
 // ── FETCH ──────────────────────────────────────────────────
 // Routing strategy:
-//   • Cross-origin requests (backend API, Google Fonts, CDN) → Network-Only
-//   • Same-origin navigation (HTML pages)                    → Network-First, cache fallback
-//   • Same-origin static assets (CSS, JS, images, SVG)      → Cache-First, network fallback
+//   • /api/ and /health endpoints             → Bypass cache completely (Network-only)
+//   • Non-GET & cross-origin requests         → Bypass cache
+//   • Local static assets (HTML, CSS, JS)     → Stale-While-Revalidate
 self.addEventListener("fetch", (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // 1. Skip cross-origin requests entirely (API, fonts, analytics, etc.)
-    if (url.origin !== self.location.origin) return;
+    // 1. Bypass cache completely for /api/ and /health endpoints
+    if (url.pathname.startsWith("/api") || url.pathname === "/health" || url.pathname.startsWith("/health")) {
+        return; // Direct network request without caching
+    }
 
-    // 2. Skip non-GET requests (POST/PUT/DELETE must hit the network)
+    // 2. Skip non-GET requests (POST/PUT/DELETE must go to network)
     if (request.method !== "GET") return;
 
-    // 3. Navigation requests (HTML) — Network-First so content stays fresh,
-    //    with a cached page as offline fallback.
-    if (request.mode === "navigate") {
-        event.respondWith(networkFirstThenCache(request));
-        return;
-    }
+    // 3. Skip cross-origin requests
+    if (url.origin !== self.location.origin) return;
 
-    // 4. Static assets — Cache-First for instant loads.
-    event.respondWith(cacheFirstThenNetwork(request));
+    // 4. Stale-While-Revalidate for local static assets (index.html, style.css, script.js, etc.)
+    event.respondWith(staleWhileRevalidate(request));
 });
 
-// Cache-First: return from cache if available, else fetch & store
-async function cacheFirstThenNetwork(request) {
-    const cached = await caches.match(request);
-    if (cached) return cached;
+// Stale-While-Revalidate strategy:
+// Return cached version immediately for speed, while simultaneously
+// fetching from network to update the cache for subsequent visits.
+async function staleWhileRevalidate(request) {
+    const cache = await caches.open(CACHE_NAME);
+    const cachedResponse = await cache.match(request);
 
-    try {
-        const networkResponse = await fetch(request);
-        // Only cache valid, same-origin responses
-        if (networkResponse && networkResponse.ok) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(request, networkResponse.clone());
-        }
-        return networkResponse;
-    } catch (err) {
-        console.warn("[SW] Cache-first network fallback failed:", request.url);
-        // Return a minimal offline placeholder for non-HTML assets
-        return new Response("", { status: 503, statusText: "Service Unavailable" });
+    const networkFetchPromise = fetch(request)
+        .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+                cache.put(request, networkResponse.clone());
+            }
+            return networkResponse;
+        })
+        .catch((err) => {
+            console.warn("[SW] Background network fetch failed for:", request.url, err);
+            return null;
+        });
+
+    // If cached response exists, return it immediately (stale)
+    if (cachedResponse) {
+        return cachedResponse;
     }
-}
 
-// Network-First: try network, fall back to cache, then offline page
-async function networkFirstThenCache(request) {
-    try {
-        const networkResponse = await fetch(request);
-        if (networkResponse && networkResponse.ok) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(request, networkResponse.clone());
-        }
+    // If not in cache, wait for network response
+    const networkResponse = await networkFetchPromise;
+    if (networkResponse) {
         return networkResponse;
-    } catch {
-        const cached = await caches.match(request);
-        if (cached) return cached;
-
-        // Last resort: serve the cached root index as a shell fallback
-        return caches.match("/index.html");
     }
+
+    // Offline fallback for navigation
+    if (request.mode === "navigate") {
+        const fallback = await cache.match("/index.html");
+        if (fallback) return fallback;
+    }
+
+    return new Response("Service Unavailable", { status: 503, statusText: "Service Unavailable" });
 }
 
 // ── PUSH ───────────────────────────────────────────────────
 // Receives Web Push payloads from the server and shows a
-// system notification. Payload format (JSON):
-//   { title, body, icon, badge, url }
+// system notification.
 self.addEventListener("push", (event) => {
     let data = {
         title : "AI Skin Care Advisor",
@@ -146,7 +142,6 @@ self.addEventListener("push", (event) => {
         try {
             data = { ...data, ...event.data.json() };
         } catch {
-            // If payload isn't valid JSON, use the raw text as the body
             data.body = event.data.text();
         }
     }
@@ -155,10 +150,10 @@ self.addEventListener("push", (event) => {
         body   : data.body,
         icon   : data.icon   || "/favicon.svg",
         badge  : data.badge  || "/favicon.svg",
-        tag    : "skincare-push",          // replaces any existing notification with same tag
+        tag    : "skincare-push",
         renotify: false,
         vibrate: [200, 100, 200],
-        data   : { url: data.url || "/" }, // stored for notificationclick
+        data   : { url: data.url || "/" },
         actions: [
             { action: "open",    title: "Open App" },
             { action: "dismiss", title: "Dismiss"  }
@@ -185,14 +180,12 @@ self.addEventListener("notificationclick", (event) => {
         clients
             .matchAll({ type: "window", includeUncontrolled: true })
             .then((clientList) => {
-                // Focus an existing tab if one is already open
                 for (const client of clientList) {
                     if (client.url.includes(self.location.origin) && "focus" in client) {
                         client.navigate(targetUrl);
                         return client.focus();
                     }
                 }
-                // Otherwise open a new window
                 if (clients.openWindow) {
                     return clients.openWindow(targetUrl);
                 }

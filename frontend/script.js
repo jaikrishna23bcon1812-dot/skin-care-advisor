@@ -20,26 +20,33 @@ function showToast(message, type = "info") {
 }
 
 // Dark Mode
-(function() {
+function toggleDarkMode() {
+    const isDark = document.body.classList.toggle("dark-mode");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    const icon = document.getElementById("themeIcon");
+    if (icon) {
+        icon.textContent = isDark ? "☀️" : "🌙";
+    }
+    return isDark;
+}
+window.toggleDarkMode = toggleDarkMode;
+
+(function () {
     const saved = localStorage.getItem("theme");
-    if (saved === "dark") document.body.classList.add("dark-mode");
+    if (saved === "dark") {
+        document.body.classList.add("dark-mode");
+    }
 })();
 
-window.addEventListener("DOMContentLoaded", function() {
-    const btn = document.getElementById("themeToggle");
+window.addEventListener("DOMContentLoaded", function () {
     const icon = document.getElementById("themeIcon");
-    if (!btn || !icon) return;
-    if (document.body.classList.contains("dark-mode")) icon.textContent = "☀️";
-    btn.addEventListener("click", function() {
-        document.body.classList.toggle("dark-mode");
-        if (document.body.classList.contains("dark-mode")) {
-            icon.textContent = "☀️";
-            localStorage.setItem("theme", "dark");
-        } else {
-            icon.textContent = "🌙";
-            localStorage.setItem("theme", "light");
-        }
-    });
+    if (icon && document.body.classList.contains("dark-mode")) {
+        icon.textContent = "☀️";
+    }
+    const btn = document.getElementById("themeToggle");
+    if (btn) {
+        btn.addEventListener("click", toggleDarkMode);
+    }
 });
 
 // Register
@@ -219,4 +226,155 @@ async function handleLikePost(postId, btn, countEl) {
     }
 }
 
-window.addEventListener("DOMContentLoaded", () => { initImageComparison(); });
+// ==================== INGREDIENT SAFETY SCANNER ====================
+const COMEDOGENIC_DATABASE = [
+    { name: "isopropyl myristate", rating: 5, type: "Highly Comedogenic" },
+    { name: "isopropyl palmitate", rating: 4, type: "Comedogenic" },
+    { name: "coconut oil", rating: 4, type: "Comedogenic" },
+    { name: "cocos nucifera", rating: 4, type: "Comedogenic" },
+    { name: "sodium lauryl sulfate", rating: 5, type: "Pore-Clogging & Irritant" },
+    { name: "sls", rating: 5, type: "Pore-Clogging & Irritant" },
+    { name: "acetylated lanolin", rating: 4, type: "Comedogenic" },
+    { name: "algae extract", rating: 5, type: "Highly Comedogenic" },
+    { name: "wheat germ oil", rating: 5, type: "Highly Comedogenic" },
+    { name: "myristyl myristate", rating: 5, type: "Highly Comedogenic" },
+    { name: "laureth-4", rating: 5, type: "Highly Comedogenic" },
+    { name: "denatured alcohol", rating: 0, type: "High Irritant / Drying" },
+    { name: "alcohol denat", rating: 0, type: "High Irritant / Drying" },
+    { name: "fragrance", rating: 0, type: "Common Allergen / Irritant" },
+    { name: "parfum", rating: 0, type: "Common Allergen / Irritant" },
+    { name: "cocoa butter", rating: 4, type: "Comedogenic" }
+];
+
+function analyzeIngredients() {
+    const inputEl = document.getElementById("ingredientInput");
+    const resultsEl = document.getElementById("checkerResults");
+    if (!inputEl || !resultsEl) return;
+
+    const rawText = inputEl.value.trim().toLowerCase();
+    if (!rawText) {
+        resultsEl.classList.remove("hidden");
+        resultsEl.innerHTML = `<div class="flagged-item"><span class="flagged-name">Please paste an ingredient deck to scan.</span></div>`;
+        return;
+    }
+
+    const ingredients = rawText.split(/[,;\n]+/).map((item) => item.trim()).filter(Boolean);
+    const flagged = [];
+
+    ingredients.forEach((userIng) => {
+        COMEDOGENIC_DATABASE.forEach((item) => {
+            if (userIng.includes(item.name)) {
+                flagged.push({ detected: userIng, reason: item.type, rating: item.rating });
+            }
+        });
+    });
+
+    resultsEl.classList.remove("hidden");
+
+    if (flagged.length === 0) {
+        resultsEl.innerHTML = `
+        <div class="clean-status">
+          ✅ <strong>No High Comedogenic or Common Irritants Detected!</strong>
+          <p style="margin-top: 0.25rem; font-size: 0.85rem; font-weight: normal;">
+            Scanned ${ingredients.length} ingredients. All safe for acne-prone skin.
+          </p>
+        </div>`;
+    } else {
+        let outputHTML = `<div style="margin-bottom: 0.5rem;"><strong style="color: #b91c1c;">⚠️ Flagged ${flagged.length} Potential Issue(s):</strong></div>`;
+        flagged.forEach((f) => {
+            outputHTML += `
+        <div class="flagged-item">
+          <div>
+            <div class="flagged-name">${f.detected}</div>
+            <div style="font-size: 0.8rem; color: #7f1d1d;">${f.reason}</div>
+          </div>
+          <span class="flagged-meta">${f.rating ? `Score: ${f.rating}/5` : "Caution"}</span>
+        </div>`;
+        });
+        resultsEl.innerHTML = outputHTML;
+    }
+}
+window.analyzeIngredients = analyzeIngredients;
+
+// ==================== DAILY ROUTINE TRACKER ====================
+const TRACKER_STORAGE_KEY = "skincare_daily_tracker";
+
+function getTodayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function getYesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function loadRoutineTracker() {
+    const data = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+    const today = getTodayKey();
+    const yesterday = getYesterdayKey();
+
+    const streakEl = document.getElementById("streakCount");
+    const checkAM = document.getElementById("checkAM");
+    const checkPM = document.getElementById("checkPM");
+    const statusMsg = document.getElementById("trackerStatusMsg");
+
+    if (!streakEl || !checkAM || !checkPM) return;
+
+    if (data.lastDate && data.lastDate !== today && data.lastDate !== yesterday) {
+        data.streak = 0;
+    }
+
+    if (data.currentDay !== today) {
+        data.currentDay = today;
+        data.am = false;
+        data.pm = false;
+        localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(data));
+    }
+
+    checkAM.checked = !!data.am;
+    checkPM.checked = !!data.pm;
+    streakEl.textContent = data.streak || 0;
+    if (statusMsg) {
+        statusMsg.textContent = data.am && data.pm ? "✨ Both routines completed today!" : "";
+    }
+}
+
+function handleRoutineCheck(type) {
+    const data = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+    const today = getTodayKey();
+    const yesterday = getYesterdayKey();
+
+    if (!data.streak) data.streak = 0;
+    if (!data.currentDay || data.currentDay !== today) {
+        data.currentDay = today;
+        data.am = false;
+        data.pm = false;
+    }
+
+    const checkAM = document.getElementById("checkAM");
+    const checkPM = document.getElementById("checkPM");
+    const streakEl = document.getElementById("streakCount");
+    const statusMsg = document.getElementById("trackerStatusMsg");
+
+    if (checkAM) data.am = checkAM.checked;
+    if (checkPM) data.pm = checkPM.checked;
+
+    if (data.am && data.pm && data.lastDate !== today) {
+        data.streak = data.lastDate === yesterday ? data.streak + 1 : 1;
+        data.lastDate = today;
+        if (statusMsg) statusMsg.textContent = "🎉 Streak maintained! Consistent habits yield lasting results.";
+    } else if (!data.am || !data.pm) {
+        if (statusMsg) statusMsg.textContent = "";
+    }
+
+    if (streakEl) streakEl.textContent = data.streak;
+    localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(data));
+}
+window.handleRoutineCheck = handleRoutineCheck;
+
+window.addEventListener("DOMContentLoaded", () => {
+    initImageComparison();
+    loadRoutineTracker();
+});
