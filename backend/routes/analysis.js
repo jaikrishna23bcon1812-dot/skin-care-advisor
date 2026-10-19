@@ -53,8 +53,8 @@ function sanitizeAIResponse(text) {
     return clean.trim();
 }
 
-// POST /api/analysis (Manual Questionnaire Route)
-router.post("/", async (req, res) => {
+// POST /api/analysis & POST /api/analysis/routine (Manual Questionnaire Route)
+router.post(["/", "/routine"], async (req, res) => {
     const { skinType = "combination", concern = "barrier repair" } = req.body;
 
     const apiKey = process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY;
