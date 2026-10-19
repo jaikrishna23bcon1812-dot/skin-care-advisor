@@ -4,7 +4,7 @@
 //             Bypass cache completely for /api/ and /health endpoints.
 // ============================================================
 
-const CACHE_NAME = "skincare-advisor-v9";
+const CACHE_NAME = "skincare-advisor-v10";
 
 // Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [

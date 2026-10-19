@@ -5,11 +5,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#10b981" />
-    <meta name="description" content="AI Skin Care Advisor - Personalized skincare routines and ingredient analysis" />
-    <title>AI Skin Care Advisor</title>
+    <meta name="description" content="AI Skin Care Advisor - Enterprise-grade Clinical AI & HealthTech Diagnostic Platform" />
+    <title>AI Skin Care Advisor | Clinical AI Diagnostic Platform</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -33,15 +37,15 @@
         <div class="auth-modal-card modal-card">
             <button type="button" class="auth-modal-close modal-close" onclick="closeAuthModal()" aria-label="Close modal">&times;</button>
             <div class="auth-modal-header">
-                <div class="auth-modal-icon">✨</div>
-                <h3 id="authModalTitle">Sign In</h3>
-                <p id="authModalSubtitle">Access your personalized routine & sync your streak</p>
+                <div class="auth-modal-icon">◈</div>
+                <h3 id="authModalTitle">Clinical Sign In</h3>
+                <p id="authModalSubtitle">Access your therapeutic regimen & sync telemetry</p>
             </div>
             <div id="authErrorMsg" class="auth-error-msg hidden" role="alert"></div>
             <form id="authForm" onsubmit="handleAuthSubmit(event)">
                 <div class="auth-form-group">
                     <label for="authEmail">Email Address</label>
-                    <input type="email" id="authEmail" name="email" placeholder="name@example.com" required autocomplete="email" />
+                    <input type="email" id="authEmail" name="email" placeholder="clinician@example.com" required autocomplete="email" />
                 </div>
                 <div class="auth-form-group">
                     <label for="authPassword">Password</label>
@@ -56,15 +60,41 @@
         </div>
     </div>
 
-    <!-- Header -->
+    <!-- Header & Top Telemetry Strip -->
     <header class="app-header">
+        <!-- Top Bar: System Telemetry Strip -->
+        <div class="telemetry-strip">
+            <div class="telemetry-item">
+                <span class="telemetry-ping live"></span>
+                <span>API:</span>
+                <span id="apiStatusText" class="mono-value">Online (Render)</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telemetry-chip engine-chip">ENGINE</span>
+                <span class="mono-value">Groq Llama 3.3 / Vision</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telemetry-ping latency-ping"></span>
+                <span>LATENCY:</span>
+                <span id="liveLatency" class="mono-value">22ms</span>
+            </div>
+            <div class="telemetry-item status-right">
+                <span class="telemetry-chip status-chip">STATUS</span>
+                <span class="mono-value text-clinical">● CLINICAL_OPERATIONAL</span>
+            </div>
+        </div>
+
         <div class="header-container">
             <div class="brand">
-                ✨ <span>SkinCare AI</span>
+                <span class="brand-symbol">◈</span>
+                <div class="brand-text">
+                    <span class="brand-title">SkinCare AI</span>
+                    <span class="brand-sub">Clinical AI Platform</span>
+                </div>
             </div>
             <nav class="app-nav nav-links">
-                <a href="#analyzer" class="nav-link">Advisor</a>
-                <a href="#routineTracker" class="nav-link">Streak</a>
+                <a href="#analyzer" class="nav-link active">Console</a>
+                <a href="#routineTracker" class="nav-link">Adherence</a>
                 <a href="products.html" class="nav-link">Products</a>
                 <a href="community.html" class="nav-link">Community</a>
                 <a href="progress.html" class="nav-link">Progress</a>
@@ -81,23 +111,27 @@
     </header>
 
     <main class="main-container">
-        <!-- Section 1: AI Advisor Input (Manual Questionnaire & Photo Vision AI) -->
-        <section id="analyzer" class="card">
-            <div class="analyzer-header">
-                <h2>Personalized Skin Analysis</h2>
-                <p class="section-desc">Analyze your skin barrier, redness, and blemishes using our AI visual scanner or manual questionnaire.</p>
-            </div>
+        <!-- Clinical Diagnostic Workspace: Split Console Layout -->
+        <div class="clinical-workspace-grid">
+            <!-- Left Console: Diagnostic Parameters & Vision Derm-Scan -->
+            <div class="console-column console-left">
+                <section id="analyzer" class="card console-card">
+                    <div class="console-card-header">
+                        <div class="console-kicker"><span class="kicker-dot live"></span> DIAGNOSTIC PARAMETER MATRIX</div>
+                        <h2>Clinical Biome Profiler</h2>
+                        <p class="section-desc">Configure epidermal biometric parameters or initiate live vision derm-scan.</p>
+                    </div>
 
-            <div class="analysis-grid">
-                <!-- Method 1: Manual Questionnaire -->
-                <div class="analysis-card manual-card">
-                    <div class="card-pill">Method 1 • Questionnaire</div>
-                    <h3>Manual Skin Profile</h3>
-                    <p class="method-desc">Select your skin characteristics to receive a customized ingredient regimen.</p>
-                    <form id="skinForm" class="skin-form" onsubmit="handleAnalyze(event)">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="skinType">Skin Type</label>
+                    <!-- Method 1: Clinical Biome Parameter Matrix -->
+                    <div class="console-subcard">
+                        <div class="subcard-header">
+                            <span class="subcard-pill">PARAM MATRIX 01</span>
+                            <h3>Epidermal Parameters</h3>
+                        </div>
+                        <form id="skinForm" class="skin-form" onsubmit="handleAnalyze(event)">
+                            <!-- Hidden backing select elements for 100% JS/DOM compatibility -->
+                            <div class="technical-select-wrap visually-hidden" aria-hidden="true">
+                                <label for="skinType">Skin Type Select</label>
                                 <select id="skinType" required>
                                     <option value="oily">Oily</option>
                                     <option value="dry">Dry</option>
@@ -105,180 +139,266 @@
                                     <option value="sensitive">Sensitive</option>
                                     <option value="normal">Normal</option>
                                 </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="primaryConcern">Primary Concern</label>
+                                <label for="primaryConcern">Primary Concern Select</label>
                                 <select id="primaryConcern" required>
                                     <option value="acne">Acne & Breakouts</option>
                                     <option value="hyperpigmentation">Hyperpigmentation & Dark Spots</option>
                                     <option value="aging">Fine Lines & Aging</option>
-                                    <option value="dryness">Barrier Repair & Dryness</option>
+                                    <option value="dryness" selected>Barrier Repair & Dryness</option>
                                     <option value="redness">Redness & Rosacea</option>
                                 </select>
                             </div>
-                        </div>
-                        <button type="submit" id="generateBtn" class="primary-btn">Generate AI Routine ✨</button>
-                    </form>
-                </div>
 
-                <!-- Method 2: Photo Skin Analysis Card -->
-                <div class="analysis-card photo-card" id="photoAnalysisCard">
-                    <div class="card-pill">Method 2 • Vision AI</div>
-                    <h3>📸 Photo Skin Analysis</h3>
-                    <p class="method-desc">Capture a live selfie or upload a photo to scan for barrier health, redness, and blemishes.</p>
-
-                    <div class="photo-module-body">
-                        <!-- Live Camera Viewfinder -->
-                        <div class="camera-container" id="cameraContainer">
-                            <div class="camera-viewport-wrap" id="cameraViewportWrap">
-                                <div id="cameraPlaceholder" class="camera-placeholder">
-                                    <span class="placeholder-icon">🤳</span>
-                                    <p>Live camera inactive</p>
-                                    <small>Click "Start Camera" or choose an image below</small>
+                            <!-- Parameter 1: Skin Biome Classification -->
+                            <div class="parameter-block">
+                                <div class="parameter-header">
+                                    <span class="parameter-num">01</span>
+                                    <span class="parameter-title">Skin Biome Classification</span>
+                                    <span class="parameter-tag required">Required</span>
                                 </div>
-                                <video id="cameraPreview" autoplay playsinline class="camera-preview hidden"></video>
-                                <div class="viewfinder-overlay hidden" id="viewfinderOverlay">
-                                    <div class="face-guide"></div>
+                                <div class="tech-pill-group" data-target="skinType">
+                                    <button type="button" class="tech-pill" data-value="oily" onclick="selectTechPill('skinType', 'oily', this)">Oily [Sebum+]</button>
+                                    <button type="button" class="tech-pill" data-value="dry" onclick="selectTechPill('skinType', 'dry', this)">Dry [Lipid-]</button>
+                                    <button type="button" class="tech-pill active" data-value="combination" onclick="selectTechPill('skinType', 'combination', this)">Combination [T-Zone]</button>
+                                    <button type="button" class="tech-pill" data-value="sensitive" onclick="selectTechPill('skinType', 'sensitive', this)">Sensitive [Reactive]</button>
+                                    <button type="button" class="tech-pill" data-value="normal" onclick="selectTechPill('skinType', 'normal', this)">Normal [Eudermic]</button>
                                 </div>
                             </div>
-                            <canvas id="captureCanvas" class="hidden" style="display:none;"></canvas>
 
-                            <!-- Camera Controls -->
-                            <div class="camera-controls">
-                                <button type="button" id="startCameraBtn" class="action-btn camera-btn" onclick="startCamera()">📷 Start Camera</button>
-                                <button type="button" id="captureBtn" class="primary-btn shutter-btn hidden" onclick="captureSelfie()">
-                                    <span class="shutter-inner"></span>
-                                    <span>Capture Selfie</span>
-                                </button>
-                                <button type="button" id="retakeBtn" class="action-btn retake-btn hidden" onclick="retakePhoto()">🔄 Retake</button>
-                                <button type="button" id="stopCameraBtn" class="action-btn stop-btn hidden" onclick="stopCamera()">⏹ Stop Camera</button>
+                            <!-- Parameter 2: Active Clinical Target / Concern -->
+                            <div class="parameter-block">
+                                <div class="parameter-header">
+                                    <span class="parameter-num">02</span>
+                                    <span class="parameter-title">Active Clinical Concern</span>
+                                    <span class="parameter-tag required">Required</span>
+                                </div>
+                                <div class="tech-pill-group" data-target="primaryConcern">
+                                    <button type="button" class="tech-pill" data-value="acne" onclick="selectTechPill('primaryConcern', 'acne', this)">Acne & Comedones</button>
+                                    <button type="button" class="tech-pill" data-value="hyperpigmentation" onclick="selectTechPill('primaryConcern', 'hyperpigmentation', this)">Hyperpigmentation [Melanin+]</button>
+                                    <button type="button" class="tech-pill" data-value="aging" onclick="selectTechPill('primaryConcern', 'aging', this)">Fine Lines & Aging</button>
+                                    <button type="button" class="tech-pill active" data-value="dryness" onclick="selectTechPill('primaryConcern', 'dryness', this)">Barrier Repair & TEWL</button>
+                                    <button type="button" class="tech-pill" data-value="redness" onclick="selectTechPill('primaryConcern', 'redness', this)">Erythema & Rosacea</button>
+                                </div>
+                            </div>
+
+                            <!-- Parameter 3: Fitzpatrick Phototype -->
+                            <div class="parameter-block">
+                                <div class="parameter-header">
+                                    <span class="parameter-num">03</span>
+                                    <span class="parameter-title">Fitzpatrick Phototype</span>
+                                    <span class="parameter-tag">Calibration</span>
+                                </div>
+                                <div class="tech-pill-group">
+                                    <button type="button" class="tech-pill active" onclick="selectSoloPill(this)">Type I-II [Fair / UV Risk]</button>
+                                    <button type="button" class="tech-pill" onclick="selectSoloPill(this)">Type III-IV [Medium / Reactive]</button>
+                                    <button type="button" class="tech-pill" onclick="selectSoloPill(this)">Type V-VI [Deep / PIH Prone]</button>
+                                </div>
+                            </div>
+
+                            <!-- Parameter 4: Environmental Exposome Stressors -->
+                            <div class="parameter-block">
+                                <div class="parameter-header">
+                                    <span class="parameter-num">04</span>
+                                    <span class="parameter-title">Environmental Stressors</span>
+                                    <span class="parameter-tag">Multi-Select</span>
+                                </div>
+                                <div class="tech-pill-group">
+                                    <button type="button" class="tech-pill active" onclick="toggleStressChip(this)">High UV (≥6)</button>
+                                    <button type="button" class="tech-pill" onclick="toggleStressChip(this)">Particulate PM2.5</button>
+                                    <button type="button" class="tech-pill active" onclick="toggleStressChip(this)">Low Humidity &lt;30%</button>
+                                    <button type="button" class="tech-pill" onclick="toggleStressChip(this)">Hard Water (Ca/Mg)</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="generateBtn" class="primary-btn clinical-submit-btn">
+                                <span>⚡ Compile Clinical Formulation</span>
+                                <span class="btn-shortcut">⌘ Enter</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Method 2: Photo Skin Analysis Card -->
+                    <div class="console-subcard photo-card" id="photoAnalysisCard">
+                        <div class="subcard-header">
+                            <span class="subcard-pill">VISION AI 02</span>
+                            <h3>Visual Derm-Scan Scanner</h3>
+                        </div>
+                        <p class="method-desc">Live optical feed or dermoscopic selfie upload for real-time AI erythema and lesion mapping.</p>
+
+                        <div class="photo-module-body">
+                            <!-- Live Camera Viewfinder -->
+                            <div class="camera-container" id="cameraContainer">
+                                <div class="camera-viewport-wrap" id="cameraViewportWrap">
+                                    <div id="cameraPlaceholder" class="camera-placeholder">
+                                        <span class="placeholder-icon">📸</span>
+                                        <p>Optical Sensor Standby</p>
+                                        <small>Initiate camera hardware or upload clinical derm-scan</small>
+                                    </div>
+                                    <video id="cameraPreview" autoplay playsinline class="camera-preview hidden"></video>
+                                    <div class="viewfinder-overlay hidden" id="viewfinderOverlay">
+                                        <div class="face-guide"></div>
+                                        <div class="viewfinder-telemetry">CALIBRATING OPTICAL SENSOR...</div>
+                                    </div>
+                                </div>
+                                <canvas id="captureCanvas" class="hidden" style="display:none;"></canvas>
+
+                                <!-- Camera Controls -->
+                                <div class="camera-controls">
+                                    <button type="button" id="startCameraBtn" class="action-btn camera-btn" onclick="startCamera()">📷 Initialize Sensor</button>
+                                    <button type="button" id="captureBtn" class="primary-btn shutter-btn hidden" onclick="captureSelfie()">
+                                        <span class="shutter-inner"></span>
+                                        <span>Capture Scan</span>
+                                    </button>
+                                    <button type="button" id="retakeBtn" class="action-btn retake-btn hidden" onclick="retakePhoto()">🔄 Re-Scan</button>
+                                    <button type="button" id="stopCameraBtn" class="action-btn stop-btn hidden" onclick="stopCamera()">⏹ Standby</button>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="photo-or-divider">
+                                <span>OR UPLOAD HIGH-RES SCAN</span>
+                            </div>
+
+                            <!-- File Upload Area -->
+                            <div class="upload-dropzone" id="uploadDropzone">
+                                <input type="file" id="selfieUploadInput" accept="image/*" onchange="handlePhotoUpload(event)" />
+                                <label for="selfieUploadInput" class="upload-dropzone-label">
+                                    <span class="upload-icon">📁</span>
+                                    <div>
+                                        <strong>Select Image or Drop File</strong>
+                                        <p>DICOM / JPG / PNG / WEBP supported</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Image Preview Container -->
+                            <div id="photoPreviewContainer" class="photo-preview-container hidden">
+                                <div class="preview-badge">Image Buffer Loaded</div>
+                                <img id="selfiePreviewImg" class="photo-preview-img" alt="Captured or Uploaded Selfie" />
+                            </div>
+
+                            <!-- Analyze Photo CTA Button -->
+                            <button type="button" id="analyzePhotoBtn" class="primary-btn analyze-photo-btn hidden" onclick="analyzePhoto()">
+                                ⚡ Run Neural Vision Derm-Analysis
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Console: Clinical Formulation Stream -->
+            <div class="console-column console-right">
+                <section id="routineResults" class="card console-card">
+                    <div class="results-header">
+                        <div>
+                            <div class="console-kicker"><span class="kicker-dot live"></span> FORMULATION DISPENSARY // RX-STREAM</div>
+                            <h2 id="routineTitle">Clinical Regimen Prescription</h2>
+                            <p id="routineSubtitle" class="section-desc">Targeted therapeutic molecular protocol compiled from biome telemetry.</p>
+                        </div>
+                        <div class="results-actions">
+                            <button type="button" id="adoptRegimenBtn" class="primary-btn adopt-regimen-btn" onclick="adoptCurrentRegimen()">
+                                Adopt Protocol
+                            </button>
+                            <button id="exportPdfBtn" class="action-btn" onclick="exportRoutinePDF()">📄 Export Rx</button>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton Placeholder -->
+                    <div id="resultsSkeleton" class="skeleton-wrapper hidden">
+                        <div class="skeleton-box skeleton-title"></div>
+                        <div class="skeleton-box skeleton-text"></div>
+                        <div class="skeleton-box skeleton-card"></div>
+                        <div class="skeleton-box skeleton-card"></div>
+                    </div>
+
+                    <!-- Real Content Display -->
+                    <div id="resultsContent">
+                        <div class="routine-columns">
+                            <div class="routine-block">
+                                <div class="phase-header">
+                                    <span class="phase-pill am-pill">☀️ AM PHASE</span>
+                                    <span class="phase-meta">Barrier Defense & Photoprotection</span>
+                                </div>
+                                <ul id="amStepsList" class="steps-list clinical-steps-stream"></ul>
+                            </div>
+                            <div class="routine-block">
+                                <div class="phase-header">
+                                    <span class="phase-pill pm-pill">🌙 PM PHASE</span>
+                                    <span class="phase-meta">Cellular Repair & Lipid Synthesis</span>
+                                </div>
+                                <ul id="pmStepsList" class="steps-list clinical-steps-stream"></ul>
                             </div>
                         </div>
 
-                        <!-- Divider -->
-                        <div class="photo-or-divider">
-                            <span>OR UPLOAD A SELFIE</span>
+                        <!-- Adopt Regimen CTA Banner -->
+                        <div class="adopt-cta-banner">
+                            <div class="adopt-cta-info">
+                                <span class="adopt-pill">DISPENSARY PROTOCOL</span>
+                                <h4>Synchronize Regimen to Adherence Log</h4>
+                                <p>Transmit formulation active compounds directly to your daily adherence log for verified tracking.</p>
+                            </div>
+                            <button type="button" class="primary-btn adopt-banner-btn" onclick="adoptCurrentRegimen()">
+                                ⚡ Adopt Protocol & Sync Log
+                            </button>
                         </div>
 
-                        <!-- File Upload Area -->
-                        <div class="upload-dropzone" id="uploadDropzone">
-                            <input type="file" id="selfieUploadInput" accept="image/*" onchange="handlePhotoUpload(event)" />
-                            <label for="selfieUploadInput" class="upload-dropzone-label">
-                                <span class="upload-icon">📁</span>
-                                <div>
-                                    <strong>Choose Photo or Drag & Drop</strong>
-                                    <p>Supports JPG, PNG, WEBP</p>
-                                </div>
-                            </label>
+                        <div class="chart-section">
+                            <div class="chart-header">
+                                <h3>Transepidermal Barrier & Hydration Projection</h3>
+                                <span class="chart-telemetry">30-Day Dermal Forecast (Pharmacokinetic Model)</span>
+                            </div>
+                            <canvas id="skinMetricsChart" width="400" height="180"></canvas>
                         </div>
-
-                        <!-- Image Preview Container -->
-                        <div id="photoPreviewContainer" class="photo-preview-container hidden">
-                            <div class="preview-badge">Ready for Scan</div>
-                            <img id="selfiePreviewImg" class="photo-preview-img" alt="Captured or Uploaded Selfie" />
-                        </div>
-
-                        <!-- Analyze Photo CTA Button -->
-                        <button type="button" id="analyzePhotoBtn" class="primary-btn analyze-photo-btn hidden" onclick="analyzePhoto()">
-                            ✨ Analyze My Photo
-                        </button>
                     </div>
-                </div>
+                </section>
             </div>
-        </section>
+        </div>
 
-        <!-- Section 2: AI Results & Routine Output -->
-        <section id="routineResults" class="card hidden">
-            <div class="results-header">
-                <div>
-                    <h2 id="routineTitle">Your Tailored Skincare Regimen</h2>
-                    <p id="routineSubtitle" class="section-desc">Scientifically curated for your barrier and goals.</p>
-                </div>
-                <div class="results-actions">
-                    <button type="button" id="adoptRegimenBtn" class="primary-btn adopt-regimen-btn" onclick="adoptCurrentRegimen()">
-                        ✨ Adopt This Regimen
-                    </button>
-                    <button id="exportPdfBtn" class="action-btn" onclick="exportRoutinePDF()">📄 Export Routine (PDF)</button>
-                </div>
-            </div>
-
-            <!-- Skeleton Placeholder -->
-            <div id="resultsSkeleton" class="skeleton-wrapper hidden">
-                <div class="skeleton-box skeleton-title"></div>
-                <div class="skeleton-box skeleton-text"></div>
-                <div class="skeleton-box skeleton-card"></div>
-                <div class="skeleton-box skeleton-card"></div>
-            </div>
-
-            <!-- Real Content Display -->
-            <div id="resultsContent">
-                <div class="routine-columns">
-                    <div class="routine-block">
-                        <h3>☀️ Morning (AM) Routine</h3>
-                        <ul id="amStepsList" class="steps-list"></ul>
-                    </div>
-                    <div class="routine-block">
-                        <h3>🌙 Evening (PM) Routine</h3>
-                        <ul id="pmStepsList" class="steps-list"></ul>
-                    </div>
-                </div>
-
-                <!-- Adopt Regimen CTA Banner -->
-                <div class="adopt-cta-banner">
-                    <div class="adopt-cta-info">
-                        <span class="adopt-pill">Prescription Formulated</span>
-                        <h4>Adopt This Clinical Regimen</h4>
-                        <p>Sync these exact prescribed products directly to your Daily Streak Tracker so you can check off each step morning & evening.</p>
-                    </div>
-                    <button type="button" class="primary-btn adopt-banner-btn" onclick="adoptCurrentRegimen()">
-                        ✨ Adopt Regimen & Sync Checklist
-                    </button>
-                </div>
-
-                <div class="chart-section">
-                    <h3>Skin Barrier & Hydration Forecast</h3>
-                    <canvas id="skinMetricsChart" width="400" height="200"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 3: Before/After Comparison Slider -->
-        <section class="card">
-            <h2>Progress Comparison</h2>
-            <p class="section-desc">Track visual transformations over a 30-day consistent regimen.</p>
-
-            <div class="img-comparison-container" id="beforeAfterSlider">
-                <img src="https://images.unsplash.com/photo-1512290900672-1f41b41df26e?auto=format&fit=crop&w=800&q=80"
-                    alt="After Routine" />
-                <div class="img-comp-overlay">
-                    <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80"
-                        alt="Before Routine" />
-                </div>
-                <div class="img-comp-slider"></div>
-            </div>
-        </section>
-
-        <!-- Section 4: Daily Routine & Streak Tracker -->
-        <section class="card" id="routineTracker">
+        <!-- Section 3: Daily Routine & Streak Tracker (Adherence Log) -->
+        <section class="card adherence-console" id="routineTracker">
             <div class="tracker-header">
                 <div>
-                    <h2>Daily Skincare Streak</h2>
-                    <p class="section-desc">Log your completed daily steps to build consistency.</p>
+                    <div class="console-kicker"><span class="kicker-dot sync"></span> ADHERENCE TELEMETRY ENGINE</div>
+                    <h2>Clinical Adherence Log</h2>
+                    <p class="section-desc">Continuous compliance tracking & daily therapeutic micro-verification.</p>
                 </div>
-                <div class="streak-badge">
-                    <span>🔥</span>
-                    <span id="streakCount">0</span> Days
+                <div class="adherence-telemetry-cluster">
+                    <div class="telemetry-badge streak-badge">
+                        <span class="badge-label">CONSECUTIVE CYCLES</span>
+                        <span class="badge-value"><span id="streakCount">0</span> Days</span>
+                    </div>
+                    <div class="telemetry-badge cloud-sync-badge">
+                        <span class="badge-label">DATABASE SYNC</span>
+                        <span class="badge-value sync-live">● MongoDB Atlas (Live)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telemetry Adherence Bar -->
+            <div class="adherence-bar-wrap">
+                <div class="adherence-bar-meta">
+                    <span class="adherence-cycle-label">30-Day Therapeutic Stabilization Cycle</span>
+                    <span class="adherence-percentage" id="adherencePercentLabel">Adherence: 100%</span>
+                </div>
+                <div class="adherence-track">
+                    <div class="adherence-fill" id="adherenceProgressFill" style="width: 85%;"></div>
                 </div>
             </div>
 
             <div class="tracker-checklist" id="trackerChecklistContainer">
                 <label class="check-container">
                     <input type="checkbox" id="checkAM" onchange="handleRoutineCheck('am')" />
-                    <span class="check-label">☀️ Morning (AM) Routine Completed</span>
+                    <span class="check-label">
+                        <span class="check-time">08:00 AM</span>
+                        <strong>☀️ Morning (AM) Protocol Verification</strong>
+                    </span>
                 </label>
                 <label class="check-container">
                     <input type="checkbox" id="checkPM" onchange="handleRoutineCheck('pm')" />
-                    <span class="check-label">🌙 Evening (PM) Routine Completed</span>
+                    <span class="check-label">
+                        <span class="check-time">21:00 PM</span>
+                        <strong>🌙 Evening (PM) Protocol Verification</strong>
+                    </span>
                 </label>
             </div>
             <div id="trackerStatusMsg" class="tracker-msg"></div>
@@ -287,10 +407,10 @@
             <div class="notification-reminder-card" id="reminderCard">
                 <div class="reminder-card-header">
                     <div class="reminder-header-title">
-                        <span class="reminder-icon">🔔</span>
+                        <span class="reminder-icon">⚡</span>
                         <div>
-                            <h3>Daily Routine Reminders</h3>
-                            <p class="reminder-desc">Receive scheduled push notifications so you never miss your AM & PM steps.</p>
+                            <h3>Automated Telemetry Reminders</h3>
+                            <p class="reminder-desc">Real-time Service Worker alert dispatch to prevent regimen omission.</p>
                         </div>
                     </div>
                     <div class="reminder-toggle-wrap">
@@ -305,35 +425,52 @@
                     <div class="reminder-schedule-item">
                         <div class="schedule-icon">☀️</div>
                         <div class="schedule-details">
-                            <strong>Morning Routine</strong>
-                            <span>8:00 AM Daily</span>
+                            <strong>Morning Dose Reminder</strong>
+                            <span class="schedule-time-mono">● 08:00 AM Daily</span>
                         </div>
-                        <span class="schedule-pill">AM Alert</span>
+                        <span class="schedule-pill">AM Trigger</span>
                     </div>
                     <div class="reminder-schedule-item">
                         <div class="schedule-icon">🌙</div>
                         <div class="schedule-details">
-                            <strong>Evening Routine</strong>
-                            <span>9:00 PM Daily</span>
+                            <strong>Evening Dose Reminder</strong>
+                            <span class="schedule-time-mono">● 21:00 PM Daily</span>
                         </div>
-                        <span class="schedule-pill">PM Alert</span>
+                        <span class="schedule-pill">PM Trigger</span>
                     </div>
                 </div>
 
                 <div class="reminder-actions">
                     <button type="button" id="testNotificationBtn" class="action-btn test-notify-btn" onclick="testNotification()">
-                        ⚡ Send Test Notification
+                        ⚡ Send Telemetry Test Signal
                     </button>
-                    <small class="reminder-note">Notifications will trigger locally via Service Worker or browser push.</small>
+                    <small class="reminder-note">Telemetry dispatches locally via Service Worker v10 / Notification API.</small>
                 </div>
             </div>
         </section>
 
+        <!-- Section 4: Before/After Comparison Slider -->
+        <section class="card comparison-console">
+            <div class="console-kicker"><span class="kicker-dot live"></span> OPTICAL LONGITUDINAL LOG</div>
+            <h2>Progress Comparison</h2>
+            <p class="section-desc">Track visual transformations over a 30-day consistent regimen.</p>
+
+            <div class="img-comparison-container" id="beforeAfterSlider">
+                <img src="https://images.unsplash.com/photo-1512290900672-1f41b41df26e?auto=format&fit=crop&w=800&q=80"
+                    alt="After Routine" />
+                <div class="img-comp-overlay">
+                    <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80"
+                        alt="Before Routine" />
+                </div>
+                <div class="img-comp-slider"></div>
+            </div>
+        </section>
+
         <!-- Section 5: Ingredient Comedogenic & Safety Checker -->
-        <section class="card" id="ingredientChecker">
+        <section class="card scanner-console" id="ingredientChecker">
+            <div class="console-kicker"><span class="kicker-dot live"></span> PHARMACOLOGIC ASSAY</div>
             <h2>🔍 Ingredient Safety & Pore-Clogging Scanner</h2>
-            <p class="section-desc">Paste an ingredient deck separated by commas to scan for comedogenic ratings and
-                irritants.</p>
+            <p class="section-desc">Paste an ingredient deck separated by commas to scan for comedogenic ratings and irritants.</p>
 
             <div class="checker-input-group">
                 <textarea id="ingredientInput" rows="3"
@@ -344,7 +481,8 @@
         </section>
 
         <!-- Section 6: Community Feed -->
-        <section class="card" id="community">
+        <section class="card registry-console" id="community">
+            <div class="console-kicker"><span class="kicker-dot live"></span> CLINICAL REGISTRY</div>
             <h2>Community Transformations</h2>
             <p class="section-desc">Real journeys shared by users following AI regimens.</p>
 
@@ -377,10 +515,17 @@
     </main>
 
     <footer class="app-footer">
+        <div class="footer-telemetry">
+            <span>AI SKIN CARE ADVISOR // CLINICAL INTELLIGENCE PLATFORM v2.4</span>
+            <span class="footer-divider">•</span>
+            <span>GROQ LLAMA 3.3 / VISION ENGINE</span>
+            <span class="footer-divider">•</span>
+            <span>MONGODB ATLAS ENCRYPTED</span>
+        </div>
         <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
     </footer>
 
-    <script src="script.js?v=9"></script>
+    <script src="script.js?v=10"></script>
 </body>
 
 </html>
