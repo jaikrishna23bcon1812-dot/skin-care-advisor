@@ -9,7 +9,7 @@
     <title>AI Skin Care Advisor</title>
 
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -28,6 +28,34 @@
         </div>
     </div>
 
+    <!-- Hidden Auth Modal (Sign In & Register) -->
+    <div id="authModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <div class="auth-modal-card modal-card">
+            <button type="button" class="auth-modal-close modal-close" onclick="closeAuthModal()" aria-label="Close modal">&times;</button>
+            <div class="auth-modal-header">
+                <div class="auth-modal-icon">✨</div>
+                <h3 id="authModalTitle">Sign In</h3>
+                <p id="authModalSubtitle">Access your personalized routine & sync your streak</p>
+            </div>
+            <div id="authErrorMsg" class="auth-error-msg hidden" role="alert"></div>
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-form-group">
+                    <label for="authEmail">Email Address</label>
+                    <input type="email" id="authEmail" name="email" placeholder="name@example.com" required autocomplete="email" />
+                </div>
+                <div class="auth-form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" name="password" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
+                </div>
+                <button type="submit" id="authSubmitBtn" class="primary-btn auth-submit-btn">Sign In</button>
+            </form>
+            <div class="auth-modal-footer">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="javascript:void(0)" id="authToggleLink" class="auth-toggle-link" onclick="toggleAuthMode(event)">Register</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="app-header">
         <div class="header-container">
@@ -40,6 +68,7 @@
                 <a href="#routineTracker">Streak</a>
                 <a href="#ingredientChecker">Checker</a>
                 <a href="#community">Community</a>
+                <button type="button" id="authModalBtn" class="auth-header-btn" onclick="openAuthModal()">Sign In</button>
             </nav>
         </div>
     </header>
@@ -209,7 +238,7 @@
         <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=5"></script>
 </body>
 
 </html>

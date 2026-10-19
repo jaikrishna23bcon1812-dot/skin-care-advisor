@@ -1,4 +1,8 @@
-const API_URL = "https://skin-care-api.onrender.com/api";
+const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:";
+const API_BASE_URL = isLocal
+    ? (window.location.port === "5000" ? "" : "http://localhost:5000")
+    : "https://skin-care-api.onrender.com";
+const API_URL = `${API_BASE_URL}/api`;
 
 // Toast Notifications
 function showToast(message, type = "info") {
@@ -66,6 +70,10 @@ if (registerForm) {
             });
             const data = await response.json();
             if (!response.ok) return showToast(data.error || "Registration failed", "error");
+            localStorage.setItem("skin_token", data.token);
+            localStorage.setItem("skin_email", data.email || email);
+            localStorage.setItem("token", data.token);
+            if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
             showToast("Account created! Please login.", "success");
             setTimeout(() => window.location.href = "login.html", 1000);
         } catch (error) {
@@ -90,9 +98,11 @@ if (loginForm) {
             });
             const data = await response.json();
             if (!response.ok) return showToast(data.error || "Login failed", "error");
+            localStorage.setItem("skin_token", data.token);
+            localStorage.setItem("skin_email", data.email || email);
             localStorage.setItem("token", data.token);
-            localStorage.setItem("user", JSON.stringify(data.user));
-            showToast("Welcome " + data.user.name + "!", "success");
+            if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+            showToast("Welcome " + (data.user?.name || data.email || "back") + "!", "success");
             setTimeout(() => window.location.href = "dashboard.html", 1000);
         } catch (error) {
             showToast("Cannot connect to server", "error");
@@ -104,14 +114,14 @@ if (loginForm) {
 document.addEventListener("click", function (e) {
     if (e.target && e.target.id === "logoutBtn") {
         e.preventDefault();
+        localStorage.removeItem("skin_token");
+        localStorage.removeItem("skin_email");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         showToast("Logged out", "info");
         setTimeout(() => window.location.href = "index.html", 800);
     }
 });
-
-const API_BASE_URL = "https://skin-care-api.onrender.com";
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 }
@@ -341,6 +351,238 @@ function loadRoutineTracker() {
     }
 }
 
+// ==================== USER AUTHENTICATION & MODAL ====================
+let currentAuthMode = "login"; // "login" or "register"
+
+function updateAuthUI() {
+    const token = localStorage.getItem("skin_token") || localStorage.getItem("token");
+    const email = localStorage.getItem("skin_email");
+    const authBtn = document.getElementById("authModalBtn");
+
+    if (!authBtn) return;
+
+    if (token) {
+        authBtn.textContent = "Sign Out";
+        authBtn.classList.add("authenticated");
+        authBtn.setAttribute("title", email ? `Signed in as ${email}. Click to sign out.` : "Click to sign out");
+    } else {
+        authBtn.textContent = "Sign In";
+        authBtn.classList.remove("authenticated");
+        authBtn.removeAttribute("title");
+    }
+}
+window.updateAuthUI = updateAuthUI;
+
+function openAuthModal() {
+    const token = localStorage.getItem("skin_token") || localStorage.getItem("token");
+    if (token) {
+        handleSignOut();
+        return;
+    }
+
+    const modal = document.getElementById("authModal");
+    if (!modal) return;
+
+    const errorMsg = document.getElementById("authErrorMsg");
+    if (errorMsg) {
+        errorMsg.textContent = "";
+        errorMsg.classList.add("hidden");
+    }
+
+    modal.classList.remove("hidden");
+    modal.classList.add("active");
+
+    const emailInput = document.getElementById("authEmail");
+    if (emailInput) {
+        setTimeout(() => emailInput.focus(), 100);
+    }
+}
+window.openAuthModal = openAuthModal;
+
+function closeAuthModal() {
+    const modal = document.getElementById("authModal");
+    if (!modal) return;
+
+    modal.classList.add("hidden");
+    modal.classList.remove("active");
+
+    const errorMsg = document.getElementById("authErrorMsg");
+    if (errorMsg) {
+        errorMsg.textContent = "";
+        errorMsg.classList.add("hidden");
+    }
+}
+window.closeAuthModal = closeAuthModal;
+
+function toggleAuthMode(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    currentAuthMode = currentAuthMode === "login" ? "register" : "login";
+
+    const titleEl = document.getElementById("authModalTitle");
+    const subtitleEl = document.getElementById("authModalSubtitle");
+    const submitBtn = document.getElementById("authSubmitBtn");
+    const toggleText = document.getElementById("authToggleText");
+    const toggleLink = document.getElementById("authToggleLink");
+    const errorMsg = document.getElementById("authErrorMsg");
+
+    if (errorMsg) {
+        errorMsg.textContent = "";
+        errorMsg.classList.add("hidden");
+    }
+
+    if (currentAuthMode === "register") {
+        if (titleEl) titleEl.textContent = "Create Account";
+        if (subtitleEl) subtitleEl.textContent = "Start tracking your skincare routine and streaks";
+        if (submitBtn) submitBtn.textContent = "Create Account";
+        if (toggleText) toggleText.textContent = "Already have an account?";
+        if (toggleLink) toggleLink.textContent = "Sign In";
+    } else {
+        if (titleEl) titleEl.textContent = "Sign In";
+        if (subtitleEl) subtitleEl.textContent = "Access your personalized routine & sync your streak";
+        if (submitBtn) submitBtn.textContent = "Sign In";
+        if (toggleText) toggleText.textContent = "Don't have an account?";
+        if (toggleLink) toggleLink.textContent = "Register";
+    }
+}
+window.toggleAuthMode = toggleAuthMode;
+
+async function handleAuthSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const emailInput = document.getElementById("authEmail");
+    const passwordInput = document.getElementById("authPassword");
+    const submitBtn = document.getElementById("authSubmitBtn");
+    const errorMsg = document.getElementById("authErrorMsg");
+
+    const email = emailInput?.value.trim();
+    const password = passwordInput?.value.trim();
+
+    if (!email || !password) {
+        if (errorMsg) {
+            errorMsg.textContent = "Please fill in all fields.";
+            errorMsg.classList.remove("hidden");
+        }
+        return;
+    }
+
+    if (password.length < 6) {
+        if (errorMsg) {
+            errorMsg.textContent = "Password must be at least 6 characters long.";
+            errorMsg.classList.remove("hidden");
+        }
+        return;
+    }
+
+    const originalBtnText = submitBtn ? submitBtn.textContent : "";
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = currentAuthMode === "register" ? "Creating Account..." : "Signing In...";
+    }
+    if (errorMsg) {
+        errorMsg.textContent = "";
+        errorMsg.classList.add("hidden");
+    }
+
+    const endpoint = currentAuthMode === "register" ? "/api/auth/register" : "/api/auth/login";
+
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            const errText = data.message || data.error || "Authentication failed. Please try again.";
+            if (errorMsg) {
+                errorMsg.textContent = errText;
+                errorMsg.classList.remove("hidden");
+            }
+            showToast(errText, "error");
+            return;
+        }
+
+        // Save skin_token and skin_email to localStorage
+        localStorage.setItem("skin_token", data.token);
+        localStorage.setItem("skin_email", data.email || email);
+        localStorage.setItem("token", data.token);
+        if (data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
+        // Synchronize streak from user document if present
+        if (typeof data.streak === "number") {
+            const trackerData = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+            trackerData.streak = data.streak;
+            if (data.lastStreakDate !== undefined && data.lastStreakDate !== null) {
+                trackerData.lastDate = data.lastStreakDate;
+            }
+            if (data.amCompleted !== undefined) trackerData.am = !!data.amCompleted;
+            if (data.pmCompleted !== undefined) trackerData.pm = !!data.pmCompleted;
+            localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackerData));
+            loadRoutineTracker();
+        }
+
+        updateAuthUI();
+        closeAuthModal();
+        showToast(
+            currentAuthMode === "register"
+                ? `Account created! Welcome, ${data.email || email}`
+                : `Welcome back, ${data.email || email}!`,
+            "success"
+        );
+    } catch (err) {
+        console.error("Auth submit error:", err);
+        const netErr = "Cannot connect to server. Please try again.";
+        if (errorMsg) {
+            errorMsg.textContent = netErr;
+            errorMsg.classList.remove("hidden");
+        }
+        showToast(netErr, "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+        }
+    }
+}
+window.handleAuthSubmit = handleAuthSubmit;
+
+function handleSignOut() {
+    localStorage.removeItem("skin_token");
+    localStorage.removeItem("skin_email");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    updateAuthUI();
+    showToast("Signed out successfully", "info");
+}
+window.handleSignOut = handleSignOut;
+
+async function syncStreakToCloud(trackerData) {
+    const token = localStorage.getItem("skin_token") || localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+        await fetch(`${API_BASE_URL}/api/auth/streak`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                streak: trackerData.streak || 0,
+                lastStreakDate: trackerData.lastDate || null,
+                amCompleted: !!trackerData.am,
+                pmCompleted: !!trackerData.pm
+            })
+        });
+    } catch (e) {
+        console.warn("MongoDB streak sync skipped:", e.message);
+    }
+}
+
 function handleRoutineCheck(type) {
     const data = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
     const today = getTodayKey();
@@ -371,10 +613,68 @@ function handleRoutineCheck(type) {
 
     if (streakEl) streakEl.textContent = data.streak;
     localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(data));
+    syncStreakToCloud(data);
 }
 window.handleRoutineCheck = handleRoutineCheck;
 
 window.addEventListener("DOMContentLoaded", () => {
     initImageComparison();
     loadRoutineTracker();
+    updateAuthUI();
+
+    const authBtn = document.getElementById("authModalBtn");
+    if (authBtn) {
+        authBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            openAuthModal();
+        });
+    }
+
+    const authToggleLink = document.getElementById("authToggleLink");
+    if (authToggleLink) {
+        authToggleLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            toggleAuthMode(e);
+        });
+    }
+
+    // Modal background click to close
+    const authModal = document.getElementById("authModal");
+    if (authModal) {
+        authModal.addEventListener("click", (e) => {
+            if (e.target === authModal) {
+                closeAuthModal();
+            }
+        });
+    }
+
+    // Escape key listener to close modal
+    window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeAuthModal();
+        }
+    });
+
+    // Check remote streak sync on initial load if logged in
+    const token = localStorage.getItem("skin_token") || localStorage.getItem("token");
+    if (token) {
+        fetch(`${API_BASE_URL}/api/auth/me`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data && typeof data.streak === "number") {
+                    const trackerData = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+                    trackerData.streak = data.streak;
+                    if (data.lastStreakDate !== undefined && data.lastStreakDate !== null) {
+                        trackerData.lastDate = data.lastStreakDate;
+                    }
+                    if (data.amCompleted !== undefined) trackerData.am = !!data.amCompleted;
+                    if (data.pmCompleted !== undefined) trackerData.pm = !!data.pmCompleted;
+                    localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackerData));
+                    loadRoutineTracker();
+                }
+            })
+            .catch(() => {});
+    }
 });

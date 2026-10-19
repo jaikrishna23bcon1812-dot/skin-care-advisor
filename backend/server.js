@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
+const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -8,6 +10,16 @@ const analysisRouter = require("./routes/analysis");
 
 const app = express();
 
+// Connect to MongoDB Atlas
+if (process.env.MONGO_URI) {
+    mongoose
+        .connect(process.env.MONGO_URI)
+        .then(() => console.log("Connected to MongoDB Atlas successfully"))
+        .catch((err) => console.error("MongoDB Atlas connection error:", err.message));
+} else {
+    console.warn("MONGO_URI is not defined in environment variables");
+}
+
 // Security Headers
 app.use(helmet());
 
@@ -15,7 +27,8 @@ app.use(helmet());
 app.use(
     cors({
         origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"],
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
 
@@ -24,10 +37,13 @@ app.use(express.json());
 // Strict Rate Limiting for Authentication / Sensitive endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20,
+    max: 100,
     message: { error: "Too many authentication attempts. Please try again in 15 minutes." },
 });
 app.use("/api/auth", authLimiter);
+
+// Mount Auth Router
+app.use("/api/auth", require("./routes/auth"));
 
 // Root route for friendly service discovery
 app.get("/", (req, res) => {
@@ -38,6 +54,9 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// Serve frontend static assets
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 // Core AI Analysis Route
 app.use("/api/analysis", analysisRouter);
