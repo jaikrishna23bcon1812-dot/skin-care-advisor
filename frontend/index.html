@@ -9,7 +9,7 @@
     <title>AI Skin Care Advisor</title>
 
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -259,6 +259,51 @@
                 </label>
             </div>
             <div id="trackerStatusMsg" class="tracker-msg"></div>
+
+            <!-- Daily Routine Reminders Card -->
+            <div class="notification-reminder-card" id="reminderCard">
+                <div class="reminder-card-header">
+                    <div class="reminder-header-title">
+                        <span class="reminder-icon">🔔</span>
+                        <div>
+                            <h3>Daily Routine Reminders</h3>
+                            <p class="reminder-desc">Receive scheduled push notifications so you never miss your AM & PM steps.</p>
+                        </div>
+                    </div>
+                    <div class="reminder-toggle-wrap">
+                        <button type="button" id="pushNotificationBtn" class="push-toggle-btn" onclick="requestNotificationPermission()">
+                            Enable Reminders
+                        </button>
+                        <span id="notificationStatus" class="notification-status-badge status-disabled">Disabled</span>
+                    </div>
+                </div>
+
+                <div class="reminder-schedule-grid">
+                    <div class="reminder-schedule-item">
+                        <div class="schedule-icon">☀️</div>
+                        <div class="schedule-details">
+                            <strong>Morning Routine</strong>
+                            <span>8:00 AM Daily</span>
+                        </div>
+                        <span class="schedule-pill">AM Alert</span>
+                    </div>
+                    <div class="reminder-schedule-item">
+                        <div class="schedule-icon">🌙</div>
+                        <div class="schedule-details">
+                            <strong>Evening Routine</strong>
+                            <span>9:00 PM Daily</span>
+                        </div>
+                        <span class="schedule-pill">PM Alert</span>
+                    </div>
+                </div>
+
+                <div class="reminder-actions">
+                    <button type="button" id="testNotificationBtn" class="action-btn test-notify-btn" onclick="testNotification()">
+                        ⚡ Send Test Notification
+                    </button>
+                    <small class="reminder-note">Notifications will trigger locally via Service Worker or browser push.</small>
+                </div>
+            </div>
         </section>
 
         <!-- Section 5: Ingredient Comedogenic & Safety Checker -->
@@ -312,7 +357,7 @@
         <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
     </footer>
 
-    <script src="script.js?v=6"></script>
+    <script src="script.js?v=7"></script>
 </body>
 
 </html>

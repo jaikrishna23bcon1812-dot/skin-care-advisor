@@ -837,10 +837,216 @@ function handleRoutineCheck(type) {
 }
 window.handleRoutineCheck = handleRoutineCheck;
 
+// ==========================================
+// PUSH & ROUTINE NOTIFICATION SYSTEM
+// ==========================================
+
+function setupNotificationUI() {
+    const btn = document.getElementById("pushNotificationBtn");
+    const statusBadge = document.getElementById("notificationStatus");
+    if (!btn || !statusBadge) return;
+
+    if (!("Notification" in window)) {
+        statusBadge.textContent = "Unsupported";
+        statusBadge.className = "notification-status-badge status-blocked";
+        btn.textContent = "Notifications Unsupported";
+        btn.disabled = true;
+        return;
+    }
+
+    const permission = Notification.permission;
+    if (permission === "granted") {
+        statusBadge.textContent = "Enabled";
+        statusBadge.className = "notification-status-badge status-enabled";
+        btn.textContent = "🔔 Reminders Active";
+        btn.classList.add("active");
+        btn.disabled = false;
+        scheduleLocalRoutineReminders();
+    } else if (permission === "denied") {
+        statusBadge.textContent = "Blocked";
+        statusBadge.className = "notification-status-badge status-blocked";
+        btn.textContent = "⚠️ Permission Blocked";
+        btn.classList.remove("active");
+        btn.disabled = false;
+    } else {
+        statusBadge.textContent = "Disabled";
+        statusBadge.className = "notification-status-badge status-disabled";
+        btn.textContent = "Enable Reminders";
+        btn.classList.remove("active");
+        btn.disabled = false;
+    }
+}
+window.setupNotificationUI = setupNotificationUI;
+
+async function requestNotificationPermission() {
+    if (!("Notification" in window)) {
+        showToast("Web Notifications are not supported in this browser.", "warning");
+        return false;
+    }
+
+    if (Notification.permission === "denied") {
+        showToast("Notifications are blocked in your browser settings. Please enable them to get reminders.", "warning");
+        setupNotificationUI();
+        return false;
+    }
+
+    try {
+        const permission = await Notification.requestPermission();
+        setupNotificationUI();
+
+        if (permission === "granted") {
+            showToast("✅ Reminders enabled! You'll receive AM (8:00 AM) & PM (9:00 PM) alerts.", "success");
+            if ("serviceWorker" in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    console.log("Service Worker ready for push notifications:", reg);
+                } catch (swErr) {
+                    console.warn("SW ready check failed:", swErr);
+                }
+            }
+            scheduleLocalRoutineReminders();
+            return true;
+        } else {
+            showToast("Notification permission was not granted.", "info");
+            return false;
+        }
+    } catch (err) {
+        console.error("Error requesting notification permission:", err);
+        return false;
+    }
+}
+window.requestNotificationPermission = requestNotificationPermission;
+
+async function triggerLocalNotification(title, body) {
+    if (!("Notification" in window)) {
+        showToast(`${title}: ${body}`, "info");
+        return;
+    }
+
+    if (Notification.permission !== "granted") {
+        const granted = await requestNotificationPermission();
+        if (!granted) return;
+    }
+
+    const notifOptions = {
+        body: body || "Take a minute to complete your skincare routine step!",
+        icon: "/favicon.svg",
+        badge: "/favicon.svg",
+        vibrate: [100, 50, 100],
+        data: {
+            url: "/index.html#routineTracker",
+            timestamp: Date.now()
+        }
+    };
+
+    let delivered = false;
+
+    // Check if Service Worker registration is active
+    if ("serviceWorker" in navigator) {
+        try {
+            const reg = await navigator.serviceWorker.getRegistration();
+            if (reg && "showNotification" in reg) {
+                await reg.showNotification(title, notifOptions);
+                delivered = true;
+            }
+        } catch (swErr) {
+            console.warn("Service Worker showNotification failed, trying fallback:", swErr);
+        }
+    }
+
+    // Fallback to new Notification()
+    if (!delivered) {
+        try {
+            new Notification(title, {
+                body: notifOptions.body,
+                icon: notifOptions.icon
+            });
+            delivered = true;
+        } catch (e) {
+            console.warn("new Notification() fallback failed:", e);
+            showToast(`${title}: ${notifOptions.body}`, "info");
+        }
+    }
+}
+window.triggerLocalNotification = triggerLocalNotification;
+
+async function testNotification() {
+    if (!("Notification" in window)) {
+        showToast("Web Notifications are not supported in this browser.", "warning");
+        return;
+    }
+
+    if (Notification.permission !== "granted") {
+        const granted = await requestNotificationPermission();
+        if (!granted) return;
+    }
+
+    await triggerLocalNotification(
+        "✨ Time for your Skincare Routine!",
+        "Keep up your glow! Take a minute to complete your AM or PM routine."
+    );
+    showToast("🔔 Test notification sent!", "success");
+}
+window.testNotification = testNotification;
+
+function scheduleLocalRoutineReminders() {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    if (window._reminderInterval) return;
+
+    function checkSchedule() {
+        if (Notification.permission !== "granted") return;
+        const now = new Date();
+        const hour = now.getHours();
+        const todayStr = getTodayKey();
+
+        // 8:00 AM check
+        if (hour === 8 && localStorage.getItem("last_am_reminder") !== todayStr) {
+            const trackerData = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+            if (!trackerData.am) {
+                triggerLocalNotification("☀️ Morning Skincare Routine", "Good morning! It's 8:00 AM — time to cleanse, hydrate, and apply SPF.");
+                localStorage.setItem("last_am_reminder", todayStr);
+            }
+        }
+
+        // 9:00 PM check
+        if (hour === 21 && localStorage.getItem("last_pm_reminder") !== todayStr) {
+            const trackerData = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+            if (!trackerData.pm) {
+                triggerLocalNotification("🌙 Evening Skincare Routine", "Good evening! It's 9:00 PM — time to double-cleanse and repair your skin barrier.");
+                localStorage.setItem("last_pm_reminder", todayStr);
+            }
+        }
+    }
+
+    checkSchedule();
+    window._reminderInterval = setInterval(checkSchedule, 60000);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     initImageComparison();
     loadRoutineTracker();
     updateAuthUI();
+    setupNotificationUI();
+
+    const pushBtn = document.getElementById("pushNotificationBtn");
+    if (pushBtn) {
+        pushBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (Notification.permission === "granted") {
+                showToast("Notifications are already enabled for AM & PM routines.", "info");
+            } else {
+                requestNotificationPermission();
+            }
+        });
+    }
+
+    const testBtn = document.getElementById("testNotificationBtn");
+    if (testBtn) {
+        testBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            testNotification();
+        });
+    }
 
     const authBtn = document.getElementById("authModalBtn");
     if (authBtn) {

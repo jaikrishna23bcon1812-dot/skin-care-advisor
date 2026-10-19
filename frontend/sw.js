@@ -4,7 +4,7 @@
 //             Bypass cache completely for /api/ and /health endpoints.
 // ============================================================
 
-const CACHE_NAME = "skincare-advisor-v6";
+const CACHE_NAME = "skincare-advisor-v7";
 
 // Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -174,7 +174,7 @@ self.addEventListener("notificationclick", (event) => {
 
     const targetUrl = (event.notification.data && event.notification.data.url)
         ? event.notification.data.url
-        : "/";
+        : "/index.html#routineTracker";
 
     event.waitUntil(
         clients
@@ -182,7 +182,9 @@ self.addEventListener("notificationclick", (event) => {
             .then((clientList) => {
                 for (const client of clientList) {
                     if (client.url.includes(self.location.origin) && "focus" in client) {
-                        client.navigate(targetUrl);
+                        if ("navigate" in client) {
+                            client.navigate(targetUrl);
+                        }
                         return client.focus();
                     }
                 }

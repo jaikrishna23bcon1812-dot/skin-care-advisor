@@ -4837,4 +4837,297 @@ body.dark-mode .retake-btn:hover {
     color: #ffffff;
 }
 
+/* ==========================================
+   DAILY ROUTINE NOTIFICATIONS & REMINDERS
+   ========================================== */
+
+.notification-reminder-card {
+    margin-top: 24px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 24px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.notification-reminder-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border-color: rgba(216, 27, 96, 0.2);
+}
+
+.reminder-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.reminder-header-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.reminder-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, rgba(216, 27, 96, 0.1), rgba(123, 31, 162, 0.1));
+    border-radius: 12px;
+}
+
+.reminder-header-title h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.reminder-desc {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.reminder-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.push-toggle-btn {
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border: 1.5px solid #d81b60;
+    border-radius: 999px;
+    background: rgba(216, 27, 96, 0.05);
+    color: #d81b60;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.push-toggle-btn:hover {
+    background: rgba(216, 27, 96, 0.12);
+    transform: translateY(-1px);
+}
+
+.push-toggle-btn.active {
+    background: #d81b60;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(216, 27, 96, 0.3);
+}
+
+.notification-status-badge {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.notification-status-badge.status-enabled {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+}
+
+.notification-status-badge.status-disabled {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+}
+
+.notification-status-badge.status-blocked {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.reminder-schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 20px 0 16px 0;
+}
+
+.reminder-schedule-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.25s ease;
+}
+
+.reminder-schedule-item:hover {
+    border-color: rgba(216, 27, 96, 0.3);
+    transform: translateY(-2px);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.schedule-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.schedule-details {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.schedule-details strong {
+    font-size: 0.92rem;
+    color: #1e293b;
+}
+
+.schedule-details span {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.schedule-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(216, 27, 96, 0.1);
+    color: #d81b60;
+}
+
+.reminder-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.test-notify-btn {
+    padding: 9px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #ffffff !important;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(79, 70, 229, 0.25);
+    transition: all 0.2s ease;
+}
+
+.test-notify-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+    background: linear-gradient(135deg, #4338ca, #6d28d9);
+}
+
+.reminder-note {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode .notification-reminder-card {
+    background: #1e1e2f;
+    border-color: rgba(244, 114, 182, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .reminder-icon {
+    background: rgba(244, 114, 182, 0.15);
+}
+
+body.dark-mode .reminder-header-title h3 {
+    color: #f1f5f9;
+}
+
+body.dark-mode .reminder-desc {
+    color: #94a3b8;
+}
+
+body.dark-mode .push-toggle-btn {
+    border-color: #f472b6;
+    color: #f472b6;
+    background: rgba(244, 114, 182, 0.08);
+}
+
+body.dark-mode .push-toggle-btn:hover {
+    background: rgba(244, 114, 182, 0.18);
+}
+
+body.dark-mode .push-toggle-btn.active {
+    background: #d81b60;
+    color: #ffffff;
+}
+
+body.dark-mode .notification-status-badge.status-enabled {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+body.dark-mode .notification-status-badge.status-disabled {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.3);
+}
+
+body.dark-mode .notification-status-badge.status-blocked {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+body.dark-mode .reminder-schedule-item {
+    background: #131320;
+    border-color: #27273a;
+}
+
+body.dark-mode .reminder-schedule-item:hover {
+    border-color: rgba(244, 114, 182, 0.35);
+    background: #1a1a2b;
+}
+
+body.dark-mode .schedule-details strong {
+    color: #f1f5f9;
+}
+
+body.dark-mode .schedule-details span {
+    color: #94a3b8;
+}
+
+body.dark-mode .schedule-pill {
+    background: rgba(244, 114, 182, 0.15);
+    color: #f472b6;
+}
+
+body.dark-mode .reminder-actions {
+    border-top-color: #27273a;
+}
+
+body.dark-mode .reminder-note {
+    color: #64748b;
+}
+
 
