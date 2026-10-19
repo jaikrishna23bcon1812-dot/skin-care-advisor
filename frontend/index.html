@@ -9,7 +9,7 @@
     <title>AI Skin Care Advisor</title>
 
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -74,36 +74,110 @@
     </header>
 
     <main class="main-container">
-        <!-- Section 1: AI Advisor Input -->
+        <!-- Section 1: AI Advisor Input (Manual Questionnaire & Photo Vision AI) -->
         <section id="analyzer" class="card">
-            <h2>Personalized Skin Analysis</h2>
-            <p class="section-desc">Select your skin profile to generate an AI-tailored morning and night routine.</p>
+            <div class="analyzer-header">
+                <h2>Personalized Skin Analysis</h2>
+                <p class="section-desc">Analyze your skin barrier, redness, and blemishes using our AI visual scanner or manual questionnaire.</p>
+            </div>
 
-            <form id="skinForm" class="skin-form" onsubmit="handleAnalyze(event)">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="skinType">Skin Type</label>
-                        <select id="skinType" required>
-                            <option value="oily">Oily</option>
-                            <option value="dry">Dry</option>
-                            <option value="combination" selected>Combination</option>
-                            <option value="sensitive">Sensitive</option>
-                            <option value="normal">Normal</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="primaryConcern">Primary Concern</label>
-                        <select id="primaryConcern" required>
-                            <option value="acne">Acne & Breakouts</option>
-                            <option value="hyperpigmentation">Hyperpigmentation & Dark Spots</option>
-                            <option value="aging">Fine Lines & Aging</option>
-                            <option value="dryness">Barrier Repair & Dryness</option>
-                            <option value="redness">Redness & Rosacea</option>
-                        </select>
+            <div class="analysis-grid">
+                <!-- Method 1: Manual Questionnaire -->
+                <div class="analysis-card manual-card">
+                    <div class="card-pill">Method 1 • Questionnaire</div>
+                    <h3>Manual Skin Profile</h3>
+                    <p class="method-desc">Select your skin characteristics to receive a customized ingredient regimen.</p>
+                    <form id="skinForm" class="skin-form" onsubmit="handleAnalyze(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="skinType">Skin Type</label>
+                                <select id="skinType" required>
+                                    <option value="oily">Oily</option>
+                                    <option value="dry">Dry</option>
+                                    <option value="combination" selected>Combination</option>
+                                    <option value="sensitive">Sensitive</option>
+                                    <option value="normal">Normal</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="primaryConcern">Primary Concern</label>
+                                <select id="primaryConcern" required>
+                                    <option value="acne">Acne & Breakouts</option>
+                                    <option value="hyperpigmentation">Hyperpigmentation & Dark Spots</option>
+                                    <option value="aging">Fine Lines & Aging</option>
+                                    <option value="dryness">Barrier Repair & Dryness</option>
+                                    <option value="redness">Redness & Rosacea</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" id="submitAnalysisBtn" class="primary-btn">Generate AI Routine</button>
+                    </form>
+                </div>
+
+                <!-- Method 2: Photo Skin Analysis Card -->
+                <div class="analysis-card photo-card" id="photoAnalysisCard">
+                    <div class="card-pill">Method 2 • Vision AI</div>
+                    <h3>📸 Photo Skin Analysis</h3>
+                    <p class="method-desc">Capture a live selfie or upload a photo to scan for barrier health, redness, and blemishes.</p>
+
+                    <div class="photo-module-body">
+                        <!-- Live Camera Viewfinder -->
+                        <div class="camera-container" id="cameraContainer">
+                            <div class="camera-viewport-wrap" id="cameraViewportWrap">
+                                <div id="cameraPlaceholder" class="camera-placeholder">
+                                    <span class="placeholder-icon">🤳</span>
+                                    <p>Live camera inactive</p>
+                                    <small>Click "Start Camera" or choose an image below</small>
+                                </div>
+                                <video id="cameraPreview" autoplay playsinline class="camera-preview hidden"></video>
+                                <div class="viewfinder-overlay hidden" id="viewfinderOverlay">
+                                    <div class="face-guide"></div>
+                                </div>
+                            </div>
+                            <canvas id="captureCanvas" class="hidden" style="display:none;"></canvas>
+
+                            <!-- Camera Controls -->
+                            <div class="camera-controls">
+                                <button type="button" id="startCameraBtn" class="action-btn camera-btn" onclick="startCamera()">📷 Start Camera</button>
+                                <button type="button" id="captureBtn" class="primary-btn shutter-btn hidden" onclick="captureSelfie()">
+                                    <span class="shutter-inner"></span>
+                                    <span>Capture Selfie</span>
+                                </button>
+                                <button type="button" id="retakeBtn" class="action-btn retake-btn hidden" onclick="retakePhoto()">🔄 Retake</button>
+                                <button type="button" id="stopCameraBtn" class="action-btn stop-btn hidden" onclick="stopCamera()">⏹ Stop Camera</button>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="photo-or-divider">
+                            <span>OR UPLOAD A SELFIE</span>
+                        </div>
+
+                        <!-- File Upload Area -->
+                        <div class="upload-dropzone" id="uploadDropzone">
+                            <input type="file" id="selfieUploadInput" accept="image/*" onchange="handlePhotoUpload(event)" />
+                            <label for="selfieUploadInput" class="upload-dropzone-label">
+                                <span class="upload-icon">📁</span>
+                                <div>
+                                    <strong>Choose Photo or Drag & Drop</strong>
+                                    <p>Supports JPG, PNG, WEBP</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Image Preview Container -->
+                        <div id="photoPreviewContainer" class="photo-preview-container hidden">
+                            <div class="preview-badge">Ready for Scan</div>
+                            <img id="selfiePreviewImg" class="photo-preview-img" alt="Captured or Uploaded Selfie" />
+                        </div>
+
+                        <!-- Analyze Photo CTA Button -->
+                        <button type="button" id="analyzePhotoBtn" class="primary-btn analyze-photo-btn hidden" onclick="analyzePhoto()">
+                            ✨ Analyze My Photo
+                        </button>
                     </div>
                 </div>
-                <button type="submit" id="submitAnalysisBtn" class="primary-btn">Generate AI Routine</button>
-            </form>
+            </div>
         </section>
 
         <!-- Section 2: AI Results & Routine Output -->
@@ -238,7 +312,7 @@
         <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
     </footer>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

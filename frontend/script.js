@@ -154,6 +154,226 @@ function toggleSkeleton(show) {
     }
 }
 
+// ==================== CAMERA & SELFIE PHOTO ANALYSIS ====================
+let cameraStream = null;
+let currentSelfieData = null;
+
+async function startCamera() {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast("Camera access is not supported by your browser.", "error");
+            return;
+        }
+
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" },
+            audio: false,
+        });
+
+        const video = document.getElementById("cameraPreview");
+        const placeholder = document.getElementById("cameraPlaceholder");
+        const overlay = document.getElementById("viewfinderOverlay");
+        const startBtn = document.getElementById("startCameraBtn");
+        const captureBtn = document.getElementById("captureBtn");
+        const stopBtn = document.getElementById("stopCameraBtn");
+        const retakeBtn = document.getElementById("retakeBtn");
+        const previewContainer = document.getElementById("photoPreviewContainer");
+
+        if (video) {
+            video.srcObject = cameraStream;
+            video.classList.remove("hidden");
+            await video.play().catch(() => {});
+        }
+        if (placeholder) placeholder.classList.add("hidden");
+        if (overlay) overlay.classList.remove("hidden");
+        if (startBtn) startBtn.classList.add("hidden");
+        if (captureBtn) captureBtn.classList.remove("hidden");
+        if (stopBtn) stopBtn.classList.remove("hidden");
+        if (retakeBtn) retakeBtn.classList.add("hidden");
+        if (previewContainer) previewContainer.classList.add("hidden");
+
+        showToast("Camera active. Align face in guide.", "info");
+    } catch (err) {
+        console.error("Camera access error:", err);
+        showToast("Camera permission denied or unavailable. You can upload a photo instead.", "error");
+    }
+}
+window.startCamera = startCamera;
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        cameraStream = null;
+    }
+    const video = document.getElementById("cameraPreview");
+    const placeholder = document.getElementById("cameraPlaceholder");
+    const overlay = document.getElementById("viewfinderOverlay");
+    const startBtn = document.getElementById("startCameraBtn");
+    const captureBtn = document.getElementById("captureBtn");
+    const stopBtn = document.getElementById("stopCameraBtn");
+
+    if (video) {
+        video.pause();
+        video.srcObject = null;
+        video.classList.add("hidden");
+    }
+    if (placeholder && (!currentSelfieData || document.getElementById("photoPreviewContainer")?.classList.contains("hidden"))) {
+        placeholder.classList.remove("hidden");
+    }
+    if (overlay) overlay.classList.add("hidden");
+    if (startBtn) startBtn.classList.remove("hidden");
+    if (captureBtn) captureBtn.classList.add("hidden");
+    if (stopBtn) stopBtn.classList.add("hidden");
+}
+window.stopCamera = stopCamera;
+
+function captureSelfie() {
+    const video = document.getElementById("cameraPreview");
+    const canvas = document.getElementById("captureCanvas");
+    if (!video || !canvas) return;
+
+    const width = video.videoWidth || 640;
+    const height = video.videoHeight || 480;
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    // Mirror horizontally for natural selfie view
+    ctx.translate(width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, width, height);
+
+    currentSelfieData = canvas.toDataURL("image/jpeg", 0.88);
+    displayPhotoPreview(currentSelfieData);
+    stopCamera();
+
+    const retakeBtn = document.getElementById("retakeBtn");
+    const startBtn = document.getElementById("startCameraBtn");
+    if (retakeBtn) retakeBtn.classList.remove("hidden");
+    if (startBtn) startBtn.classList.add("hidden");
+
+    showToast("Selfie captured! Click 'Analyze My Photo'.", "success");
+}
+window.captureSelfie = captureSelfie;
+
+function retakePhoto() {
+    currentSelfieData = null;
+    const previewContainer = document.getElementById("photoPreviewContainer");
+    const analyzeBtn = document.getElementById("analyzePhotoBtn");
+    const retakeBtn = document.getElementById("retakeBtn");
+    if (previewContainer) previewContainer.classList.add("hidden");
+    if (analyzeBtn) analyzeBtn.classList.add("hidden");
+    if (retakeBtn) retakeBtn.classList.add("hidden");
+    startCamera();
+}
+window.retakePhoto = retakePhoto;
+
+function handlePhotoUpload(event) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        showToast("Please choose a valid image file (JPG, PNG, etc.)", "error");
+        return;
+    }
+
+    stopCamera();
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        currentSelfieData = e.target.result;
+        displayPhotoPreview(currentSelfieData);
+        const retakeBtn = document.getElementById("retakeBtn");
+        const startBtn = document.getElementById("startCameraBtn");
+        if (retakeBtn) retakeBtn.classList.remove("hidden");
+        if (startBtn) startBtn.classList.remove("hidden");
+        showToast("Photo uploaded successfully!", "success");
+    };
+    reader.onerror = () => {
+        showToast("Failed to read image file.", "error");
+    };
+    reader.readAsDataURL(file);
+}
+window.handlePhotoUpload = handlePhotoUpload;
+
+function displayPhotoPreview(dataUrl) {
+    const previewContainer = document.getElementById("photoPreviewContainer");
+    const previewImg = document.getElementById("selfiePreviewImg");
+    const analyzeBtn = document.getElementById("analyzePhotoBtn");
+
+    if (previewImg) previewImg.src = dataUrl;
+    if (previewContainer) previewContainer.classList.remove("hidden");
+    if (analyzeBtn) {
+        analyzeBtn.classList.remove("hidden");
+        analyzeBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+}
+
+async function analyzePhoto() {
+    if (!currentSelfieData) {
+        showToast("Please capture a selfie or upload an image first.", "error");
+        return;
+    }
+
+    const analyzeBtn = document.getElementById("analyzePhotoBtn");
+    const origText = analyzeBtn ? analyzeBtn.textContent : "";
+    if (analyzeBtn) {
+        analyzeBtn.disabled = true;
+        analyzeBtn.textContent = "Scanning Skin Matrix...";
+    }
+
+    const resultsCard = document.getElementById("routineResults");
+    if (resultsCard) {
+        resultsCard.classList.remove("hidden");
+        toggleSkeleton(true);
+        resultsCard.scrollIntoView({ behavior: "smooth" });
+    }
+
+    try {
+        const res = await apiFetch("/api/analysis/photo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: currentSelfieData }),
+        });
+
+        const data = await res.json();
+
+        const routineTitle = document.getElementById("routineTitle");
+        const routineSubtitle = document.getElementById("routineSubtitle");
+        if (data.detectedConcerns && data.detectedConcerns.length > 0) {
+            if (routineTitle) routineTitle.textContent = "Visual Analysis: " + data.detectedConcerns.join(" • ");
+            if (routineSubtitle) routineSubtitle.textContent = data.summary || "AI-detected barrier condition and targeted treatment regimen.";
+        }
+
+        renderRoutineResults(data.routine);
+        showToast("Skin matrix scanned successfully!", "success");
+    } catch (err) {
+        console.error("Visual analysis error:", err);
+        showToast("Using clinical visual regimen fallback.", "info");
+        renderRoutineResults({
+            am: [
+                "Gentle Balancing Centella Cleanser",
+                "10% Azelaic Acid + Zinc Soothing Serum",
+                "Lightweight Barrier Restorative Lotion",
+                "Broad-Spectrum Invisible Shield Sunscreen SPF 50+"
+            ],
+            pm: [
+                "Jojoba Oil Pre-Cleanse",
+                "Squalane Hydrating Cleanser",
+                "Ceramide Deep Repair Lipid Complex",
+                "Overnight Blemish Calming Spot Balm"
+            ]
+        });
+    } finally {
+        toggleSkeleton(false);
+        if (analyzeBtn) {
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = origText;
+        }
+    }
+}
+window.analyzePhoto = analyzePhoto;
+
 let skinChartInstance = null;
 async function handleAnalyze(e) {
     e.preventDefault();
