@@ -6,7 +6,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-    /* 1. Global Clinical Slate Design Tokens */
+    /* 1. Global Clinical Slate Design Tokens (Default Dark) */
     --bg-base: #09090b;
     --bg-surface: #121215;
     --bg-subtle: #18181b;
@@ -18,6 +18,8 @@
     --accent-clinical: #10b981;
     --accent-cyan: #06b6d4;
     --accent-danger: #f43f5e;
+
+    --bg-header: rgba(9, 9, 11, 0.92);
 
     /* High-Precision Typography */
     --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -31,18 +33,18 @@
     --btn-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.1);
     --btn-sheen-active: inset 0 1px 0 rgba(0, 0, 0, 0.2);
 
-    /* Legacy Token Mappings (Dark-First Precision) */
-    --primary: #10b981;
+    /* Legacy Token Mappings */
+    --primary: var(--accent-clinical);
     --primary-dark: #059669;
     --primary-light: #34d399;
-    --secondary: #06b6d4;
-    --accent: #10b981;
-    --bg-primary: #09090b;
-    --bg-secondary: #121215;
-    --bg-card: #121215;
-    --bg-hover: #18181b;
-    --border: #27272a;
-    --border-light: #27272a;
+    --secondary: var(--accent-cyan);
+    --accent: var(--accent-clinical);
+    --bg-primary: var(--bg-base);
+    --bg-secondary: var(--bg-surface);
+    --bg-card: var(--bg-surface);
+    --bg-hover: var(--bg-subtle);
+    --border: var(--border-subtle);
+    --border-light: var(--border-subtle);
     --shadow-sm: none;
     --shadow-md: none;
     --shadow-lg: none;
@@ -52,6 +54,42 @@
     --radius-lg: 8px;
     --radius-xl: 10px;
     --transition: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body,
+body.dark-mode {
+    --bg-base: #09090b;
+    --bg-surface: #121215;
+    --bg-subtle: #18181b;
+    --border-subtle: #27272a;
+    --border-focus: #3f3f46;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --accent-clinical: #10b981;
+    --accent-cyan: #06b6d4;
+    --accent-danger: #f43f5e;
+    --bg-header: rgba(9, 9, 11, 0.92);
+    --btn-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    color-scheme: dark;
+}
+
+html.light-mode,
+body.light-mode {
+    --bg-base: #ffffff;
+    --bg-surface: #f8fafc;
+    --bg-subtle: #f1f5f9;
+    --border-subtle: #e2e8f0;
+    --border-focus: #cbd5e1;
+    --text-primary: #09090b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --accent-clinical: #059669;
+    --accent-cyan: #0284c7;
+    --accent-danger: #e11d48;
+    --bg-header: rgba(255, 255, 255, 0.94);
+    --btn-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    color-scheme: light;
 }
 
 /* ==========================================
@@ -67,15 +105,14 @@
 html {
     scroll-behavior: smooth;
     background: var(--bg-base);
-    color-scheme: dark;
 }
 
 body {
     font-family: var(--font-body);
-    background: var(--bg-base);
-    color: var(--text-primary);
+    background: var(--bg-base) !important;
+    color: var(--text-primary) !important;
     line-height: 1.5;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -6300,7 +6337,7 @@ body.dark-mode .tracker-hint-box {
 
 /* ==========================================================================
    ENTERPRISE CLINICAL AI PLATFORM // PRECISION COMPONENT STYLES
-   Linear / Ro / Stripe High-Precision Dark Slate Specification
+   Linear / Ro / Stripe High-Precision Dark Slate & Clean White Light Mode
    ========================================================================== */
 
 /* Telemetry Strip (Top Bar) */
@@ -6309,13 +6346,14 @@ body.dark-mode .tracker-hint-box {
     align-items: center;
     gap: 16px;
     padding: 6px 24px;
-    background: #09090b;
+    background: var(--bg-base);
     border-bottom: 1px solid var(--border-subtle);
     font-family: var(--font-mono);
     font-size: 0.73rem;
     color: var(--text-secondary);
     overflow-x: auto;
     white-space: nowrap;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .telemetry-item {
@@ -6351,7 +6389,7 @@ body.dark-mode .tracker-hint-box {
     font-size: 0.65rem;
     padding: 1px 5px;
     border-radius: 3px;
-    background: #18181b;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     color: var(--text-muted);
     font-weight: 600;
@@ -6379,13 +6417,14 @@ body.dark-mode .tracker-hint-box {
 
 /* Header & Brand Refresh */
 .app-header {
-    background: rgba(9, 9, 11, 0.92) !important;
+    background: var(--bg-header) !important;
     backdrop-filter: blur(16px) !important;
     border-bottom: 1px solid var(--border-subtle) !important;
     box-shadow: none !important;
     position: sticky;
     top: 0;
     z-index: 1000;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .header-container {
@@ -6451,7 +6490,7 @@ body.dark-mode .tracker-hint-box {
 
 .nav-links a.nav-link.active {
     color: var(--text-primary) !important;
-    background: #18181b;
+    background: var(--bg-subtle);
     border-color: var(--border-subtle);
 }
 
@@ -6495,7 +6534,8 @@ body.dark-mode .tracker-hint-box {
     border-radius: 8px !important;
     box-shadow: none !important;
     padding: 20px !important;
-    transition: border-color 0.15s ease;
+    color: var(--text-primary);
+    transition: background 0.2s ease, border-color 0.15s ease, color 0.2s ease;
 }
 
 .card:hover,
@@ -6554,11 +6594,12 @@ body.dark-mode .tracker-hint-box {
 
 /* Console Subcard */
 .console-subcard {
-    background: #0f0f12;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 16px;
     margin-top: 16px;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .subcard-header {
@@ -6649,7 +6690,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .tech-pill:hover {
-    background: #202025;
+    background: var(--bg-base);
     border-color: var(--border-focus);
     color: var(--text-primary);
 }
@@ -6657,7 +6698,7 @@ body.dark-mode .tracker-hint-box {
 .tech-pill.active {
     background: rgba(16, 185, 129, 0.12);
     border-color: var(--accent-clinical);
-    color: #34d399;
+    color: var(--accent-clinical);
     font-weight: 600;
     box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.25);
 }
@@ -6680,7 +6721,7 @@ body.dark-mode .tracker-hint-box {
 .scan-btn,
 .analyze-photo-btn {
     background: var(--accent-clinical) !important;
-    color: #042f2e !important;
+    color: #ffffff !important;
     border: 1px solid rgba(255, 255, 255, 0.25) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
     border-radius: 6px !important;
@@ -6744,7 +6785,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .action-btn:hover {
-    background: #232328 !important;
+    background: var(--border-subtle) !important;
     border-color: var(--border-focus) !important;
 }
 
@@ -6813,12 +6854,12 @@ body.dark-mode .tracker-hint-box {
 
 /* Clinical Step Card (Prescription Specification) */
 .clinical-step-card {
-    background: #0f0f12 !important;
+    background: var(--bg-subtle) !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: 6px !important;
     padding: 12px 14px !important;
     box-shadow: none !important;
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, background 0.2s ease;
 }
 
 .clinical-step-card:hover {
@@ -6860,7 +6901,7 @@ body.dark-mode .tracker-hint-box {
     font-family: var(--font-mono) !important;
     font-size: 0.68rem !important;
     color: var(--text-muted) !important;
-    background: var(--bg-subtle) !important;
+    background: var(--bg-base) !important;
     padding: 2px 5px !important;
     border-radius: 3px !important;
     border: 1px solid var(--border-subtle) !important;
@@ -6886,7 +6927,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .molecular-breakdown {
-    background: #09090b;
+    background: var(--bg-base);
     border: 1px solid var(--border-subtle);
     border-radius: 4px;
     padding: 6px 8px;
@@ -6894,6 +6935,7 @@ body.dark-mode .tracker-hint-box {
     font-family: var(--font-mono);
     font-size: 0.72rem;
     line-height: 1.45;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .molecular-label {
@@ -6911,7 +6953,7 @@ body.dark-mode .tracker-hint-box {
     flex-direction: column;
     gap: 4px;
     font-size: 0.74rem;
-    border-top: 1px solid rgba(39, 39, 42, 0.5);
+    border-top: 1px solid var(--border-subtle);
     padding-top: 6px;
 }
 
@@ -6936,7 +6978,7 @@ body.dark-mode .tracker-hint-box {
 
 /* Adopt CTA Banner */
 .adopt-cta-banner {
-    background: #0f0f12;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 16px;
@@ -6946,6 +6988,7 @@ body.dark-mode .tracker-hint-box {
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .adopt-pill {
@@ -6976,11 +7019,12 @@ body.dark-mode .tracker-hint-box {
 
 /* Forecast Chart Section */
 .chart-section {
-    background: #0f0f12;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 14px;
     margin-top: 16px;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .chart-header {
@@ -7025,13 +7069,14 @@ body.dark-mode .tracker-hint-box {
 }
 
 .telemetry-badge {
-    background: #0f0f12;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 6px 12px;
     display: flex;
     flex-direction: column;
     gap: 1px;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .badge-label {
@@ -7055,11 +7100,12 @@ body.dark-mode .tracker-hint-box {
 }
 
 .adherence-bar-wrap {
-    background: #0f0f12;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 10px 12px;
     margin-bottom: 14px;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .adherence-bar-meta {
@@ -7077,7 +7123,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .adherence-track {
-    background: #18181b;
+    background: var(--border-subtle);
     border-radius: 3px;
     height: 5px;
     overflow: hidden;
@@ -7104,7 +7150,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .check-container {
-    background: #0f0f12;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 12px;
@@ -7113,7 +7159,7 @@ body.dark-mode .tracker-hint-box {
     gap: 10px;
     cursor: pointer;
     user-select: none;
-    transition: border-color 0.12s ease;
+    transition: border-color 0.12s ease, background 0.2s ease;
 }
 
 .check-container:hover {
@@ -7147,11 +7193,12 @@ body.dark-mode .tracker-hint-box {
 
 /* Automated Telemetry Reminders Card */
 .notification-reminder-card {
-    background: #0f0f12;
+    background: var(--bg-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 14px;
     margin-top: 14px;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .reminder-card-header {
@@ -7193,7 +7240,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .push-toggle-btn {
-    background: var(--bg-subtle);
+    background: var(--bg-base);
     color: var(--text-primary);
     border: 1px solid var(--border-subtle);
     box-shadow: var(--btn-sheen);
@@ -7207,7 +7254,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .push-toggle-btn:hover {
-    background: #202025;
+    background: var(--bg-surface);
     border-color: var(--border-focus);
 }
 
@@ -7219,7 +7266,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .status-disabled {
-    background: #18181b;
+    background: var(--bg-base);
     color: var(--text-muted);
     border: 1px solid var(--border-subtle);
 }
@@ -7244,13 +7291,14 @@ body.dark-mode .tracker-hint-box {
 }
 
 .reminder-schedule-item {
-    background: #09090b;
+    background: var(--bg-base);
     border: 1px solid var(--border-subtle);
     border-radius: 4px;
     padding: 8px 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .schedule-details {
@@ -7273,9 +7321,10 @@ body.dark-mode .tracker-hint-box {
     font-family: var(--font-mono);
     font-size: 0.65rem;
     color: var(--text-muted);
-    background: #18181b;
+    background: var(--bg-subtle);
     padding: 2px 5px;
     border-radius: 3px;
+    border: 1px solid var(--border-subtle);
 }
 
 .reminder-actions {
@@ -7300,7 +7349,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .checker-input-group textarea {
-    background: #09090b !important;
+    background: var(--bg-base) !important;
     border: 1px solid var(--border-subtle) !important;
     color: var(--text-primary) !important;
     font-family: var(--font-mono) !important;
@@ -7310,6 +7359,7 @@ body.dark-mode .tracker-hint-box {
     width: 100% !important;
     resize: vertical;
     box-shadow: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .checker-input-group textarea:focus {
@@ -7331,10 +7381,11 @@ body.dark-mode .tracker-hint-box {
 }
 
 .post-card {
-    background: #0f0f12 !important;
+    background: var(--bg-subtle) !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: 6px !important;
     padding: 14px !important;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .post-card h4 {
@@ -7361,7 +7412,7 @@ body.dark-mode .tracker-hint-box {
 }
 
 .like-btn {
-    background: var(--bg-subtle);
+    background: var(--bg-base);
     border: 1px solid var(--border-subtle);
     color: var(--text-secondary);
     border-radius: 4px;
@@ -7372,12 +7423,33 @@ body.dark-mode .tracker-hint-box {
     box-shadow: var(--btn-sheen);
 }
 
+/* Camera Placeholder & Dropzone */
+.camera-placeholder {
+    background: var(--bg-base) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--text-secondary) !important;
+}
+
+.upload-dropzone {
+    background: var(--bg-base) !important;
+    border: 1px dashed var(--border-subtle) !important;
+}
+
+.upload-dropzone strong {
+    color: var(--text-primary);
+}
+
+.upload-dropzone p {
+    color: var(--text-secondary);
+}
+
 /* Footer Precision Telemetry */
 .app-footer {
     border-top: 1px solid var(--border-subtle);
     padding: 24px 20px;
     text-align: center;
-    background: #09090b;
+    background: var(--bg-base);
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .footer-telemetry {
@@ -7412,12 +7484,12 @@ body.dark-mode .tracker-hint-box {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #27272a;
+    background: var(--border-subtle);
     border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
+    background: var(--border-focus);
 }
 
 /* Ensure Zero Muddy Shadows and Strict Hairline Borders Everywhere */
@@ -7426,19 +7498,83 @@ body, body.dark-mode {
     color: var(--text-primary) !important;
 }
 
+body.light-mode {
+    background: var(--bg-base) !important;
+    color: var(--text-primary) !important;
+}
+
 body .card,
 body.dark-mode .card,
+body.light-mode .card,
 body .modal-card,
-body.dark-mode .modal-card {
+body.dark-mode .modal-card,
+body.light-mode .modal-card {
     box-shadow: none !important;
     border-color: var(--border-subtle) !important;
+    background: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
 }
 
 body .card:hover,
-body.dark-mode .card:hover {
+body.dark-mode .card:hover,
+body.light-mode .card:hover {
     transform: none !important;
     box-shadow: none !important;
     border-color: var(--border-focus) !important;
+}
+
+/* Light Mode Polish Refinements */
+body.light-mode .contraindication-warning {
+    color: #be123c !important;
+    background: rgba(225, 29, 72, 0.08) !important;
+    border-color: rgba(225, 29, 72, 0.25) !important;
+}
+
+body.light-mode .tech-pill.active {
+    background: rgba(5, 150, 105, 0.12) !important;
+    border-color: var(--accent-clinical) !important;
+    color: #047857 !important;
+}
+
+body.light-mode .tech-pill:hover {
+    background: #e2e8f0 !important;
+    color: var(--text-primary) !important;
+}
+
+body.light-mode .phase-pill.am-pill {
+    background: rgba(217, 119, 6, 0.12) !important;
+    color: #b45309 !important;
+    border-color: rgba(217, 119, 6, 0.3) !important;
+}
+
+body.light-mode .phase-pill.pm-pill {
+    background: rgba(79, 70, 229, 0.12) !important;
+    color: #4338ca !important;
+    border-color: rgba(79, 70, 229, 0.3) !important;
+}
+
+body.light-mode .rx-telemetry-badge {
+    background: rgba(2, 132, 199, 0.08) !important;
+    border-color: rgba(2, 132, 199, 0.3) !important;
+    color: #0284c7 !important;
+}
+
+body.light-mode .rx-indicator-dot {
+    background: #0284c7 !important;
+    box-shadow: 0 0 5px rgba(2, 132, 199, 0.6) !important;
+}
+
+body.light-mode .auth-form-group input,
+body.light-mode input[type="text"],
+body.light-mode input[type="email"],
+body.light-mode input[type="password"] {
+    background: var(--bg-base) !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-primary) !important;
+}
+
+body.light-mode .auth-form-group label {
+    color: var(--text-secondary) !important;
 }
 
 

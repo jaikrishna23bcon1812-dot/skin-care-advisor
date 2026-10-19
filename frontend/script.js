@@ -74,33 +74,67 @@ if (typeof window !== "undefined") {
     };
 }
 
-// Dark Mode
-function toggleDarkMode() {
-    const isDark = document.body.classList.toggle("dark-mode");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
+// Theme Toggle (Dark Clinical Slate Default <-> Light Clean White / Zinc)
+function toggleTheme() {
+    const isLightMode = document.body.classList.contains("light-mode");
+    document.body.classList.toggle("light-mode");
+    const isLight = document.body.classList.contains("light-mode");
+
+    if (isLight) {
+        document.body.classList.remove("dark-mode");
+        if (document.documentElement) document.documentElement.classList.add("light-mode");
+    } else {
+        document.body.classList.add("dark-mode");
+        if (document.documentElement) document.documentElement.classList.remove("light-mode");
+    }
+
     const icon = document.getElementById("themeIcon");
     if (icon) {
-        icon.textContent = isDark ? "☀️" : "🌙";
+        icon.textContent = isLight ? "☀️" : "🌙";
     }
-    return isDark;
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+    return isLight;
 }
-window.toggleDarkMode = toggleDarkMode;
+window.toggleTheme = toggleTheme;
+window.toggleDarkMode = toggleTheme;
 
+// Immediate theme application to prevent unstyled flash
 (function () {
     const saved = localStorage.getItem("theme");
-    if (saved === "dark") {
+    if (saved === "light") {
+        document.body.classList.add("light-mode");
+        document.body.classList.remove("dark-mode");
+        if (document.documentElement) document.documentElement.classList.add("light-mode");
+    } else {
+        document.body.classList.remove("light-mode");
         document.body.classList.add("dark-mode");
+        if (document.documentElement) document.documentElement.classList.remove("light-mode");
     }
 })();
 
 window.addEventListener("DOMContentLoaded", function () {
+    const saved = localStorage.getItem("theme");
+    if (saved === "light") {
+        document.body.classList.add("light-mode");
+        document.body.classList.remove("dark-mode");
+        if (document.documentElement) document.documentElement.classList.add("light-mode");
+    } else {
+        document.body.classList.remove("light-mode");
+        document.body.classList.add("dark-mode");
+        if (document.documentElement) document.documentElement.classList.remove("light-mode");
+    }
+
+    const isLight = document.body.classList.contains("light-mode");
     const icon = document.getElementById("themeIcon");
-    if (icon && document.body.classList.contains("dark-mode")) {
-        icon.textContent = "☀️";
+    if (icon) {
+        icon.textContent = isLight ? "☀️" : "🌙";
     }
     const btn = document.getElementById("themeToggle");
     if (btn) {
-        btn.addEventListener("click", toggleDarkMode);
+        btn.onclick = function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+            toggleTheme();
+        };
     }
 });
 
