@@ -6,77 +6,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Catalogue - AI Skin Care Advisor</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="logo">SkinCare AI</div>
-        <div class="nav-links">
-            <a href="dashboard.html" data-i18n="dashboard">Dashboard</a>
-            <a href="analysis.html" data-i18n="analysis">Analysis</a>
-            <a href="routine.html" data-i18n="routine">Routine</a>
-            <a href="progress.html" data-i18n="progress">Progress</a>
-            <a href="compare.html" data-i18n="compare">Compare</a>
-            <a href="community.html">Community</a>
-            <a href="products.html" data-i18n="products">Products</a>
-            <a href="profile.html" data-i18n="profile">Profile</a>
-            <a href="settings.html" data-i18n="settings">Settings</a>
-            <a href="#" id="logoutBtn" data-i18n="logout">Logout</a>
-            <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">हिं</button>
-            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
+    <!-- Hidden Auth Modal (Sign In & Register) -->
+    <div id="authModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <div class="auth-modal-card modal-card">
+            <button type="button" class="auth-modal-close modal-close" onclick="closeAuthModal()" aria-label="Close modal">&times;</button>
+            <div class="auth-modal-header">
+                <div class="auth-modal-icon">✨</div>
+                <h3 id="authModalTitle">Sign In</h3>
+                <p id="authModalSubtitle">Access your personalized routine & sync your streak</p>
+            </div>
+            <div id="authErrorMsg" class="auth-error-msg hidden" role="alert"></div>
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-form-group">
+                    <label for="authEmail">Email Address</label>
+                    <input type="email" id="authEmail" name="email" placeholder="name@example.com" required autocomplete="email" />
+                </div>
+                <div class="auth-form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" name="password" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
+                </div>
+                <button type="submit" id="authSubmitBtn" class="primary-btn auth-submit-btn">Sign In</button>
+            </form>
+            <div class="auth-modal-footer">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="javascript:void(0)" id="authToggleLink" class="auth-toggle-link" onclick="toggleAuthMode(event)">Register</a>
+            </div>
         </div>
-    </nav>
+    </div>
 
-    <section class="products-section">
-        <h1>Product Catalogue</h1>
-        <p>Curated skincare products for Indian skin</p>
-
-        <div class="products-search">
-            <input type="text" id="searchInput" placeholder="🔍 Search products...">
+    <!-- Sticky Frosted Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand" onclick="window.location.href='index.html'" style="cursor: pointer;">
+                ✨ <span>SkinCare AI</span>
+            </div>
+            <nav class="app-nav nav-links">
+                <a href="index.html#analyzer" class="nav-link">Advisor</a>
+                <a href="index.html#routineTracker" class="nav-link">Streak</a>
+                <a href="products.html" class="nav-link active">Products</a>
+                <a href="community.html" class="nav-link">Community</a>
+                <a href="progress.html" class="nav-link">Progress</a>
+                <a href="compare.html" class="nav-link">Compare</a>
+                <a href="settings.html" class="nav-link">Settings</a>
+            </nav>
+            <div class="header-actions">
+                <button type="button" id="themeToggle" class="theme-toggle-btn action-btn" onclick="toggleDarkMode()" aria-label="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <button type="button" id="authModalBtn" class="auth-header-btn action-btn" onclick="openAuthModal()">Sign In</button>
+            </div>
         </div>
+    </header>
 
-        <div class="filter-bar">
-            <div class="filter-group">
-                <label>Category</label>
-                <div class="filter-chips" id="categoryFilter">
-                    <button class="filter-chip active" data-value="all">All</button>
-                    <button class="filter-chip" data-value="Cleanser">Cleansers</button>
-                    <button class="filter-chip" data-value="Serum">Serums</button>
-                    <button class="filter-chip" data-value="Moisturizer">Moisturizers</button>
-                    <button class="filter-chip" data-value="Sunscreen">Sunscreens</button>
-                    <button class="filter-chip" data-value="Treatment">Treatments</button>
+    <main class="main-container">
+        <section class="products-section card">
+            <h2>Product Catalogue</h2>
+            <p class="section-desc">Curated skincare products formulated with proven barrier repair and active ingredients.</p>
+
+            <div class="products-search form-group" style="margin-bottom: 1.5rem;">
+                <input type="text" id="searchInput" placeholder="🔍 Search by name, brand, or active ingredient (e.g., Niacinamide, Ceramides)...">
+            </div>
+
+            <div class="filter-bar" style="margin-bottom: 1.5rem;">
+                <div class="filter-group">
+                    <label>Category</label>
+                    <div class="filter-chips" id="categoryFilter">
+                        <button class="filter-chip active" data-value="all">All</button>
+                        <button class="filter-chip" data-value="Cleanser">Cleansers</button>
+                        <button class="filter-chip" data-value="Serum">Serums</button>
+                        <button class="filter-chip" data-value="Moisturizer">Moisturizers</button>
+                        <button class="filter-chip" data-value="Sunscreen">Sunscreens</button>
+                        <button class="filter-chip" data-value="Treatment">Treatments</button>
+                    </div>
+                </div>
+
+                <div class="filter-group" style="margin-top: 1rem;">
+                    <label>Skin Type</label>
+                    <div class="filter-chips" id="skinTypeFilter">
+                        <button class="filter-chip active" data-value="all">All</button>
+                        <button class="filter-chip" data-value="oily">Oily</button>
+                        <button class="filter-chip" data-value="dry">Dry</button>
+                        <button class="filter-chip" data-value="combination">Combination</button>
+                        <button class="filter-chip" data-value="sensitive">Sensitive</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="filter-group">
-                <label>Skin Type</label>
-                <div class="filter-chips" id="skinTypeFilter">
-                    <button class="filter-chip active" data-value="all">All</button>
-                    <button class="filter-chip" data-value="oily">Oily</button>
-                    <button class="filter-chip" data-value="dry">Dry</button>
-                    <button class="filter-chip" data-value="combination">Combination</button>
-                    <button class="filter-chip" data-value="sensitive">Sensitive</button>
+            <div class="products-grid" id="productsGrid">
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Loading products...</p>
                 </div>
             </div>
-        </div>
 
-        <div class="products-grid" id="productsGrid">
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <p>Loading products...</p>
+            <div id="noProducts" class="empty-state" style="display:none;">
+                <div class="empty-state-icon">🔍</div>
+                <h3>No products found</h3>
+                <p>Try changing the search keyword or filter chips above</p>
             </div>
-        </div>
+        </section>
+    </main>
 
-        <div id="noProducts" class="empty-state" style="display:none;">
-            <div class="empty-state-icon">🔍</div>
-            <h3>No products found</h3>
-            <p>Try changing the filters above</p>
-        </div>
-    </section>
+    <footer class="app-footer">
+        <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
+    </footer>
 
-    <script src="translations.js"></script>
-    <script src="script.js"></script>
+    <script src="translations.js?v=8"></script>
+    <script src="script.js?v=8"></script>
 </body>
 
 </html>

@@ -6,81 +6,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Before/After Comparison - AI Skin Care Advisor</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="logo">SkinCare AI</div>
-        <div class="nav-links">
-            <a href="dashboard.html" data-i18n="dashboard">Dashboard</a>
-            <a href="analysis.html" data-i18n="analysis">Analysis</a>
-            <a href="routine.html" data-i18n="routine">Routine</a>
-            <a href="progress.html" data-i18n="progress">Progress</a>
-            <a href="compare.html" data-i18n="compare">Compare</a>
-            <a href="community.html">Community</a>
-            <a href="products.html" data-i18n="products">Products</a>
-            <a href="profile.html" data-i18n="profile">Profile</a>
-            <a href="settings.html" data-i18n="settings">Settings</a>
-            <a href="#" id="logoutBtn" data-i18n="logout">Logout</a>
-            <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">हिं</button>
-            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
+    <!-- Hidden Auth Modal (Sign In & Register) -->
+    <div id="authModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <div class="auth-modal-card modal-card">
+            <button type="button" class="auth-modal-close modal-close" onclick="closeAuthModal()" aria-label="Close modal">&times;</button>
+            <div class="auth-modal-header">
+                <div class="auth-modal-icon">✨</div>
+                <h3 id="authModalTitle">Sign In</h3>
+                <p id="authModalSubtitle">Access your personalized routine & sync your streak</p>
+            </div>
+            <div id="authErrorMsg" class="auth-error-msg hidden" role="alert"></div>
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-form-group">
+                    <label for="authEmail">Email Address</label>
+                    <input type="email" id="authEmail" name="email" placeholder="name@example.com" required autocomplete="email" />
+                </div>
+                <div class="auth-form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" name="password" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
+                </div>
+                <button type="submit" id="authSubmitBtn" class="primary-btn auth-submit-btn">Sign In</button>
+            </form>
+            <div class="auth-modal-footer">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="javascript:void(0)" id="authToggleLink" class="auth-toggle-link" onclick="toggleAuthMode(event)">Register</a>
+            </div>
         </div>
-    </nav>
+    </div>
 
-    <section class="compare-section">
-        <h1>Before/After Comparison</h1>
-        <p>Upload two photos and see your skin transformation</p>
+    <!-- Sticky Frosted Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand" onclick="window.location.href='index.html'" style="cursor: pointer;">
+                ✨ <span>SkinCare AI</span>
+            </div>
+            <nav class="app-nav nav-links">
+                <a href="index.html#analyzer" class="nav-link">Advisor</a>
+                <a href="index.html#routineTracker" class="nav-link">Streak</a>
+                <a href="products.html" class="nav-link">Products</a>
+                <a href="community.html" class="nav-link">Community</a>
+                <a href="progress.html" class="nav-link">Progress</a>
+                <a href="compare.html" class="nav-link active">Compare</a>
+                <a href="settings.html" class="nav-link">Settings</a>
+            </nav>
+            <div class="header-actions">
+                <button type="button" id="themeToggle" class="theme-toggle-btn action-btn" onclick="toggleDarkMode()" aria-label="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <button type="button" id="authModalBtn" class="auth-header-btn action-btn" onclick="openAuthModal()">Sign In</button>
+            </div>
+        </div>
+    </header>
 
-        <div class="comparison-upload-card">
-            <h3>📸 Create New Comparison</h3>
+    <main class="main-container">
+        <section class="compare-section card">
+            <h2>Before / After Visual Comparison</h2>
+            <p class="section-desc">Upload side-by-side snapshots to visualize barrier repair and transformation progress.</p>
 
-            <div class="upload-two-grid">
-                <div class="upload-box-wrapper">
-                    <label>Before Photo</label>
-                    <div class="mini-upload-area" id="beforeUploadArea" data-side="before">
-                        <input type="file" id="beforeInput" accept="image/*" hidden>
-                        <div class="mini-upload-content" id="beforePlaceholder">
-                            <div class="mini-icon">📷</div>
-                            <p>Click to upload</p>
+            <div class="comparison-upload-card card" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1.25rem; color: var(--text-primary); text-align: center;">📸 Create New Comparison</h3>
+
+                <div class="upload-two-grid">
+                    <div class="upload-box-wrapper">
+                        <label>Before Photo</label>
+                        <div class="mini-upload-area" id="beforeUploadArea" data-side="before">
+                            <input type="file" id="beforeInput" accept="image/*" hidden>
+                            <div class="mini-upload-content" id="beforePlaceholder">
+                                <div class="mini-icon">📷</div>
+                                <p>Click to upload Before photo</p>
+                            </div>
+                            <img id="beforePreview" style="display:none;" alt="Before">
                         </div>
-                        <img id="beforePreview" style="display:none;" alt="Before">
+                        <input type="text" id="beforeDateLabel" placeholder="Label (e.g., Day 1)" value="Day 1">
                     </div>
-                    <input type="text" id="beforeDateLabel" placeholder="Label (e.g., Day 1)" value="Day 1">
+
+                    <div class="upload-box-wrapper">
+                        <label>After Photo</label>
+                        <div class="mini-upload-area" id="afterUploadArea" data-side="after">
+                            <input type="file" id="afterInput" accept="image/*" hidden>
+                            <div class="mini-upload-content" id="afterPlaceholder">
+                                <div class="mini-icon">📷</div>
+                                <p>Click to upload After photo</p>
+                            </div>
+                            <img id="afterPreview" style="display:none;" alt="After">
+                        </div>
+                        <input type="text" id="afterDateLabel" placeholder="Label (e.g., Day 30)" value="Today">
+                    </div>
                 </div>
 
-                <div class="upload-box-wrapper">
-                    <label>After Photo</label>
-                    <div class="mini-upload-area" id="afterUploadArea" data-side="after">
-                        <input type="file" id="afterInput" accept="image/*" hidden>
-                        <div class="mini-upload-content" id="afterPlaceholder">
-                            <div class="mini-icon">📷</div>
-                            <p>Click to upload</p>
-                        </div>
-                        <img id="afterPreview" style="display:none;" alt="After">
-                    </div>
-                    <input type="text" id="afterDateLabel" placeholder="Label (e.g., Day 30)" value="Today">
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="comparisonNotes">Notes (optional)</label>
+                    <input type="text" id="comparisonNotes" placeholder="e.g., 30 days of consistent barrier ceramides + SPF 50">
                 </div>
+
+                <button id="saveComparisonBtn" class="primary-btn" disabled style="width: 100%; margin-top: 1rem;">
+                    Save Comparison
+                </button>
             </div>
 
-            <div class="form-group" style="margin-top: 20px;">
-                <label>Notes (optional)</label>
-                <input type="text" id="comparisonNotes" placeholder="e.g., 30 days of consistent routine">
+            <div class="saved-comparisons card">
+                <h3 class="section-title" style="margin-bottom: 1.25rem;">My Transformations</h3>
+                <div id="comparisonsList"></div>
             </div>
+        </section>
+    </main>
 
-            <button id="saveComparisonBtn" class="btn-primary" disabled style="width: 100%; margin-top: 15px;">
-                Save Comparison
-            </button>
-        </div>
+    <footer class="app-footer">
+        <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
+    </footer>
 
-        <div class="saved-comparisons">
-            <h2 class="section-title">My Comparisons</h2>
-            <div id="comparisonsList"></div>
-        </div>
-    </section>
-
-    <script src="translations.js"></script>
-    <script src="script.js"></script>
+    <script src="translations.js?v=8"></script>
+    <script src="script.js?v=8"></script>
 </body>
 
 </html>

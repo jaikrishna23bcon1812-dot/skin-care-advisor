@@ -4,106 +4,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progress - AI Skin Care Advisor</title>
+    <title>Progress Tracker - AI Skin Care Advisor</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="logo">SkinCare AI</div>
-        <div class="nav-links">
-            <a href="dashboard.html" data-i18n="dashboard">Dashboard</a>
-            <a href="analysis.html" data-i18n="analysis">Analysis</a>
-            <a href="routine.html" data-i18n="routine">Routine</a>
-            <a href="progress.html" data-i18n="progress">Progress</a>
-            <a href="compare.html" data-i18n="compare">Compare</a>
-            <a href="community.html">Community</a>
-            <a href="products.html" data-i18n="products">Products</a>
-            <a href="profile.html" data-i18n="profile">Profile</a>
-            <a href="settings.html" data-i18n="settings">Settings</a>
-            <a href="#" id="logoutBtn" data-i18n="logout">Logout</a>
-            <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">हिं</button>
-            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
-        </div>
-    </nav>
-
-    <section class="progress-section">
-        <h1>Track Your Progress</h1>
-        <p>Log your skin condition daily and see your journey</p>
-
-        <div class="progress-summary">
-            <div class="summary-card">
-                <div class="summary-icon">🔥</div>
-                <div class="summary-value" id="streakValue">0</div>
-                <div class="summary-label">Day Streak</div>
+    <!-- Hidden Auth Modal (Sign In & Register) -->
+    <div id="authModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <div class="auth-modal-card modal-card">
+            <button type="button" class="auth-modal-close modal-close" onclick="closeAuthModal()" aria-label="Close modal">&times;</button>
+            <div class="auth-modal-header">
+                <div class="auth-modal-icon">✨</div>
+                <h3 id="authModalTitle">Sign In</h3>
+                <p id="authModalSubtitle">Access your personalized routine & sync your streak</p>
             </div>
-            <div class="summary-card">
-                <div class="summary-icon">📅</div>
-                <div class="summary-value" id="weekAvg">0.0</div>
-                <div class="summary-label">This Week Avg</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon">📊</div>
-                <div class="summary-value" id="totalCount">0</div>
-                <div class="summary-label">Total Entries</div>
+            <div id="authErrorMsg" class="auth-error-msg hidden" role="alert"></div>
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-form-group">
+                    <label for="authEmail">Email Address</label>
+                    <input type="email" id="authEmail" name="email" placeholder="name@example.com" required autocomplete="email" />
+                </div>
+                <div class="auth-form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" name="password" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
+                </div>
+                <button type="submit" id="authSubmitBtn" class="primary-btn auth-submit-btn">Sign In</button>
+            </form>
+            <div class="auth-modal-footer">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="javascript:void(0)" id="authToggleLink" class="auth-toggle-link" onclick="toggleAuthMode(event)">Register</a>
             </div>
         </div>
+    </div>
 
-        <div class="progress-form">
-            <h3 style="margin-bottom: 20px; color: var(--text-primary);">Add New Entry</h3>
-
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" id="progressDate">
+    <!-- Sticky Frosted Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand" onclick="window.location.href='index.html'" style="cursor: pointer;">
+                ✨ <span>SkinCare AI</span>
             </div>
-
-            <div class="form-group">
-                <label>Rating</label>
-                <select id="progressRating">
-                    <option value="1">1 - Worse</option>
-                    <option value="2">2 - Bad</option>
-                    <option value="3" selected>3 - Same</option>
-                    <option value="4">4 - Better</option>
-                    <option value="5">5 - Great</option>
-                </select>
+            <nav class="app-nav nav-links">
+                <a href="index.html#analyzer" class="nav-link">Advisor</a>
+                <a href="index.html#routineTracker" class="nav-link">Streak</a>
+                <a href="products.html" class="nav-link">Products</a>
+                <a href="community.html" class="nav-link">Community</a>
+                <a href="progress.html" class="nav-link active">Progress</a>
+                <a href="compare.html" class="nav-link">Compare</a>
+                <a href="settings.html" class="nav-link">Settings</a>
+            </nav>
+            <div class="header-actions">
+                <button type="button" id="themeToggle" class="theme-toggle-btn action-btn" onclick="toggleDarkMode()" aria-label="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <button type="button" id="authModalBtn" class="auth-header-btn action-btn" onclick="openAuthModal()">Sign In</button>
             </div>
-
-            <div class="form-group">
-                <label>Notes</label>
-                <textarea id="progressNotes" placeholder="How is your skin today?"></textarea>
-            </div>
-
-            <button id="addProgressBtn" class="btn-primary">Add Entry</button>
         </div>
+    </header>
 
-        <div class="chart-container">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="margin: 0;">Progress Chart</h3>
-                <div class="chart-type-toggle">
-                    <button class="chart-toggle-btn active" data-type="line">📈 Line</button>
-                    <button class="chart-toggle-btn" data-type="bar">📊 Bar</button>
+    <main class="main-container">
+        <!-- Progress Overview & Logging Card -->
+        <section class="progress-section card">
+            <h2>Track Your Progress</h2>
+            <p class="section-desc">Log your daily skin condition, watch your metrics trend, and keep consistency alive.</p>
+
+            <div class="progress-summary stats-grid" style="margin-bottom: 2rem;">
+                <div class="summary-card stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value" id="streakValue">0</div>
+                    <div class="stat-label">Day Streak</div>
+                </div>
+                <div class="summary-card stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-value" id="weekAvg">0.0</div>
+                    <div class="stat-label">This Week Avg</div>
+                </div>
+                <div class="summary-card stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">Total Entries</div>
                 </div>
             </div>
-            <canvas id="progressChart"></canvas>
-        </div>
 
-        <div class="progress-list">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="margin: 0;">Your Entries</h3>
-                <button id="exportBtn" class="btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">
-                    📤 Export CSV
-                </button>
+            <div class="progress-form card" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Add New Entry</h3>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="progressDate">Date</label>
+                        <input type="date" id="progressDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="progressRating">Rating</label>
+                        <select id="progressRating">
+                            <option value="1">1 - Worse</option>
+                            <option value="2">2 - Bad</option>
+                            <option value="3" selected>3 - Same</option>
+                            <option value="4">4 - Better</option>
+                            <option value="5">5 - Great</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="progressNotes">Notes</label>
+                    <textarea id="progressNotes" rows="3" placeholder="How does your skin feel today? Any new breakout or barrier redness?"></textarea>
+                </div>
+
+                <button id="addProgressBtn" class="primary-btn" style="margin-top: 0.5rem;">Add Entry</button>
             </div>
-            <div id="progressList"></div>
-        </div>
-    </section>
+
+            <!-- Chart Card -->
+            <div class="chart-container card" style="margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0;">Progress Trajectory</h3>
+                    <div class="chart-type-toggle">
+                        <button class="action-btn chart-toggle-btn active" data-type="line">📈 Line</button>
+                        <button class="action-btn chart-toggle-btn" data-type="bar">📊 Bar</button>
+                    </div>
+                </div>
+                <canvas id="progressChart"></canvas>
+            </div>
+
+            <!-- List Card -->
+            <div class="progress-list card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0;">Logged Entries</h3>
+                    <button id="exportBtn" class="action-btn" style="padding: 6px 16px; font-size: 0.88rem;">
+                        📤 Export CSV
+                    </button>
+                </div>
+                <div id="progressList"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="translations.js"></script>
-    <script src="script.js"></script>
+    <script src="translations.js?v=8"></script>
+    <script src="script.js?v=8"></script>
 </body>
 
 </html>

@@ -6,263 +6,294 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - AI Skin Care Advisor</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="logo">SkinCare AI</div>
-        <div class="nav-links">
-            <a href="dashboard.html" data-i18n="dashboard">Dashboard</a>
-            <a href="analysis.html" data-i18n="analysis">Analysis</a>
-            <a href="routine.html" data-i18n="routine">Routine</a>
-            <a href="progress.html" data-i18n="progress">Progress</a>
-            <a href="compare.html" data-i18n="compare">Compare</a>
-            <a href="community.html">Community</a>
-            <a href="products.html" data-i18n="products">Products</a>
-            <a href="profile.html" data-i18n="profile">Profile</a>
-            <a href="settings.html" data-i18n="settings">Settings</a>
-            <a href="#" id="logoutBtn" data-i18n="logout">Logout</a>
-            <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">हिं</button>
-            <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span></button>
-        </div>
-    </nav>
-
-    <section class="settings-section">
-        <h1>Settings</h1>
-        <p>Manage your account preferences</p>
-
-        <div class="settings-card">
-            <div class="settings-header">
-                <div class="settings-icon">👤</div>
-                <div>
-                    <h3>Account</h3>
-                    <p>Manage your personal information</p>
-                </div>
+    <!-- Hidden Auth Modal (Sign In & Register) -->
+    <div id="authModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <div class="auth-modal-card modal-card">
+            <button type="button" class="auth-modal-close modal-close" onclick="closeAuthModal()" aria-label="Close modal">&times;</button>
+            <div class="auth-modal-header">
+                <div class="auth-modal-icon">✨</div>
+                <h3 id="authModalTitle">Sign In</h3>
+                <p id="authModalSubtitle">Access your personalized routine & sync your streak</p>
             </div>
-            <div class="settings-body">
-                <div class="settings-row">
-                    <div>
-                        <strong>Name</strong>
-                        <p id="settingsName">Loading...</p>
-                    </div>
-                    <a href="profile.html" class="btn-secondary">Edit</a>
+            <div id="authErrorMsg" class="auth-error-msg hidden" role="alert"></div>
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-form-group">
+                    <label for="authEmail">Email Address</label>
+                    <input type="email" id="authEmail" name="email" placeholder="name@example.com" required autocomplete="email" />
                 </div>
-                <div class="settings-row">
-                    <div>
-                        <strong>Email</strong>
-                        <p id="settingsEmail">Loading...</p>
-                    </div>
+                <div class="auth-form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" name="password" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
                 </div>
+                <button type="submit" id="authSubmitBtn" class="primary-btn auth-submit-btn">Sign In</button>
+            </form>
+            <div class="auth-modal-footer">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="javascript:void(0)" id="authToggleLink" class="auth-toggle-link" onclick="toggleAuthMode(event)">Register</a>
             </div>
         </div>
+    </div>
 
-        <div class="settings-card">
-            <div class="settings-header">
-                <div class="settings-icon">🔒</div>
-                <div>
-                    <h3>Change Password</h3>
-                    <p>Update your account password</p>
-                </div>
+    <!-- Sticky Frosted Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand" onclick="window.location.href='index.html'" style="cursor: pointer;">
+                ✨ <span>SkinCare AI</span>
             </div>
-            <div class="settings-body">
-                <div class="form-group">
-                    <label>Current Password</label>
-                    <input type="password" id="currentPassword" placeholder="Enter current password">
-                </div>
-                <div class="form-group">
-                    <label>New Password</label>
-                    <input type="password" id="newPassword" placeholder="At least 6 characters">
-                </div>
-                <div class="form-group">
-                    <label>Confirm New Password</label>
-                    <input type="password" id="confirmPassword" placeholder="Re-enter new password">
-                </div>
-                <button id="changePasswordBtn" class="btn-primary">Update Password</button>
-            </div>
-        </div>
-
-        <div class="settings-card">
-            <div class="settings-header">
-                <div class="settings-icon">🔔</div>
-                <div>
-                    <h3>Notifications</h3>
-                    <p>Choose what updates you receive</p>
-                </div>
-            </div>
-            <div class="settings-body">
-                <div class="settings-row">
-                    <div>
-                        <strong>Daily Routine Reminders</strong>
-                        <p>Get reminded to follow your routine</p>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="notifDaily">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="settings-row">
-                    <div>
-                        <strong>Weekly Progress Reports</strong>
-                        <p>See your skin progress summary</p>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="notifWeekly">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="settings-row">
-                    <div>
-                        <strong>Product Recommendations</strong>
-                        <p>Get personalized product suggestions</p>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="notifProducts">
-                        <span class="slider"></span>
-                    </label>
-                </div>
+            <nav class="app-nav nav-links">
+                <a href="index.html#analyzer" class="nav-link">Advisor</a>
+                <a href="index.html#routineTracker" class="nav-link">Streak</a>
+                <a href="products.html" class="nav-link">Products</a>
+                <a href="community.html" class="nav-link">Community</a>
+                <a href="progress.html" class="nav-link">Progress</a>
+                <a href="compare.html" class="nav-link">Compare</a>
+                <a href="settings.html" class="nav-link active">Settings</a>
+            </nav>
+            <div class="header-actions">
+                <button type="button" id="themeToggle" class="theme-toggle-btn action-btn" onclick="toggleDarkMode()" aria-label="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <button type="button" id="authModalBtn" class="auth-header-btn action-btn" onclick="openAuthModal()">Sign In</button>
             </div>
         </div>
+    </header>
 
-        <div class="settings-card">
-            <div class="settings-header">
-                <div class="settings-icon">📧</div>
-                <div>
-                    <h3>Email Reminders</h3>
-                    <p>Get daily routine reminders to your inbox</p>
+    <main class="main-container">
+        <section class="settings-section card">
+            <h2>Account & App Settings</h2>
+            <p class="section-desc">Manage your notification schedules, credentials, and app preferences.</p>
+
+            <div class="settings-card card" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 1.5rem;">
+                <div class="settings-header">
+                    <div class="settings-icon">👤</div>
+                    <div>
+                        <h3>Account Details</h3>
+                        <p class="section-desc" style="margin-bottom: 0;">Manage your personal profile and email</p>
+                    </div>
+                </div>
+                <div class="settings-body" style="margin-top: 1rem;">
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Name</strong>
+                            <p id="settingsName" style="color: var(--text-secondary); margin: 0.2rem 0 0 0;">Loading...</p>
+                        </div>
+                        <a href="profile.html" class="action-btn" style="padding: 6px 14px; font-size: 0.85rem;">Edit</a>
+                    </div>
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0;">
+                        <div>
+                            <strong>Email</strong>
+                            <p id="settingsEmail" style="color: var(--text-secondary); margin: 0.2rem 0 0 0;">Loading...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="settings-body">
-                <div class="settings-row">
-                    <div>
-                        <strong>Daily Reminder</strong>
-                        <p>Receive a daily email with your skincare routine</p>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="emailReminderToggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
 
-                <div class="settings-row" id="reminderTimeRow" style="display:none;">
+            <div class="settings-card card" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 1.5rem;">
+                <div class="settings-header">
+                    <div class="settings-icon">🔒</div>
                     <div>
-                        <strong>Reminder Time</strong>
-                        <p>When should we send your reminder?</p>
+                        <h3>Change Password</h3>
+                        <p class="section-desc" style="margin-bottom: 0;">Update your account password</p>
                     </div>
-                    <input type="time" id="reminderTimeInput" value="09:00" style="padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; color: var(--text-primary); background: var(--bg-card);">
                 </div>
-
-                <div class="settings-row">
-                    <div>
-                        <strong>Test Email</strong>
-                        <p>Send a test reminder to your email</p>
+                <div class="settings-body" style="margin-top: 1rem;">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
                     </div>
-                    <button id="testEmailBtn" class="btn-secondary">Send Test</button>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" placeholder="At least 6 characters">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Re-enter new password">
+                    </div>
+                    <button id="changePasswordBtn" class="primary-btn" style="margin-top: 0.5rem;">Update Password</button>
                 </div>
             </div>
-        </div>
 
-        <div class="settings-card">
-            <div class="settings-header">
-                <div class="settings-icon">🔔</div>
-                <div>
-                    <h3>Push Notifications</h3>
-                    <p>Get browser notifications for reminders</p>
+            <div class="settings-card card" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 1.5rem;">
+                <div class="settings-header">
+                    <div class="settings-icon">🔔</div>
+                    <div>
+                        <h3>Push Notifications</h3>
+                        <p class="section-desc" style="margin-bottom: 0;">Get scheduled browser notifications for routine reminders</p>
+                    </div>
+                </div>
+                <div class="settings-body" style="margin-top: 1rem;">
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Enable Push Notifications</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Allow browser notifications for daily AM/PM reminders</p>
+                        </div>
+                        <button id="enableNotificationsBtn" class="primary-btn" style="padding: 6px 16px; font-size: 0.88rem;">Enable</button>
+                    </div>
+
+                    <div class="settings-row" id="notifStatusRow" style="display:none; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Status</strong>
+                            <p id="notifStatusText" style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Enabled</p>
+                        </div>
+                        <span id="notifStatusIcon" style="font-size: 1.5rem;">✅</span>
+                    </div>
+
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Daily Routine Reminders</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Morning 8:00 AM & Evening 9:00 PM alerts</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notifDaily">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Weekly Progress Reports</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Summary of your weekly streak and skin logs</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notifWeekly">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Product Recommendations</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Receive personalized active ingredient updates</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notifProducts">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Routine Reminder Toggle</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Active alert toggle for daily steps</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="routineNotifToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Progress Reminder</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Get reminded to log your skin progress</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="progressNotifToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0;">
+                        <div>
+                            <strong>Test Notification</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Send a test notification to your device</p>
+                        </div>
+                        <button id="testNotificationBtn" class="action-btn" style="padding: 6px 16px; font-size: 0.88rem;">Send Test</button>
+                    </div>
                 </div>
             </div>
-            <div class="settings-body">
-                <div class="settings-row">
-                    <div>
-                        <strong>Enable Notifications</strong>
-                        <p>Allow browser notifications for reminders</p>
-                    </div>
-                    <button id="enableNotificationsBtn" class="btn-primary">Enable</button>
-                </div>
 
-                <div class="settings-row" id="notifStatusRow" style="display:none;">
+            <div class="settings-card card" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 1.5rem;">
+                <div class="settings-header">
+                    <div class="settings-icon">📧</div>
                     <div>
-                        <strong>Status</strong>
-                        <p id="notifStatusText">Enabled</p>
+                        <h3>Email Reminders</h3>
+                        <p class="section-desc" style="margin-bottom: 0;">Get daily routine reminders delivered to your inbox</p>
                     </div>
-                    <span id="notifStatusIcon" style="font-size: 1.5rem;">✅</span>
                 </div>
-
-                <div class="settings-row">
-                    <div>
-                        <strong>Routine Reminder</strong>
-                        <p>Get notified to follow your routine</p>
+                <div class="settings-body" style="margin-top: 1rem;">
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Daily Email Reminder</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Receive your morning skincare steps via email</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="emailReminderToggle">
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="routineNotifToggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
 
-                <div class="settings-row">
-                    <div>
-                        <strong>Progress Reminder</strong>
-                        <p>Get reminded to log your progress</p>
+                    <div class="settings-row" id="reminderTimeRow" style="display:none; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <strong>Reminder Time</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Choose preferred delivery time</p>
+                        </div>
+                        <input type="time" id="reminderTimeInput" value="09:00" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;">
                     </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="progressNotifToggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
 
-                <div class="settings-row">
-                    <div>
-                        <strong>Test Notification</strong>
-                        <p>Send a test notification to yourself</p>
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0;">
+                        <div>
+                            <strong>Test Email</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Send a test routine summary to your email</p>
+                        </div>
+                        <button id="testEmailBtn" class="action-btn" style="padding: 6px 16px; font-size: 0.88rem;">Send Test</button>
                     </div>
-                    <button id="testNotificationBtn" class="btn-secondary">Send Test</button>
                 </div>
             </div>
-        </div>
 
-        <div class="settings-card">
-            <div class="settings-header">
-                <div class="settings-icon">🎨</div>
-                <div>
-                    <h3>Appearance</h3>
-                    <p>Customize how the app looks</p>
-                </div>
-            </div>
-            <div class="settings-body">
-                <div class="settings-row">
+            <div class="settings-card card" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 1.5rem;">
+                <div class="settings-header">
+                    <div class="settings-icon">🎨</div>
                     <div>
-                        <strong>Dark Mode</strong>
-                        <p>Switch between light and dark themes</p>
+                        <h3>Appearance</h3>
+                        <p class="section-desc" style="margin-bottom: 0;">Customize application theme</p>
                     </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="settingsDarkMode">
-                        <span class="slider"></span>
-                    </label>
+                </div>
+                <div class="settings-body" style="margin-top: 1rem;">
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0;">
+                        <div>
+                            <strong>Dark Mode</strong>
+                            <p style="color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.88rem;">Switch between light and dark theme</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="settingsDarkMode">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="settings-card danger-zone">
-            <div class="settings-header">
-                <div class="settings-icon">⚠️</div>
-                <div>
-                    <h3>Danger Zone</h3>
-                    <p>Irreversible actions - proceed with caution</p>
-                </div>
-            </div>
-            <div class="settings-body">
-                <div class="settings-row">
+            <div class="settings-card danger-zone card" style="background: #fef2f2; border-color: #fecaca;">
+                <div class="settings-header">
+                    <div class="settings-icon">⚠️</div>
                     <div>
-                        <strong>Logout from All Devices</strong>
-                        <p>Sign out everywhere you're logged in</p>
+                        <h3 style="color: #b91c1c;">Danger Zone</h3>
+                        <p class="section-desc" style="color: #ef4444; margin-bottom: 0;">Irreversible actions - proceed with caution</p>
                     </div>
-                    <button id="logoutAllBtn" class="btn-danger">Logout All</button>
+                </div>
+                <div class="settings-body" style="margin-top: 1rem;">
+                    <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0;">
+                        <div>
+                            <strong>Logout from All Devices</strong>
+                            <p style="color: #991b1b; margin: 0.2rem 0 0 0; font-size: 0.88rem;">Sign out everywhere your account is active</p>
+                        </div>
+                        <button id="logoutAllBtn" class="action-btn" style="background: #dc2626; color: #fff; padding: 6px 16px; font-size: 0.88rem; border-color: #b91c1c;">Logout All</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
-    <script src="translations.js"></script>
-    <script src="script.js"></script>
+    <footer class="app-footer">
+        <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
+    </footer>
+
+    <script src="translations.js?v=8"></script>
+    <script src="script.js?v=8"></script>
 </body>
 
 </html>
