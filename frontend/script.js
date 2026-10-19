@@ -4,23 +4,74 @@ const API_BASE_URL = isLocal
     : "https://skin-care-api.onrender.com";
 const API_URL = `${API_BASE_URL}/api`;
 
-// Toast Notifications
-function showToast(message, type = "info") {
-    let container = document.querySelector(".toast-container");
+// ==========================================
+// TOAST NOTIFICATION SYSTEM (SaaS Quality)
+// ==========================================
+function getOrCreateToastContainer() {
+    let container = document.getElementById("toastContainer");
     if (!container) {
         container = document.createElement("div");
+        container.id = "toastContainer";
         container.className = "toast-container";
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Notifications");
         document.body.appendChild(container);
     }
+    return container;
+}
+
+function showToast(message, type = "info") {
+    const container = getOrCreateToastContainer();
+    const validTypes = ["success", "error", "info"];
+    const toastType = validTypes.includes(type) ? type : "info";
+
+    const icons = {
+        success: "✓",
+        error: "✕",
+        info: "ℹ"
+    };
+
     const toast = document.createElement("div");
-    toast.className = "toast " + type;
-    const icons = { success: "✅", error: "❌", info: "ℹ️" };
-    toast.innerHTML = `<span class="toast-icon">${icons[type] || "ℹ️"}</span><span class="toast-message">${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => {
+    toast.className = `toast toast-${toastType}`;
+    toast.setAttribute("role", "alert");
+    toast.innerHTML = `
+        <div class="toast-icon-wrap">${icons[toastType]}</div>
+        <div class="toast-content">
+            <span class="toast-message">${message}</span>
+        </div>
+        <button type="button" class="toast-close-btn" aria-label="Dismiss notification">&times;</button>
+    `;
+
+    // Click to dismiss
+    const dismiss = () => {
+        if (toast.classList.contains("removing")) return;
         toast.classList.add("removing");
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
+        setTimeout(() => {
+            if (toast.parentElement) toast.remove();
+        }, 300);
+    };
+
+    toast.addEventListener("click", dismiss);
+    const closeBtn = toast.querySelector(".toast-close-btn");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dismiss();
+        });
+    }
+
+    container.appendChild(toast);
+
+    // Auto-dismiss in 3.5 seconds
+    setTimeout(dismiss, 3500);
+}
+window.showToast = showToast;
+
+// Route any native window.alert to SaaS toast
+if (typeof window !== "undefined") {
+    window.alert = function (message) {
+        showToast(message, "info");
+    };
 }
 
 // Dark Mode
@@ -376,50 +427,158 @@ window.analyzePhoto = analyzePhoto;
 
 let skinChartInstance = null;
 async function handleAnalyze(e) {
-    e.preventDefault();
-    const skinType = document.getElementById("skinType")?.value;
-    const concern = document.getElementById("primaryConcern")?.value;
+    if (e && e.preventDefault) e.preventDefault();
+    const skinType = document.getElementById("skinType")?.value || "combination";
+    const concern = document.getElementById("primaryConcern")?.value || "barrier repair";
     const resultsCard = document.getElementById("routineResults");
-    if(resultsCard) {
+    if (resultsCard) {
         resultsCard.classList.remove("hidden");
         toggleSkeleton(true);
         resultsCard.scrollIntoView({ behavior: "smooth" });
     }
     try {
         const res = await apiFetch("/api/analysis", {
-            method: "POST", headers: { "Content-Type": "application/json" },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ skinType, concern }),
         });
         const data = await res.json();
         renderRoutineResults(data.routine);
+        showToast("Personalized AI regimen generated!", "success");
     } catch (err) {
         renderRoutineResults({
-            am: ["Gentle Gel Cleanser", "Niacinamide 5% Serum", "Barrier Repair Emulsion", "SPF 50+"],
-            pm: ["Cleansing Oil", "Barrier Cleanser", "Ceramide Cream"]
+            am: [
+                "Gentle Balancing Gel Cleanser",
+                "5% Niacinamide + Zinc Serum",
+                "Lightweight Barrier Restorative Lotion",
+                "Broad-Spectrum Hydrating Sunscreen SPF 50"
+            ],
+            pm: [
+                "Jojoba Oil Pre-Cleanse",
+                "Squalane Hydrating Cleanser",
+                "Ceramide Deep Repair Complex",
+                "Spot Blemish Gel (as needed)"
+            ]
         });
-    } finally { toggleSkeleton(false); }
+        showToast("Personalized clinical regimen generated!", "success");
+    } finally {
+        toggleSkeleton(false);
+    }
+}
+window.handleAnalyze = handleAnalyze;
+
+let lastGeneratedRoutine = null;
+
+// Highlight clinical active ingredients with stylish badge
+function highlightActiveIngredients(text) {
+    if (!text) return "";
+    const actives = [
+        "Niacinamide", "Zinc", "Hyaluronic Acid", "Centella Asiatica", "Centella", 
+        "Ceramide Deep Repair Complex", "Ceramide", "Ceramides", "Azelaic Acid", 
+        "Salicylic Acid", "BHA", "AHA", "Glycolic Acid", "Lactic Acid", "Squalane", 
+        "Retinol", "Retinoid", "Peptides", "Vitamin C", "Ascorbic Acid", "SPF 50\\+", 
+        "SPF 50", "Broad-Spectrum", "Jojoba Oil", "Jojoba", "Panthenol", "Glycerin", 
+        "Allantoin", "Tea Tree", "Alpha Arbutin"
+    ];
+    const regex = new RegExp(`\\b(${actives.join("|")})\\b`, "gi");
+    return text.replace(regex, (match) => `<span class="clinical-active-highlight">✨ ${match}</span>`);
+}
+
+// Timing tag inference for clinical guidance
+function getClinicalTimingTag(stepText, timeOfDay) {
+    const lower = (stepText || "").toLowerCase();
+    if (timeOfDay === "am") {
+        if (lower.includes("cleanse") || lower.includes("wash")) return "Morning • 60s gentle massage";
+        if (lower.includes("sunscreen") || lower.includes("spf") || lower.includes("shield")) return "Morning • 2 finger-lengths SPF protection";
+        if (lower.includes("serum") || lower.includes("zinc") || lower.includes("niacinamide") || lower.includes("vitamin c") || lower.includes("azelaic")) return "Morning • 3-4 drops, pat gently";
+        if (lower.includes("moistur") || lower.includes("lotion") || lower.includes("emulsion") || lower.includes("barrier") || lower.includes("cream")) return "Morning • Pea-sized barrier seal";
+        if (lower.includes("toner") || lower.includes("mist") || lower.includes("essence")) return "Morning • Hydrating pat, damp skin";
+        return "Morning • Daily application";
+    } else {
+        if (lower.includes("pre-cleanse") || lower.includes("oil") || lower.includes("balm") || lower.includes("micellar")) return "Night • 60s pre-cleanse on dry skin";
+        if (lower.includes("cleanse") || lower.includes("wash")) return "Night • Water-based wash, rinse lukewarm";
+        if (lower.includes("retinol") || lower.includes("retinoid") || lower.includes("exfoli") || lower.includes("acid") || lower.includes("bha") || lower.includes("aha") || lower.includes("spot") || lower.includes("blemish")) return "Night • Targeted treatment, leave-on";
+        if (lower.includes("serum") || lower.includes("ampoule")) return "Night • 3-4 drops overnight restoration";
+        if (lower.includes("ceramide") || lower.includes("lipid") || lower.includes("cream") || lower.includes("mask") || lower.includes("complex") || lower.includes("moistur")) return "Night • Rich barrier repair, leave-on";
+        return "Night • Leave-on restorative treatment";
+    }
+}
+
+// Build a numbered clinical prescription card
+function createClinicalStepCard(stepText, index, timeOfDay) {
+    const stepNumber = String(index + 1).padStart(2, "0");
+    const timingTag = getClinicalTimingTag(stepText, timeOfDay);
+    const highlightedProduct = highlightActiveIngredients(stepText);
+
+    return `
+        <li class="clinical-step-card ${timeOfDay}-step-card">
+            <div class="step-card-header">
+                <span class="step-badge">Step ${stepNumber}</span>
+                <span class="timing-tag"><span class="timing-icon">⏱️</span> ${timingTag}</span>
+            </div>
+            <div class="step-card-body">
+                <div class="step-product-name">${highlightedProduct}</div>
+            </div>
+        </li>
+    `;
 }
 
 function renderRoutineResults(routine) {
+    lastGeneratedRoutine = routine;
+
     const amList = document.getElementById("amStepsList");
     const pmList = document.getElementById("pmStepsList");
-    if (amList) amList.innerHTML = (routine.am || []).map(s => `<li>${s}</li>`).join("");
-    if (pmList) pmList.innerHTML = (routine.pm || []).map(s => `<li>${s}</li>`).join("");
+    
+    if (amList) {
+        amList.innerHTML = (routine.am || []).map((step, idx) => createClinicalStepCard(step, idx, "am")).join("");
+    }
+    if (pmList) {
+        pmList.innerHTML = (routine.pm || []).map((step, idx) => createClinicalStepCard(step, idx, "pm")).join("");
+    }
     
     const ctx = document.getElementById("skinMetricsChart")?.getContext("2d");
-    if (!ctx) return;
-    if (skinChartInstance) skinChartInstance.destroy();
-    skinChartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: ["Day 1", "Day 7", "Day 14", "Day 21", "Day 30"],
-            datasets: [
-                { label: "Hydration %", data: [35, 48, 62, 75, 84], borderColor: "#10b981", fill: true, tension: 0.35 },
-                { label: "Sensitivity", data: [80, 65, 45, 30, 20], borderColor: "#f59e0b", borderDash: [5, 5], tension: 0.35 }
-            ]
-        }, options: { responsive: true, plugins: { legend: { position: "bottom" } } }
-    });
+    if (!ctx || typeof Chart === "undefined") return;
+    try {
+        if (skinChartInstance) skinChartInstance.destroy();
+        skinChartInstance = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: ["Day 1", "Day 7", "Day 14", "Day 21", "Day 30"],
+                datasets: [
+                    { label: "Hydration %", data: [35, 48, 62, 75, 84], borderColor: "#10b981", fill: true, tension: 0.35 },
+                    { label: "Sensitivity", data: [80, 65, 45, 30, 20], borderColor: "#f59e0b", borderDash: [5, 5], tension: 0.35 }
+                ]
+            }, options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+        });
+    } catch (e) {
+        console.warn("Chart initialization skipped:", e.message);
+    }
 }
+window.renderRoutineResults = renderRoutineResults;
+
+function adoptCurrentRegimen() {
+    if (!lastGeneratedRoutine || (!lastGeneratedRoutine.am && !lastGeneratedRoutine.pm)) {
+        showToast("Please generate or scan a routine first.", "error");
+        return;
+    }
+
+    const regimenData = {
+        am: lastGeneratedRoutine.am || [],
+        pm: lastGeneratedRoutine.pm || [],
+        title: document.getElementById("routineTitle")?.textContent || "Prescribed Regimen",
+        adoptedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem(ADOPTED_REGIMEN_KEY, JSON.stringify(regimenData));
+    renderAdoptedTrackerUI();
+    showToast("Clinical regimen adopted! Your daily checklist has been updated.", "success");
+
+    const tracker = document.getElementById("routineTracker");
+    if (tracker) {
+        tracker.scrollIntoView({ behavior: "smooth" });
+    }
+}
+window.adoptCurrentRegimen = adoptCurrentRegimen;
 
 function initImageComparison() {
     const container = document.getElementById("beforeAfterSlider");
@@ -528,6 +687,8 @@ window.analyzeIngredients = analyzeIngredients;
 
 // ==================== DAILY ROUTINE TRACKER ====================
 const TRACKER_STORAGE_KEY = "skincare_daily_tracker";
+const ADOPTED_REGIMEN_KEY = "skincare_adopted_regimen";
+const ADOPTED_CHECKS_KEY = "skincare_adopted_checks";
 
 function getTodayKey() {
     const d = new Date();
@@ -540,17 +701,157 @@ function getYesterdayKey() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function getAdoptedChecks() {
+    const today = getTodayKey();
+    const raw = JSON.parse(localStorage.getItem(ADOPTED_CHECKS_KEY) || "{}");
+    if (raw.date !== today) {
+        return { date: today, am: {}, pm: {} };
+    }
+    return raw;
+}
+
+function saveAdoptedChecks(checks) {
+    localStorage.setItem(ADOPTED_CHECKS_KEY, JSON.stringify(checks));
+}
+
+function renderAdoptedTrackerUI() {
+    const container = document.getElementById("trackerChecklistContainer") || document.querySelector(".tracker-checklist");
+    if (!container) return;
+
+    const savedRegimen = JSON.parse(localStorage.getItem(ADOPTED_REGIMEN_KEY) || "null");
+    const trackerData = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+    const today = getTodayKey();
+    const checks = getAdoptedChecks();
+
+    if (!savedRegimen || (!savedRegimen.am?.length && !savedRegimen.pm?.length)) {
+        container.innerHTML = `
+            <label class="check-container">
+                <input type="checkbox" id="checkAM" onchange="handleRoutineCheck('am')" ${trackerData.am && trackerData.currentDay === today ? "checked" : ""} />
+                <span class="check-label">☀️ Morning (AM) Routine Completed</span>
+            </label>
+            <label class="check-container">
+                <input type="checkbox" id="checkPM" onchange="handleRoutineCheck('pm')" ${trackerData.pm && trackerData.currentDay === today ? "checked" : ""} />
+                <span class="check-label">🌙 Evening (PM) Routine Completed</span>
+            </label>
+            <div class="tracker-hint-box">
+                <small>💡 Generate a routine above and click <strong>"Adopt This Regimen"</strong> to sync your exact prescribed products here.</small>
+            </div>
+        `;
+        return;
+    }
+
+    const amSteps = savedRegimen.am || [];
+    const pmSteps = savedRegimen.pm || [];
+
+    const amCheckedCount = amSteps.filter((_, i) => !!checks.am[i]).length;
+    const pmCheckedCount = pmSteps.filter((_, i) => !!checks.pm[i]).length;
+
+    const isAmAllDone = amSteps.length > 0 && amCheckedCount === amSteps.length;
+    const isPmAllDone = pmSteps.length > 0 && pmCheckedCount === pmSteps.length;
+
+    let html = `
+        <div class="adopted-regimen-banner">
+            <div class="adopted-regimen-info">
+                <span class="active-badge">✓ Active Clinical Regimen</span>
+                <strong>${savedRegimen.title || "Prescribed Skincare Regimen"}</strong>
+            </div>
+            <button type="button" class="reset-regimen-btn" onclick="clearAdoptedRegimen()" title="Reset to standard tracker">✕ Reset</button>
+        </div>
+        
+        <div class="adopted-routine-group">
+            <div class="adopted-group-header">
+                <label class="check-container main-routine-check">
+                    <input type="checkbox" id="checkAM" onchange="toggleEntireAdoptedGroup('am', this.checked)" ${isAmAllDone || (trackerData.am && trackerData.currentDay === today) ? "checked" : ""} />
+                    <span class="check-label"><strong>☀️ Morning (AM) Prescribed Steps</strong></span>
+                </label>
+                <span class="step-progress-badge ${isAmAllDone ? 'badge-complete' : ''}" id="amProgressBadge">${amCheckedCount}/${amSteps.length} Steps</span>
+            </div>
+            <div class="adopted-steps-sublist">
+                ${amSteps.map((step, idx) => `
+                    <label class="adopted-step-item ${checks.am[idx] ? "completed" : ""}">
+                        <input type="checkbox" class="sub-step-check" data-type="am" data-idx="${idx}" onchange="handleAdoptedStepCheck('am', ${idx}, this.checked)" ${checks.am[idx] ? "checked" : ""} />
+                        <span class="adopted-step-num">0${idx + 1}</span>
+                        <span class="adopted-step-title">${step}</span>
+                    </label>
+                `).join("")}
+            </div>
+        </div>
+
+        <div class="adopted-routine-group">
+            <div class="adopted-group-header">
+                <label class="check-container main-routine-check">
+                    <input type="checkbox" id="checkPM" onchange="toggleEntireAdoptedGroup('pm', this.checked)" ${isPmAllDone || (trackerData.pm && trackerData.currentDay === today) ? "checked" : ""} />
+                    <span class="check-label"><strong>🌙 Evening (PM) Prescribed Steps</strong></span>
+                </label>
+                <span class="step-progress-badge ${isPmAllDone ? 'badge-complete' : ''}" id="pmProgressBadge">${pmCheckedCount}/${pmSteps.length} Steps</span>
+            </div>
+            <div class="adopted-steps-sublist">
+                ${pmSteps.map((step, idx) => `
+                    <label class="adopted-step-item ${checks.pm[idx] ? "completed" : ""}">
+                        <input type="checkbox" class="sub-step-check" data-type="pm" data-idx="${idx}" onchange="handleAdoptedStepCheck('pm', ${idx}, this.checked)" ${checks.pm[idx] ? "checked" : ""} />
+                        <span class="adopted-step-num">0${idx + 1}</span>
+                        <span class="adopted-step-title">${step}</span>
+                    </label>
+                `).join("")}
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+window.renderAdoptedTrackerUI = renderAdoptedTrackerUI;
+
+function handleAdoptedStepCheck(type, idx, isChecked) {
+    const checks = getAdoptedChecks();
+    if (!checks[type]) checks[type] = {};
+    checks[type][idx] = isChecked;
+    saveAdoptedChecks(checks);
+
+    const savedRegimen = JSON.parse(localStorage.getItem(ADOPTED_REGIMEN_KEY) || "{}");
+    const steps = savedRegimen[type] || [];
+    const allChecked = steps.length > 0 && steps.every((_, i) => !!checks[type][i]);
+
+    const masterCheck = document.getElementById(type === "am" ? "checkAM" : "checkPM");
+    if (masterCheck) {
+        masterCheck.checked = allChecked;
+    }
+
+    handleRoutineCheck(type);
+    renderAdoptedTrackerUI();
+}
+window.handleAdoptedStepCheck = handleAdoptedStepCheck;
+
+function toggleEntireAdoptedGroup(type, isChecked) {
+    const checks = getAdoptedChecks();
+    const savedRegimen = JSON.parse(localStorage.getItem(ADOPTED_REGIMEN_KEY) || "{}");
+    const steps = savedRegimen[type] || [];
+
+    if (!checks[type]) checks[type] = {};
+    steps.forEach((_, i) => {
+        checks[type][i] = isChecked;
+    });
+    saveAdoptedChecks(checks);
+
+    handleRoutineCheck(type);
+    renderAdoptedTrackerUI();
+}
+window.toggleEntireAdoptedGroup = toggleEntireAdoptedGroup;
+
+function clearAdoptedRegimen() {
+    localStorage.removeItem(ADOPTED_REGIMEN_KEY);
+    localStorage.removeItem(ADOPTED_CHECKS_KEY);
+    renderAdoptedTrackerUI();
+    showToast("Reset daily checklist to standard tracker.", "info");
+}
+window.clearAdoptedRegimen = clearAdoptedRegimen;
+
 function loadRoutineTracker() {
     const data = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
     const today = getTodayKey();
     const yesterday = getYesterdayKey();
 
     const streakEl = document.getElementById("streakCount");
-    const checkAM = document.getElementById("checkAM");
-    const checkPM = document.getElementById("checkPM");
     const statusMsg = document.getElementById("trackerStatusMsg");
-
-    if (!streakEl || !checkAM || !checkPM) return;
 
     if (data.lastDate && data.lastDate !== today && data.lastDate !== yesterday) {
         data.streak = 0;
@@ -563,12 +864,12 @@ function loadRoutineTracker() {
         localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(data));
     }
 
-    checkAM.checked = !!data.am;
-    checkPM.checked = !!data.pm;
-    streakEl.textContent = data.streak || 0;
+    if (streakEl) streakEl.textContent = data.streak || 0;
     if (statusMsg) {
         statusMsg.textContent = data.am && data.pm ? "✨ Both routines completed today!" : "";
     }
+
+    renderAdoptedTrackerUI();
 }
 
 // ==================== USER AUTHENTICATION & MODAL ====================
@@ -1027,6 +1328,11 @@ window.addEventListener("DOMContentLoaded", () => {
     loadRoutineTracker();
     updateAuthUI();
     setupNotificationUI();
+
+    const skinForm = document.getElementById("skinForm");
+    if (skinForm) {
+        skinForm.addEventListener("submit", handleAnalyze);
+    }
 
     const pushBtn = document.getElementById("pushNotificationBtn");
     if (pushBtn) {

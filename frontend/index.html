@@ -9,7 +9,7 @@
     <title>AI Skin Care Advisor</title>
 
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -194,8 +194,12 @@
                     <h2 id="routineTitle">Your Tailored Skincare Regimen</h2>
                     <p id="routineSubtitle" class="section-desc">Scientifically curated for your barrier and goals.</p>
                 </div>
-                <button id="exportPdfBtn" class="action-btn" onclick="exportRoutinePDF()">📄 Export Routine
-                    (PDF)</button>
+                <div class="results-actions">
+                    <button type="button" id="adoptRegimenBtn" class="primary-btn adopt-regimen-btn" onclick="adoptCurrentRegimen()">
+                        ✨ Adopt This Regimen
+                    </button>
+                    <button id="exportPdfBtn" class="action-btn" onclick="exportRoutinePDF()">📄 Export Routine (PDF)</button>
+                </div>
             </div>
 
             <!-- Skeleton Placeholder -->
@@ -217,6 +221,18 @@
                         <h3>🌙 Evening (PM) Routine</h3>
                         <ul id="pmStepsList" class="steps-list"></ul>
                     </div>
+                </div>
+
+                <!-- Adopt Regimen CTA Banner -->
+                <div class="adopt-cta-banner">
+                    <div class="adopt-cta-info">
+                        <span class="adopt-pill">Prescription Formulated</span>
+                        <h4>Adopt This Clinical Regimen</h4>
+                        <p>Sync these exact prescribed products directly to your Daily Streak Tracker so you can check off each step morning & evening.</p>
+                    </div>
+                    <button type="button" class="primary-btn adopt-banner-btn" onclick="adoptCurrentRegimen()">
+                        ✨ Adopt Regimen & Sync Checklist
+                    </button>
                 </div>
 
                 <div class="chart-section">
@@ -255,7 +271,7 @@
                 </div>
             </div>
 
-            <div class="tracker-checklist">
+            <div class="tracker-checklist" id="trackerChecklistContainer">
                 <label class="check-container">
                     <input type="checkbox" id="checkAM" onchange="handleRoutineCheck('am')" />
                     <span class="check-label">☀️ Morning (AM) Routine Completed</span>
@@ -364,7 +380,7 @@
         <p>&copy; 2026 AI Skin Care Advisor. Full-stack client & server architecture.</p>
     </footer>
 
-    <script src="script.js?v=8"></script>
+    <script src="script.js?v=9"></script>
 </body>
 
 </html>
