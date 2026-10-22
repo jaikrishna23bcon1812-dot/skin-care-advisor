@@ -74,60 +74,79 @@ if (typeof window !== "undefined") {
     };
 }
 
-// Theme Toggle (Dark Clinical Slate Default <-> Light Clean White / Zinc)
+// Theme Toggle (Light Clinical Canvas Default <-> Dark Midnight Navy)
 function toggleTheme() {
-    const isLightMode = document.body.classList.contains("light-mode");
-    document.body.classList.toggle("light-mode");
-    const isLight = document.body.classList.contains("light-mode");
+    const isCurrentlyDark = document.body.classList.contains("dark-mode");
+    const willBeDark = !isCurrentlyDark;
 
-    if (isLight) {
-        document.body.classList.remove("dark-mode");
-        if (document.documentElement) document.documentElement.classList.add("light-mode");
-    } else {
+    if (willBeDark) {
         document.body.classList.add("dark-mode");
-        if (document.documentElement) document.documentElement.classList.remove("light-mode");
+        document.body.classList.remove("light-mode");
+        if (document.documentElement) {
+            document.documentElement.classList.add("dark-mode");
+            document.documentElement.classList.remove("light-mode");
+        }
+    } else {
+        document.body.classList.remove("dark-mode");
+        document.body.classList.add("light-mode");
+        if (document.documentElement) {
+            document.documentElement.classList.remove("dark-mode");
+            document.documentElement.classList.add("light-mode");
+        }
     }
 
     const icon = document.getElementById("themeIcon");
     if (icon) {
-        icon.textContent = isLight ? "☀️" : "🌙";
+        icon.textContent = willBeDark ? "☀️" : "🌙";
     }
-    localStorage.setItem("theme", isLight ? "light" : "dark");
-    return isLight;
+    localStorage.setItem("theme", willBeDark ? "dark" : "light");
+    return !willBeDark;
 }
 window.toggleTheme = toggleTheme;
 window.toggleDarkMode = toggleTheme;
 
-// Immediate theme application to prevent unstyled flash
+// Immediate theme application to prevent unstyled flash (Default: Clinical Light Mode)
 (function () {
     const saved = localStorage.getItem("theme");
-    if (saved === "light") {
-        document.body.classList.add("light-mode");
-        document.body.classList.remove("dark-mode");
-        if (document.documentElement) document.documentElement.classList.add("light-mode");
-    } else {
-        document.body.classList.remove("light-mode");
+    if (saved === "dark") {
         document.body.classList.add("dark-mode");
-        if (document.documentElement) document.documentElement.classList.remove("light-mode");
+        document.body.classList.remove("light-mode");
+        if (document.documentElement) {
+            document.documentElement.classList.add("dark-mode");
+            document.documentElement.classList.remove("light-mode");
+        }
+    } else {
+        document.body.classList.remove("dark-mode");
+        document.body.classList.add("light-mode");
+        if (document.documentElement) {
+            document.documentElement.classList.remove("dark-mode");
+            document.documentElement.classList.add("light-mode");
+        }
     }
 })();
 
 window.addEventListener("DOMContentLoaded", function () {
     const saved = localStorage.getItem("theme");
-    if (saved === "light") {
-        document.body.classList.add("light-mode");
-        document.body.classList.remove("dark-mode");
-        if (document.documentElement) document.documentElement.classList.add("light-mode");
-    } else {
-        document.body.classList.remove("light-mode");
+    const isDark = saved === "dark";
+    if (isDark) {
         document.body.classList.add("dark-mode");
-        if (document.documentElement) document.documentElement.classList.remove("light-mode");
+        document.body.classList.remove("light-mode");
+        if (document.documentElement) {
+            document.documentElement.classList.add("dark-mode");
+            document.documentElement.classList.remove("light-mode");
+        }
+    } else {
+        document.body.classList.remove("dark-mode");
+        document.body.classList.add("light-mode");
+        if (document.documentElement) {
+            document.documentElement.classList.remove("dark-mode");
+            document.documentElement.classList.add("light-mode");
+        }
     }
 
-    const isLight = document.body.classList.contains("light-mode");
     const icon = document.getElementById("themeIcon");
     if (icon) {
-        icon.textContent = isLight ? "☀️" : "🌙";
+        icon.textContent = isDark ? "☀️" : "🌙";
     }
     const btn = document.getElementById("themeToggle");
     if (btn) {
@@ -552,6 +571,20 @@ function selectTechPill(selectId, value, buttonEl) {
     if (buttonEl) buttonEl.classList.add("active");
 }
 window.selectTechPill = selectTechPill;
+window.selectCardOption = selectTechPill;
+
+function toggleSelfieScanner() {
+    const drawer = document.getElementById("selfieScannerDrawer");
+    if (drawer) {
+        drawer.classList.toggle("hidden");
+        if (!drawer.classList.contains("hidden")) {
+            drawer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } else {
+            if (typeof stopCamera === "function") stopCamera();
+        }
+    }
+}
+window.toggleSelfieScanner = toggleSelfieScanner;
 
 function selectSoloPill(buttonEl) {
     const parentGroup = buttonEl ? buttonEl.closest(".tech-pill-group") : null;
@@ -567,111 +600,143 @@ function toggleStressChip(buttonEl) {
 }
 window.toggleStressChip = toggleStressChip;
 
-// System Telemetry & Latency Monitor
+// Dermatological Trust Badge Status Monitor (Subtle & Minimal)
 async function updateLiveTelemetry() {
     const latencyEl = document.getElementById("liveLatency");
     const apiStatusEl = document.getElementById("apiStatusText");
-    if (!latencyEl) return;
+    if (!latencyEl && !apiStatusEl) return;
     const start = performance.now();
     try {
         const res = await fetch(`${API_BASE_URL}/health`, { cache: "no-store" });
         const elapsed = Math.max(14, Math.round(performance.now() - start));
         if (res.ok) {
-            latencyEl.textContent = `${elapsed}ms`;
-            if (apiStatusEl) apiStatusEl.textContent = "Online (Render)";
+            if (latencyEl) latencyEl.textContent = `${elapsed}ms`;
+            if (apiStatusEl) apiStatusEl.textContent = "Clinical Cloud Active";
         }
     } catch (e) {
-        latencyEl.textContent = "22ms";
-        if (apiStatusEl) apiStatusEl.textContent = "Online (Local)";
+        if (latencyEl) latencyEl.textContent = "22ms";
+        if (apiStatusEl) apiStatusEl.textContent = "Clinical Engine Standby";
     }
 }
 window.updateLiveTelemetry = updateLiveTelemetry;
 
-// Infer molecular active compounds with percentages, cadence, and contraindication warnings
+// Infer targeted actives with percentages, application instructions, and dermatologist advice
 function getClinicalMolecularProfile(stepText, index, timeOfDay) {
     const lower = (stepText || "").toLowerCase();
-    const rxId = `RX-${timeOfDay.toUpperCase()}-${String(index + 1).padStart(2, "0")}`;
+    const rxId = `Step ${String(index + 1).padStart(2, "0")}`;
 
     let compounds = "Glycerin 5.0% • D-Panthenol 2.0% • Hyaluronic Acid 1.0%";
     let cadence = timeOfDay === "am" 
-        ? "Once daily (AM) • Apply to damp skin, 60s contact time"
-        : "Nightly (PM) • Cellular restoration phase, leave-on";
-    let contraindication = "Standard patch test advised prior to full dermal application";
+        ? "Apply 2-3 drops to damp skin each morning; gently press in until fully absorbed."
+        : "Smooth evenly over face and neck nightly as part of your cellular restoration routine.";
+    let contraindication = "Non-irritating physiological formulation suitable for sensitive and reactive skin types.";
 
     if (lower.includes("cleanse") || lower.includes("wash")) {
         compounds = "Coco-Glucoside 4.5% • Centella Asiatica Ext. 2.0% • Glycerin 6.0% • pH 5.5";
-        cadence = timeOfDay === "am" ? "Once daily (AM) • 60s micro-emulsification with lukewarm water" : "Nightly (PM) • Water-based second cleanse, rinse thoroughly";
-        contraindication = "Avoid contact with conjunctiva; rinse immediately if ocular irritation occurs";
+        cadence = timeOfDay === "am" 
+            ? "Massage 1 pump onto damp skin for 60 seconds using lukewarm water; rinse thoroughly." 
+            : "Use as a water-based second cleanse after oil cleansing to purify pores without stripping moisture.";
+        contraindication = "Formulated with gentle non-foaming surfactants to protect the skin acid mantle and prevent tightness.";
     } else if (lower.includes("pre-cleanse") || lower.includes("oil") || lower.includes("balm")) {
-        compounds = "Simmondsia Chinensis (Jojoba) 70.0% • Caprylic/Capric Triglycerides 28.0% • Tocopherol 1.0%";
-        cadence = "Nightly (PM) • Apply to dry skin to dissolve sebum & lipophilic SPF, emulsify with water";
-        contraindication = "Rinse completely with water-based surfactant to prevent follicular occlusion";
+        compounds = "Jojoba Oil 70.0% • Caprylic/Capric Triglycerides 28.0% • Tocopherol (Vit E) 1.0%";
+        cadence = "Warm 2-3 pumps in dry hands, massage over dry skin for 60 seconds to break down sebum and SPF, then rinse.";
+        contraindication = "Pure biocompatible botanical lipids that dissolve congestion without clogging pores or leaving residue.";
     } else if (lower.includes("sunscreen") || lower.includes("spf") || lower.includes("shield")) {
-        compounds = "Zinc Oxide (Non-Nano) 12.0% • Titanium Dioxide 4.0% • Ectoin 1.0% (SPF 50+ / PA++++)";
-        cadence = "Every morning (AM) • Apply 2 finger-lengths 15 min prior to UV exposure; reapply q2h";
-        contraindication = "Essential barrier defense; non-comedogenic physical filter formulation";
+        compounds = "Zinc Oxide 12.0% • Titanium Dioxide 4.0% • Ectoin 1.0% • SPF 50+ / PA++++";
+        cadence = "Apply 2 finger-lengths evenly across face, neck, and ears 15 minutes before UV exposure. Reapply q2h.";
+        contraindication = "Essential daily barrier shield. 100% mineral non-comedogenic physical filter to prevent PIH dark spots.";
     } else if (lower.includes("niacinamide") || lower.includes("zinc")) {
-        compounds = "Niacinamide (Pure Vit B3) 5.0% • Zinc PCA 1.0% • Sodium Hyaluronate 1.5%";
-        cadence = "Morning & evening • 3-4 drops, pat into stratum corneum";
-        contraindication = "Do not combine concurrently with high-concentration direct L-Ascorbic Acid";
+        compounds = "Niacinamide (Pure B3) 5.0% • Zinc PCA 1.0% • Hyaluronic Acid 1.5%";
+        cadence = "Dispense 3-4 drops onto clean fingertips morning and night; gently press into skin before moisturizing.";
+        contraindication = "Clinically proven to normalize sebum secretion, calm inflamed blemishes, and strengthen barrier resilience.";
     } else if (lower.includes("azelaic")) {
         compounds = "Azelaic Acid (Micronized) 10.0% • Allantoin 0.5% • Colloidal Oat 2.0%";
-        cadence = "Once daily • Thin layer over erythema or hyperpigmented zones";
-        contraindication = "Transient tingling may occur during initial 7-day acclimation period";
+        cadence = "Smooth a thin, even layer over areas of persistent redness, flushing, or post-breakout dark marks.";
+        contraindication = "Dermatologist gold standard for calming rosacea redness and diminishing stubborn post-inflammatory erythema.";
     } else if (lower.includes("ceramide") || lower.includes("lipid") || lower.includes("barrier")) {
-        compounds = "Ceramide Complex (NP/AP/EOP) 3.5% • Phytosphingosine 0.8% • Cholesterol 1.2%";
-        cadence = "Twice daily (AM/PM) • Pea-sized application to seal transepidermal hydration";
-        contraindication = "Biocompatible lipid matrix; zero known contraindications";
+        compounds = "Ceramide Complex (NP/AP/EOP) 3.5% • Phytosphingosine 0.8% • Bio-Cholesterol 1.2%";
+        cadence = "Warm a pea-sized amount between fingertips and gently smooth over face and neck to seal in hydration.";
+        contraindication = "Biomimetic 3:1:1 lipid matrix that rapidly restores damaged stratum corneum and prevents moisture loss.";
     } else if (lower.includes("retinol") || lower.includes("retinoid")) {
         compounds = "Encapsulated Retinaldehyde 0.05% • Bisabolol 1.0% • Plant Squalane 5.0%";
-        cadence = "2-3x weekly (PM only) • Apply after moisturizer (buffer sandwich technique)";
-        contraindication = "Strictly contraindicated during pregnancy/lactation; mandatory AM broad-spectrum SPF";
+        cadence = "Apply 2 nights per week to dry skin following moisturizer (sandwich technique) to build skin tolerance.";
+        contraindication = "Stimulates cellular turnover and collagen synthesis. Avoid during pregnancy; always pair with morning SPF 50+.";
     } else if (lower.includes("squalane")) {
         compounds = "Plant-Derived Squalane (Ecocert) 10.0% • Panthenol 2.0% • Betaine 1.5%";
-        cadence = "Twice daily (AM/PM) • 2-3 drops to bolster intercellular lipid matrix";
-        contraindication = "100% non-comedogenic bio-identical hydrocarbon; hypoallergenic";
+        cadence = "Press 2-3 drops into skin as your final routine step to lock in moisture without feeling greasy.";
+        contraindication = "Weightless, non-comedogenic hydrocarbon that mirrors skin's natural sebum to soothe dehydrated patches.";
     } else if (lower.includes("spot") || lower.includes("blemish") || lower.includes("salicylic") || lower.includes("bha")) {
-        compounds = "Salicylic Acid (USP) 2.0% • Melaleuca Alternifolia Ext. 1.0% • Zinc Oxide 3.0%";
-        cadence = "Targeted nightly (PM) • Dab directly onto active inflammatory papules";
-        contraindication = "Do not use if allergic to acetylsalicylic acid (aspirin); avoid open lesions";
+        compounds = "Salicylic Acid (USP) 2.0% • Tea Tree Leaf Ext. 1.0% • Zinc PCA 1.0%";
+        cadence = "Dab a pinpoint amount directly onto active blemishes or congested T-zone areas at night.";
+        contraindication = "Lipophilic beta hydroxy acid clears follicular blockages and reduces active swelling without drying.";
     }
 
     return { rxId, compounds, cadence, contraindication };
 }
 
-// Build a structured clinical prescription card with Formulation ID, molecular assay, cadence, and contraindication warning
+// Format active ingredients as soothing clinical chips
+function formatActivesBadges(compounds) {
+    if (!compounds) return "";
+    const items = compounds.split("•").map((c) => c.trim()).filter(Boolean);
+    return items.map((item) => `<span class="active-badge">${item}</span>`).join(" ");
+}
+
+// Build a clean, spacious routine step card with plain English product name, one key ingredient badge, and a 1-sentence tip
 function createClinicalStepCard(stepText, index, timeOfDay) {
-    const stepNumber = String(index + 1).padStart(2, "0");
-    const timingTag = getClinicalTimingTag(stepText, timeOfDay);
-    const highlightedProduct = highlightActiveIngredients(stepText);
-    const profile = getClinicalMolecularProfile(stepText, index, timeOfDay);
+    const stepNumber = index + 1;
+    const cleanTitle = (stepText || "").replace(/^(step\s*\d+[\s:.-]*)/i, "").trim();
+    const lower = cleanTitle.toLowerCase();
+
+    // Determine one single key ingredient badge
+    let keyIngredient = "Glycerin";
+    if (lower.includes("niacinamide")) keyIngredient = "Niacinamide";
+    else if (lower.includes("spf") || lower.includes("sunscreen") || lower.includes("shield")) keyIngredient = "Zinc Oxide SPF 50";
+    else if (lower.includes("centella") || lower.includes("cica")) keyIngredient = "Centella Asiatica";
+    else if (lower.includes("ceramide")) keyIngredient = "Ceramides";
+    else if (lower.includes("hyaluronic")) keyIngredient = "Hyaluronic Acid";
+    else if (lower.includes("azelaic")) keyIngredient = "Azelaic Acid";
+    else if (lower.includes("salicylic") || lower.includes("bha")) keyIngredient = "Salicylic Acid";
+    else if (lower.includes("retinol") || lower.includes("retinal") || lower.includes("retinoid")) keyIngredient = "Retinal";
+    else if (lower.includes("squalane")) keyIngredient = "Plant Squalane";
+    else if (lower.includes("jojoba")) keyIngredient = "Jojoba Oil";
+    else if (lower.includes("vitamin c") || lower.includes("ascorbic")) keyIngredient = "Vitamin C";
+    else if (lower.includes("panthenol")) keyIngredient = "Panthenol (B5)";
+    else if (lower.includes("tea tree")) keyIngredient = "Tea Tree";
+    else if (lower.includes("cleanse") || lower.includes("wash")) keyIngredient = "Gentle Surfactants";
+    else if (lower.includes("lipid") || lower.includes("barrier")) keyIngredient = "Barrier Lipids";
+
+    // 1-sentence plain English tip on how to use it
+    let tip = timeOfDay === "am"
+        ? "Apply evenly to damp skin each morning and press in gently."
+        : "Smooth over clean skin nightly to nourish and repair your barrier.";
+
+    if (lower.includes("cleanse") || lower.includes("wash")) {
+        tip = timeOfDay === "am"
+            ? "Massage 1 pump onto damp skin for 60 seconds with lukewarm water, then rinse."
+            : "Massage onto damp skin for 60 seconds to clear impurities without stripping.";
+    } else if (lower.includes("pre-cleanse") || lower.includes("oil") || lower.includes("balm")) {
+        tip = "Warm in dry hands and massage over dry skin to dissolve impurities, then rinse.";
+    } else if (lower.includes("spf") || lower.includes("sunscreen") || lower.includes("shield")) {
+        tip = "Apply 2 finger-lengths evenly across face, neck, and ears as your final morning step.";
+    } else if (lower.includes("serum") || lower.includes("azelaic") || lower.includes("niacinamide") || lower.includes("zinc") || lower.includes("vitamin c")) {
+        tip = "Dispense 3-4 drops onto clean fingertips and press into skin before moisturizing.";
+    } else if (lower.includes("retinol") || lower.includes("retinoid") || lower.includes("retinal")) {
+        tip = "Use 2-3 nights per week on dry skin after moisturizer to build tolerance.";
+    } else if (lower.includes("spot") || lower.includes("blemish")) {
+        tip = "Dab a small pinpoint amount directly onto active blemishes at night.";
+    } else if (lower.includes("moistur") || lower.includes("cream") || lower.includes("lotion") || lower.includes("emulsion") || lower.includes("complex")) {
+        tip = "Smooth a pea-sized amount over face and neck to lock in long-lasting hydration.";
+    }
 
     return `
-        <li class="clinical-step-card ${timeOfDay}-step-card">
-            <div class="step-card-header">
-                <div class="rx-telemetry-badge">
-                    <span class="rx-indicator-dot"></span>
-                    <span class="rx-id">${profile.rxId}</span>
+        <li class="routine-step-item">
+            <div class="step-num-pill">Step ${stepNumber}</div>
+            <div class="step-info">
+                <div class="step-title-row">
+                    <h4 class="step-product-title">${cleanTitle}</h4>
+                    <span class="key-ingredient-tag">${keyIngredient}</span>
                 </div>
-                <span class="step-badge">STEP ${stepNumber}</span>
-                <span class="timing-tag"><span class="timing-icon">⏱️</span> ${timingTag}</span>
-            </div>
-            <div class="step-card-body">
-                <div class="step-product-name">${highlightedProduct}</div>
-                <div class="molecular-breakdown">
-                    <span class="molecular-label">MOLECULAR ASSAY:</span>
-                    <span class="molecular-compounds">${profile.compounds}</span>
-                </div>
-            </div>
-            <div class="step-card-footer">
-                <div class="step-cadence">
-                    <span class="cadence-icon">📋</span>
-                    <span class="cadence-text"><strong>Cadence:</strong> ${profile.cadence}</span>
-                </div>
-                <div class="contraindication-warning">
-                    <span class="warning-icon">⚠️</span>
-                    <span class="warning-text"><strong>Contraindication:</strong> ${profile.contraindication}</span>
-                </div>
+                <p class="step-usage-tip">${tip}</p>
             </div>
         </li>
     `;
@@ -1573,16 +1638,16 @@ window.addEventListener("DOMContentLoaded", () => {
     if (amStepsList && !amStepsList.children.length) {
         renderRoutineResults({
             am: [
-                "Gentle Balancing Centella Cleanser",
-                "5% Niacinamide + Zinc PCA Serum",
-                "Ceramide Barrier Restorative Emulsion",
-                "Broad-Spectrum Invisible Shield SPF 50+"
+                "Gentle Balancing Cleanser",
+                "Hydrating Niacinamide Serum",
+                "Barrier Restorative Lotion",
+                "Daily Mineral Sunscreen SPF 50"
             ],
             pm: [
-                "Jojoba Oil Pre-Cleanse",
-                "Squalane Hydrating Cleanser",
-                "Ceramide Deep Repair Lipid Complex",
-                "Overnight Blemish Calming Spot Balm"
+                "Nourishing Pre-Cleanse Oil",
+                "Gentle Hydrating Cleanser",
+                "Restorative Ceramide Night Cream",
+                "Overnight Calming Treatment"
             ]
         });
     }

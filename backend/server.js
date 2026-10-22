@@ -46,18 +46,18 @@ app.use("/api/auth", authLimiter);
 // Mount Auth Router
 app.use("/api/auth", require("./routes/auth"));
 
-// Root route for friendly service discovery
-app.get("/", (req, res) => {
-    res.json({ message: "AI Skin Care Advisor API is running", health: "/health" });
-});
+// Serve frontend static assets
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 // Health check endpoint for Render cold starts
 app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Serve frontend static assets
-app.use(express.static(path.join(__dirname, "../frontend")));
+// Friendly service discovery route
+app.get("/api-status", (req, res) => {
+    res.json({ message: "SkinCare AI API is running", health: "/health" });
+});
 
 // Core AI Analysis Route
 app.use("/api/analysis", analysisRouter);
