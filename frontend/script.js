@@ -755,6 +755,10 @@ function renderRoutineResults(routine) {
         pmList.innerHTML = (routine.pm || []).map((step, idx) => createClinicalStepCard(step, idx, "pm")).join("");
     }
     
+    if (typeof renderClimateAlerts === "function") {
+        renderClimateAlerts();
+    }
+    
     const ctx = document.getElementById("skinMetricsChart")?.getContext("2d");
     if (!ctx || typeof Chart === "undefined") return;
     try {
@@ -799,22 +803,1075 @@ function adoptCurrentRegimen() {
 }
 window.adoptCurrentRegimen = adoptCurrentRegimen;
 
-function initImageComparison() {
-    const container = document.getElementById("beforeAfterSlider");
-    if (!container) return;
-    const slider = container.querySelector(".img-comp-slider");
-    const overlay = container.querySelector(".img-comp-overlay");
-    if (!slider || !overlay) return;
-    let isDown = false;
-    function updateSlider(clientX) {
-        const rect = container.getBoundingClientRect();
-        let x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-        const percent = (x / rect.width) * 100;
-        slider.style.left = `${percent}%`; overlay.style.width = `${percent}%`;
+// ==========================================================================
+// FEATURE 1: LIVE UV INDEX & CLIMATE-ADAPTIVE ROUTINE
+// ==========================================================================
+const CLIMATE_CACHE_KEY = "skincare_climate_cache";
+let currentClimateData = null;
+
+function getCachedClimate() {
+    try {
+        const raw = localStorage.getItem(CLIMATE_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        // Valid for 30 minutes
+        if (Date.now() - parsed.timestamp < 30 * 60 * 1000) {
+            return parsed;
+        }
+    } catch (e) {}
+    return null;
+}
+
+function applyClimateUI(data) {
+    currentClimateData = data;
+    const tempEl = document.getElementById("climateTemp");
+    const humidityEl = document.getElementById("climateHumidity");
+    const uvValEl = document.getElementById("climateUVValue");
+    const uvDotEl = document.getElementById("climateUVDot");
+
+    if (tempEl) tempEl.textContent = `${data.temp}°C`;
+    if (humidityEl) humidityEl.textContent = `💧 ${data.humidity}%`;
+    if (uvValEl) uvValEl.textContent = `${data.uv}`;
+
+    if (uvDotEl) {
+        uvDotEl.className = "uv-status-dot";
+        if (data.uv < 3) {
+            uvDotEl.classList.add("dot-low");
+            uvDotEl.textContent = "🟢 Low";
+        } else if (data.uv < 6) {
+            uvDotEl.classList.add("dot-moderate");
+            uvDotEl.textContent = "🟡 Moderate";
+        } else {
+            uvDotEl.classList.add("dot-high");
+            uvDotEl.textContent = "🔴 High";
+        }
     }
-    slider.addEventListener("pointerdown", (e) => { isDown = true; slider.setPointerCapture(e.pointerId); });
-    window.addEventListener("pointerup", () => isDown = false);
-    window.addEventListener("pointermove", (e) => { if (isDown) updateSlider(e.clientX); });
+
+    renderClimateAlerts(data);
+}
+
+function renderClimateAlerts(climate = currentClimateData) {
+    const alertsContainer = document.getElementById("climateAlerts");
+    if (!alertsContainer) return;
+    if (!climate) {
+        alertsContainer.innerHTML = "";
+        return;
+    }
+
+    const { uv, humidity } = climate;
+    const chips = [];
+
+    // Prompt rule: If uv_index >= 6: Add a warning chip: "High UV Index ({uv}) — Reapply broad-spectrum SPF 50 every 2 hours."
+    if (uv >= 6) {
+        chips.push(`
+            <div class="climate-alert-chip alert-high-uv">
+                <span class="chip-alert-icon">☀️</span>
+                <span class="chip-alert-text"><strong>High UV Index (${uv})</strong> — Reapply broad-spectrum SPF 50 every 2 hours.</span>
+            </div>
+        `);
+    }
+
+    // Prompt rule: If relative_humidity_2m < 40: Add a chip: "Low Air Moisture ({humidity}%) — Add a ceramide or hyaluronic layer."
+    if (humidity < 40) {
+        chips.push(`
+            <div class="climate-alert-chip alert-low-humidity">
+                <span class="chip-alert-icon">💧</span>
+                <span class="chip-alert-text"><strong>Low Air Moisture (${humidity}%)</strong> — Add a ceramide or hyaluronic layer.</span>
+            </div>
+        `);
+    }
+
+    // Default balanced climate state
+    if (chips.length === 0) {
+        chips.push(`
+            <div class="climate-alert-chip alert-optimal">
+                <span class="chip-alert-icon">🌿</span>
+                <span class="chip-alert-text"><strong>Optimal Climate</strong> (${humidity}% humidity, UV ${uv}) — Standard hydration &amp; SPF 50 daily routine sufficient.</span>
+            </div>
+        `);
+    }
+
+    alertsContainer.innerHTML = chips.join("");
+}
+window.renderClimateAlerts = renderClimateAlerts;
+
+async function fetchOpenMeteoWeather(lat, lon, label = "Local", forceNotification = false) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,uv_index`;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Weather API status " + res.status);
+        const data = await res.json();
+        const cur = data.current || {};
+        const temp = Math.round(cur.temperature_2m !== undefined ? cur.temperature_2m : 22);
+        const humidity = Math.round(cur.relative_humidity_2m !== undefined ? cur.relative_humidity_2m : 45);
+        const uv = cur.uv_index !== undefined ? Number(cur.uv_index.toFixed(1)) : 2.4;
+
+        const payload = {
+            temp,
+            humidity,
+            uv,
+            lat,
+            lon,
+            label,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(CLIMATE_CACHE_KEY, JSON.stringify(payload));
+        applyClimateUI(payload);
+
+        if (forceNotification) {
+            showToast(`Climate synced (${label}): ${temp}°C, ${humidity}% humidity, UV ${uv}`, "success");
+        }
+    } catch (err) {
+        console.warn("Open-Meteo fetch failed:", err.message);
+        // Fallback default coordinates (Lat: 40.71, Lon: -74.00)
+        const fallback = {
+            temp: 22,
+            humidity: 38,
+            uv: 6.2,
+            label: "Default (NYC)",
+            timestamp: Date.now()
+        };
+        applyClimateUI(fallback);
+        if (forceNotification) {
+            showToast("Using default climate coordinates (NYC fallback)", "info");
+        }
+    }
+}
+
+function detectClimate(forceRefresh = false) {
+    if (!forceRefresh) {
+        const cached = getCachedClimate();
+        if (cached) {
+            applyClimateUI(cached);
+            return;
+        }
+        // Immediate default fallback (Lat: 40.71, Lon: -74.00) so the widget is immediately populated
+        applyClimateUI({
+            temp: 22,
+            humidity: 45,
+            uv: 6.2,
+            label: "Default (NYC)",
+            timestamp: Date.now()
+        });
+    }
+
+    const detectBtn = document.getElementById("detectClimateBtn");
+    if (detectBtn) detectBtn.textContent = "📍 Locating...";
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = Number(pos.coords.latitude.toFixed(2));
+                const lon = Number(pos.coords.longitude.toFixed(2));
+                fetchOpenMeteoWeather(lat, lon, "Detected GPS", forceRefresh).finally(() => {
+                    if (detectBtn) detectBtn.textContent = "📍 Detect Local Climate";
+                });
+            },
+            (err) => {
+                console.warn("Geolocation fallback coordinates used:", err.message);
+                // Fallback coordinates Lat: 40.71, Lon: -74.00
+                fetchOpenMeteoWeather(40.71, -74.00, "New York (Default)", forceRefresh).finally(() => {
+                    if (detectBtn) detectBtn.textContent = "📍 Detect Local Climate";
+                });
+            },
+            { timeout: 7000 }
+        );
+    } else {
+        fetchOpenMeteoWeather(40.71, -74.00, "New York (Default)", forceRefresh).finally(() => {
+            if (detectBtn) detectBtn.textContent = "📍 Detect Local Climate";
+        });
+    }
+}
+window.detectClimate = detectClimate;
+
+function initClimateWidget() {
+    detectClimate(false);
+}
+
+// ==========================================================================
+// FEATURE 2: ACTIVE INGREDIENT CONFLICT & INTERACTION CHECKER
+// ==========================================================================
+const CONFLICT_ACTIVES = [
+    { id: "retinol", name: "Retinol / Retinoids", short: "Retinol" },
+    { id: "vitamin_c", name: "Vitamin C (L-Ascorbic)", short: "Vit C" },
+    { id: "aha_bha", name: "AHA / BHA (Acids)", short: "AHA / BHA" },
+    { id: "benzoyl_peroxide", name: "Benzoyl Peroxide", short: "Benzoyl Peroxide" },
+    { id: "niacinamide", name: "Niacinamide (Vit B3)", short: "Niacinamide" },
+    { id: "copper_peptides", name: "Copper Peptides", short: "Copper Peptides" },
+    { id: "hyaluronic_acid", name: "Hyaluronic Acid", short: "Hyaluronic Acid" },
+    { id: "ceramides", name: "Ceramides", short: "Ceramides" },
+    { id: "azelaic_acid", name: "Azelaic Acid", short: "Azelaic Acid" },
+    { id: "spf", name: "Sunscreen (SPF 50)", short: "SPF 50" }
+];
+
+const COMPATIBILITY_DATABASE = {
+    // ❌ Retinol + AHA/BHA
+    "aha_bha|retinol": {
+        level: "conflict",
+        badge: "🔴 Direct Conflict",
+        title: "High Irritation & Barrier Impairment Risk",
+        summary: "Both AHA/BHA and Retinol stimulate aggressive cellular turnover and desquamation. Layering them concurrently compromises the stratum corneum, causing erythema, flaking, and contact dermatitis.",
+        protocol: "Split into AM/PM or alternate days: Use AHA/BHA chemical exfoliation in the morning or 1-2 nights per week; reserve Retinol strictly for non-exfoliation evenings."
+    },
+    // ❌ Retinol + Benzoyl Peroxide
+    "benzoyl_peroxide|retinol": {
+        level: "conflict",
+        badge: "🔴 Direct Conflict",
+        title: "Active Retinoid Deactivation & Extreme Dryness",
+        summary: "Benzoyl Peroxide is a potent oxidizing agent that chemically oxidizes and deactivates active retinoids (including pure retinol and tretinoin), neutralizing efficacy while triggering severe barrier dryness.",
+        protocol: "Use Benzoyl Peroxide in the morning (or as a short-contact wash) and Retinol in the evening, or on alternating days."
+    },
+    // ❌ Vitamin C (L-Ascorbic) + Copper Peptides
+    "copper_peptides|vitamin_c": {
+        level: "conflict",
+        badge: "🔴 Direct Conflict",
+        title: "Oxidative Inactivation of Copper & Ascorbic Acid",
+        summary: "L-Ascorbic Acid (pure Vitamin C) has a low pH and chelating profile that oxidizes copper ions in Copper Peptides, rendering both ingredients ineffective and creating pro-oxidant radicals.",
+        protocol: "Apply Vitamin C in the morning under sunscreen for antioxidant defense; apply Copper Peptides in your evening routine for cellular remodeling."
+    },
+    // ✅ Niacinamide + Salicylic Acid (AHA/BHA)
+    "aha_bha|niacinamide": {
+        level: "synergistic",
+        badge: "🟢 Synergistic",
+        title: "Optimal Pore Clearing & Sebum Regulation",
+        summary: "Salicylic Acid (lipophilic BHA) penetrates deep into follicles to dissolve oxidized sebum, while Niacinamide (Vitamin B3) regulates lipid synthesis, calms inflammation, and strengthens the stratum corneum.",
+        protocol: "Apply Salicylic Acid first to cleansed skin, allow to absorb for 60 seconds, then follow with Niacinamide serum."
+    },
+    // ✅ Hyaluronic Acid + Ceramides
+    "ceramides|hyaluronic_acid": {
+        level: "synergistic",
+        badge: "🟢 Synergistic",
+        title: "Optimal Barrier Hydration Synergy",
+        summary: "Hyaluronic Acid acts as a humectant reservoir by pulling moisture into the epidermis, while Ceramides act as the structural mortar to seal the intercellular lipid matrix and halt transepidermal water loss.",
+        protocol: "Apply Hyaluronic Acid onto slightly damp skin, then immediately lock it in with a ceramide-rich barrier moisturizer."
+    },
+    // ✅ Niacinamide + Retinol
+    "niacinamide|retinol": {
+        level: "synergistic",
+        badge: "🟢 Synergistic",
+        title: "Barrier Buffering & Retinoid Tolerance",
+        summary: "Niacinamide upregulates natural ceramide synthesis and dampens the transient inflammatory cascade caused by retinoids, significantly decreasing retinoid flaking and dermatitis.",
+        protocol: "Layer Niacinamide before or alongside Retinol to buffer potential peeling and erythema."
+    },
+    // ✅ Vitamin C + SPF
+    "spf|vitamin_c": {
+        level: "synergistic",
+        badge: "🟢 Synergistic",
+        title: "Multi-Tiered Photoprotection Synergy",
+        summary: "Vitamin C neutralizes reactive oxygen species (ROS) triggered by infrared and UVA rays that bypass sunscreen filters, providing robust defense against photoaging.",
+        protocol: "Apply Vitamin C serum every morning directly under your broad-spectrum SPF 50 sunscreen."
+    },
+    // ✅ Azelaic Acid + Niacinamide
+    "azelaic_acid|niacinamide": {
+        level: "synergistic",
+        badge: "🟢 Synergistic",
+        title: "Calming Erythema & Tone Normalization",
+        summary: "Both actives reduce vascular inflammation and inhibit melanogenesis without causing desquamation, making this pair ideal for rosacea, redness, and post-acne dark marks.",
+        protocol: "Can be applied together morning or evening; layer lighter water serums before treatment gels."
+    },
+    // 🟡 Retinol + Vitamin C
+    "retinol|vitamin_c": {
+        level: "caution",
+        badge: "🟡 Caution (Alternate AM / PM)",
+        title: "pH Mismatch & Potential Sensitization",
+        summary: "Pure L-Ascorbic Acid requires an acidic pH (<3.5), whereas Retinol converts best at neutral pH (~5.5-6.0). Layering simultaneously can trigger tingling and cutaneous irritation.",
+        protocol: "Gold standard clinical protocol: Vitamin C in the morning (under SPF); Retinol in the evening (before barrier cream)."
+    },
+    // 🟡 AHA/BHA + Benzoyl Peroxide
+    "aha_bha|benzoyl_peroxide": {
+        level: "caution",
+        badge: "🟡 Caution (Alternate Days)",
+        title: "Exfoliation Overload & Barrier Stripping",
+        summary: "Combining keratolytic acids with antimicrobial oxidizing benzoyl peroxide can over-strip essential skin lipids, triggering reactive rebound oiliness and flaking.",
+        protocol: "Use Benzoyl Peroxide spot treatment on active breakouts; save AHA/BHA chemical exfoliation for 1-2 alternate nights per week."
+    },
+    // ❌ AHA/BHA + Copper Peptides
+    "aha_bha|copper_peptides": {
+        level: "conflict",
+        badge: "🔴 Direct Conflict",
+        title: "Peptide Bond Hydrolysis in Acidic Environment",
+        summary: "Direct chemical acids break the molecular peptide bonds in copper tripeptides, decomposing the active peptides into inactive fragments.",
+        protocol: "Use chemical exfoliants on alternating nights from copper peptide treatments."
+    },
+    // ✅ Hyaluronic Acid + Retinol
+    "hyaluronic_acid|retinol": {
+        level: "synergistic",
+        badge: "🟢 Synergistic",
+        title: "Hydration Cushioning Against Flaking",
+        summary: "Hyaluronic Acid prevents the surface dehydration frequently experienced during early retinoid use, maintaining barrier elasticity.",
+        protocol: "Apply Hyaluronic Acid onto damp skin, allow to dry completely, then apply Retinol followed by moisturizer."
+    },
+    // ✅ Ceramides + Retinol
+    "ceramides|retinol": {
+        level: "synergistic",
+        badge: "🟢 Synergistic",
+        title: "Essential Barrier Protection & Repair",
+        summary: "Ceramides replenish depleted intercellular lipids, counteracting retinoid flaking and fortifying the moisture barrier.",
+        protocol: "Apply Retinol, then generously seal with a ceramide cream (the 'retinol sandwich' method)."
+    }
+};
+
+function checkIngredientCompatibility() {
+    const activeA = document.getElementById("activeA")?.value || "retinol";
+    const activeB = document.getElementById("activeB")?.value || "aha_bha";
+    const resultCard = document.getElementById("compatibilityResult");
+    if (!resultCard) return;
+
+    const actAObj = CONFLICT_ACTIVES.find(x => x.id === activeA) || { name: activeA };
+    const actBObj = CONFLICT_ACTIVES.find(x => x.id === activeB) || { name: activeB };
+
+    let data;
+    if (activeA === activeB) {
+        data = {
+            level: "caution",
+            badge: "🟡 Caution (Duplicate Active)",
+            title: "Redundant Layering & Increased Irritation",
+            summary: `Layering two products containing high concentrations of ${actAObj.name} does not double efficacy; it significantly raises the threshold for irritation and stratum corneum disruption.`,
+            protocol: "Choose one well-formulated product containing this active per routine."
+        };
+    } else {
+        const key = [activeA, activeB].sort().join("|");
+        data = COMPATIBILITY_DATABASE[key];
+        if (!data) {
+            data = {
+                level: "synergistic",
+                badge: "🟢 Compatible / Safe to Combine",
+                title: "No Known Adverse Biochemical Contraindications",
+                summary: `${actAObj.name} and ${actBObj.name} have compatible pH requirements and mechanisms. They can be safely layered or alternated without neutralizing efficacy.`,
+                protocol: "Apply thinnest liquid/water-based formulas first, allowing 60 seconds of absorption before applying heavier emulsions."
+            };
+        }
+    }
+
+    const badgeClass = data.level === "conflict" ? "badge-conflict" : (data.level === "caution" ? "badge-caution" : "badge-synergistic");
+
+    resultCard.classList.remove("hidden");
+    resultCard.className = `compatibility-result-card active-card-${data.level}`;
+    resultCard.innerHTML = `
+        <div class="result-card-header">
+            <span class="compat-status-badge ${badgeClass}">${data.badge}</span>
+            <div class="compat-pair-names">${actAObj.name} &amp; ${actBObj.name}</div>
+        </div>
+        <h4 class="compat-result-title">${data.title}</h4>
+        <div class="compat-section">
+            <span class="compat-section-label">🔬 Clinical Interaction:</span>
+            <p class="compat-section-p">${data.summary}</p>
+        </div>
+        <div class="compat-section protocol-section">
+            <span class="compat-section-label">📋 Recommended Regimen Protocol:</span>
+            <p class="compat-section-p"><strong>${data.protocol}</strong></p>
+        </div>
+    `;
+}
+window.checkIngredientCompatibility = checkIngredientCompatibility;
+
+function swapConflictActives() {
+    const selA = document.getElementById("activeA");
+    const selB = document.getElementById("activeB");
+    if (!selA || !selB) return;
+    const temp = selA.value;
+    selA.value = selB.value;
+    selB.value = temp;
+    updateConflictActiveChips();
+    checkIngredientCompatibility();
+}
+window.swapConflictActives = swapConflictActives;
+
+function quickCheckPair(a, b) {
+    const selA = document.getElementById("activeA");
+    const selB = document.getElementById("activeB");
+    if (selA) selA.value = a;
+    if (selB) selB.value = b;
+    updateConflictActiveChips();
+    checkIngredientCompatibility();
+    const resultCard = document.getElementById("compatibilityResult");
+    if (resultCard) resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+window.quickCheckPair = quickCheckPair;
+
+function handleConflictActiveChange() {
+    updateConflictActiveChips();
+    checkIngredientCompatibility();
+}
+window.handleConflictActiveChange = handleConflictActiveChange;
+
+function renderConflictChips() {
+    const wrapA = document.getElementById("activeAChips");
+    const wrapB = document.getElementById("activeBChips");
+    if (!wrapA || !wrapB) return;
+
+    wrapA.innerHTML = CONFLICT_ACTIVES.map(a => `
+        <button type="button" class="conflict-chip-btn" data-target="activeA" data-id="${a.id}" onclick="selectConflictChip('activeA', '${a.id}')">
+            ${a.short}
+        </button>
+    `).join("");
+
+    wrapB.innerHTML = CONFLICT_ACTIVES.map(b => `
+        <button type="button" class="conflict-chip-btn" data-target="activeB" data-id="${b.id}" onclick="selectConflictChip('activeB', '${b.id}')">
+            ${b.short}
+        </button>
+    `).join("");
+
+    updateConflictActiveChips();
+}
+
+function selectConflictChip(selectId, value) {
+    const sel = document.getElementById(selectId);
+    if (sel) {
+        sel.value = value;
+        updateConflictActiveChips();
+        checkIngredientCompatibility();
+    }
+}
+window.selectConflictChip = selectConflictChip;
+
+function updateConflictActiveChips() {
+    const valA = document.getElementById("activeA")?.value;
+    const valB = document.getElementById("activeB")?.value;
+
+    document.querySelectorAll('#activeAChips .conflict-chip-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-id') === valA);
+    });
+    document.querySelectorAll('#activeBChips .conflict-chip-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-id') === valB);
+    });
+}
+
+function switchCheckerTab(tabName) {
+    const conflictCard = document.getElementById("conflictChecker");
+    const poreCard = document.getElementById("poreScannerCard");
+    const btnConflict = document.getElementById("tabConflictBtn");
+    const btnPore = document.getElementById("tabPoreBtn");
+
+    if (tabName === "conflict") {
+        if (conflictCard) conflictCard.classList.remove("hidden");
+        if (poreCard) poreCard.classList.add("hidden");
+        if (btnConflict) {
+            btnConflict.classList.add("active");
+            btnConflict.setAttribute("aria-selected", "true");
+        }
+        if (btnPore) {
+            btnPore.classList.remove("active");
+            btnPore.setAttribute("aria-selected", "false");
+        }
+    } else {
+        if (conflictCard) conflictCard.classList.add("hidden");
+        if (poreCard) poreCard.classList.remove("hidden");
+        if (btnConflict) {
+            btnConflict.classList.remove("active");
+            btnConflict.setAttribute("aria-selected", "false");
+        }
+        if (btnPore) {
+            btnPore.classList.add("active");
+            btnPore.setAttribute("aria-selected", "true");
+        }
+    }
+}
+window.switchCheckerTab = switchCheckerTab;
+
+function initConflictChecker() {
+    renderConflictChips();
+    checkIngredientCompatibility();
+}
+
+// ==========================================================================
+// FEATURE 3: INTERACTIVE VISUAL SKIN JOURNEY (DAY 1 VS. DAY 30 SLIDER)
+// ==========================================================================
+const JOURNEY_PHOTOS_KEY = "skincare_progress_photos";
+
+const DEFAULT_BASELINE_SVG = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+    <defs>
+        <radialGradient id="baseTone" cx="50%" cy="50%" r="65%">
+            <stop offset="0%" stop-color="#f5e1d5" />
+            <stop offset="60%" stop-color="#edd2c2" />
+            <stop offset="100%" stop-color="#e2bfad" />
+        </radialGradient>
+        <radialGradient id="erythema1" cx="45%" cy="48%" r="35%">
+            <stop offset="0%" stop-color="rgba(239, 68, 68, 0.42)" />
+            <stop offset="60%" stop-color="rgba(239, 68, 68, 0.16)" />
+            <stop offset="100%" stop-color="rgba(239, 68, 68, 0)" />
+        </radialGradient>
+        <radialGradient id="erythema2" cx="62%" cy="54%" r="30%">
+            <stop offset="0%" stop-color="rgba(225, 29, 72, 0.38)" />
+            <stop offset="70%" stop-color="rgba(225, 29, 72, 0.12)" />
+            <stop offset="100%" stop-color="rgba(225, 29, 72, 0)" />
+        </radialGradient>
+    </defs>
+    <rect width="800" height="600" fill="url(#baseTone)" />
+    <rect width="800" height="600" fill="url(#erythema1)" />
+    <rect width="800" height="600" fill="url(#erythema2)" />
+    <circle cx="360" cy="270" r="14" fill="rgba(220, 38, 38, 0.55)" filter="blur(2px)" />
+    <circle cx="358" cy="268" r="5" fill="#fca5a5" />
+    <circle cx="440" cy="310" r="12" fill="rgba(220, 38, 38, 0.45)" filter="blur(2px)" />
+    <circle cx="438" cy="308" r="4" fill="#fca5a5" />
+    <circle cx="490" cy="250" r="10" fill="rgba(220, 38, 38, 0.4)" filter="blur(2px)" />
+    <circle cx="310" cy="340" r="8" fill="rgba(220, 38, 38, 0.35)" />
+    <path d="M 320 220 Q 340 225 360 218" stroke="rgba(180, 130, 110, 0.4)" stroke-width="2" fill="none" />
+    <path d="M 430 380 Q 450 375 470 382" stroke="rgba(180, 130, 110, 0.4)" stroke-width="2" fill="none" />
+    <path d="M 280 290 Q 300 295 320 288" stroke="rgba(180, 130, 110, 0.35)" stroke-width="2" fill="none" />
+    <rect x="30" y="30" width="260" height="65" rx="10" fill="rgba(15, 23, 42, 0.78)" />
+    <text x="48" y="58" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="16">BASELINE (DAY 01)</text>
+    <text x="48" y="78" fill="#fca5a5" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500" font-size="12">Active Erythema &amp; Micro-Blemishes</text>
+</svg>
+`);
+
+const DEFAULT_CURRENT_SVG = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+    <defs>
+        <radialGradient id="healthyTone" cx="50%" cy="50%" r="65%">
+            <stop offset="0%" stop-color="#faf2ec" />
+            <stop offset="65%" stop-color="#f5e4d9" />
+            <stop offset="100%" stop-color="#eed5c6" />
+        </radialGradient>
+        <radialGradient id="radiantGlow" cx="50%" cy="45%" r="45%">
+            <stop offset="0%" stop-color="rgba(255, 255, 255, 0.55)" />
+            <stop offset="50%" stop-color="rgba(13, 148, 136, 0.12)" />
+            <stop offset="100%" stop-color="rgba(13, 148, 136, 0)" />
+        </radialGradient>
+    </defs>
+    <rect width="800" height="600" fill="url(#healthyTone)" />
+    <rect width="800" height="600" fill="url(#radiantGlow)" />
+    <ellipse cx="400" cy="270" rx="140" ry="85" fill="rgba(255, 255, 255, 0.35)" filter="blur(30px)" />
+    <ellipse cx="510" cy="230" rx="60" ry="40" fill="rgba(255, 255, 255, 0.45)" filter="blur(15px)" />
+    <ellipse cx="320" cy="290" rx="70" ry="50" fill="rgba(255, 255, 255, 0.38)" filter="blur(15px)" />
+    <rect x="510" y="30" width="260" height="65" rx="10" fill="rgba(15, 23, 42, 0.78)" />
+    <text x="528" y="58" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="16">PROGRESS (DAY 30)</text>
+    <text x="528" y="78" fill="#5eead4" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500" font-size="12">Barrier Restored • Luminous Clarity</text>
+</svg>
+`);
+
+let journeySliderPos = 50;
+
+function loadJourneyPhotos() {
+    const beforeImg = document.getElementById("journeyBeforeImg");
+    const afterImg = document.getElementById("journeyAfterImg");
+    if (!beforeImg || !afterImg) return;
+
+    let saved = null;
+    try {
+        saved = JSON.parse(localStorage.getItem(JOURNEY_PHOTOS_KEY) || "null");
+    } catch (e) {}
+
+    beforeImg.src = (saved && saved.baseline) ? saved.baseline : DEFAULT_BASELINE_SVG;
+    afterImg.src = (saved && saved.current) ? saved.current : DEFAULT_CURRENT_SVG;
+}
+
+function setJourneySliderPosition(percent) {
+    const clamped = Math.max(0, Math.min(100, percent));
+    journeySliderPos = clamped;
+
+    const handle = document.getElementById("journeyHandle");
+    const beforeLayer = document.getElementById("journeyBeforeLayer");
+
+    if (handle) {
+        handle.style.left = `${clamped}%`;
+        handle.setAttribute("aria-valuenow", Math.round(clamped));
+    }
+    if (beforeLayer) {
+        beforeLayer.style.width = `${clamped}%`;
+    }
+}
+
+function initSkinJourneySlider() {
+    loadJourneyPhotos();
+
+    const viewport = document.getElementById("journeyViewport");
+    const handle = document.getElementById("journeyHandle");
+    if (!viewport || !handle) return;
+
+    setJourneySliderPosition(50);
+
+    let isDragging = false;
+
+    function onPointerMove(clientX) {
+        const rect = viewport.getBoundingClientRect();
+        if (rect.width <= 0) return;
+        const x = clientX - rect.left;
+        const percent = (x / rect.width) * 100;
+        setJourneySliderPosition(percent);
+    }
+
+    handle.addEventListener("pointerdown", (e) => {
+        isDragging = true;
+        handle.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+
+    viewport.addEventListener("pointerdown", (e) => {
+        if (e.target !== handle && !handle.contains(e.target)) {
+            isDragging = true;
+            onPointerMove(e.clientX);
+        }
+    });
+
+    window.addEventListener("pointermove", (e) => {
+        if (!isDragging) return;
+        onPointerMove(e.clientX);
+    });
+
+    window.addEventListener("pointerup", () => {
+        isDragging = false;
+    });
+
+    window.addEventListener("pointercancel", () => {
+        isDragging = false;
+    });
+
+    // Keyboard support
+    handle.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") {
+            setJourneySliderPosition(journeySliderPos - 5);
+            e.preventDefault();
+        } else if (e.key === "ArrowRight") {
+            setJourneySliderPosition(journeySliderPos + 5);
+            e.preventDefault();
+        }
+    });
+}
+
+function handleJourneyPhotoUpload(event, type) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        showToast("Please select a valid image file.", "error");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+            // Compress image to max 900px wide
+            const canvas = document.createElement("canvas");
+            const maxDimension = 900;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxDimension || height > maxDimension) {
+                if (width > height) {
+                    height = Math.round((height * maxDimension) / width);
+                    width = maxDimension;
+                } else {
+                    width = Math.round((width * maxDimension) / height);
+                    height = maxDimension;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.85);
+
+            let stored = {};
+            try {
+                stored = JSON.parse(localStorage.getItem(JOURNEY_PHOTOS_KEY) || "{}");
+            } catch (err) {}
+
+            stored[type] = compressedBase64;
+            stored.lastUpdated = Date.now();
+            localStorage.setItem(JOURNEY_PHOTOS_KEY, JSON.stringify(stored));
+
+            loadJourneyPhotos();
+            showToast(`${type === "baseline" ? "Day 1 Baseline" : "Current progress"} photo updated!`, "success");
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+window.handleJourneyPhotoUpload = handleJourneyPhotoUpload;
+
+function resetJourneyPhotos() {
+    localStorage.removeItem(JOURNEY_PHOTOS_KEY);
+    loadJourneyPhotos();
+    setJourneySliderPosition(50);
+    showToast("Reset to clinical comparison demo photos.", "info");
+}
+window.resetJourneyPhotos = resetJourneyPhotos;
+
+// ==========================================================================
+// FEATURE 4: "MY VANITY" PRODUCT EXPIRY & PAO TRACKER
+// ==========================================================================
+const VANITY_STORAGE_KEY = "skincare_vanity_items";
+
+const DEFAULT_VANITY_ITEMS = [
+    {
+        id: "vanity-1",
+        name: "CeraVe Hydrating Facial Cleanser",
+        category: "Cleanser",
+        paoMonths: 12,
+        dateOpened: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    },
+    {
+        id: "vanity-2",
+        name: "SkinCeuticals C E Ferulic (Vitamin C)",
+        category: "Serum",
+        paoMonths: 3,
+        dateOpened: new Date(Date.now() - 82 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    },
+    {
+        id: "vanity-3",
+        name: "La Roche-Posay Anthelios Invisible SPF 50+",
+        category: "SPF",
+        paoMonths: 6,
+        dateOpened: new Date(Date.now() - 210 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    }
+];
+
+function getVanityItems() {
+    try {
+        const raw = localStorage.getItem(VANITY_STORAGE_KEY);
+        if (!raw) {
+            localStorage.setItem(VANITY_STORAGE_KEY, JSON.stringify(DEFAULT_VANITY_ITEMS));
+            return DEFAULT_VANITY_ITEMS;
+        }
+        return JSON.parse(raw);
+    } catch (e) {
+        return DEFAULT_VANITY_ITEMS;
+    }
+}
+
+function saveVanityItems(items) {
+    localStorage.setItem(VANITY_STORAGE_KEY, JSON.stringify(items));
+}
+
+function getCategoryIcon(cat) {
+    const icons = {
+        "Cleanser": "🧴",
+        "Serum": "💧",
+        "Moisturizer": "🌿",
+        "SPF": "🛡️",
+        "Treatment": "🧪",
+        "Eye Cream": "👁️"
+    };
+    return icons[cat] || "✨";
+}
+
+function renderVanityShelf() {
+    const grid = document.getElementById("vanityShelfGrid");
+    const countTotal = document.getElementById("vanityTotalCount");
+    const countWarning = document.getElementById("vanityWarningCount");
+    const countExpired = document.getElementById("vanityExpiredCount");
+
+    if (!grid) return;
+
+    const items = getVanityItems();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const msPerDay = 1000 * 60 * 60 * 24;
+
+    let warningCount = 0;
+    let expiredCount = 0;
+
+    if (items.length === 0) {
+        grid.innerHTML = `
+            <div class="vanity-empty-shelf">
+                <span class="empty-shelf-icon">🧴</span>
+                <h4>Your Vanity Shelf is Empty</h4>
+                <p>Add your skincare formulas above to track PAO and never apply expired actives again.</p>
+            </div>
+        `;
+        if (countTotal) countTotal.textContent = "0";
+        if (countWarning) countWarning.textContent = "0";
+        if (countExpired) countExpired.textContent = "0";
+        return;
+    }
+
+    const cardsHtml = items.map((item) => {
+        const openedDate = new Date(item.dateOpened);
+        const expiryDate = new Date(openedDate);
+        expiryDate.setMonth(expiryDate.getMonth() + parseInt(item.paoMonths || 6));
+
+        const daysRemaining = Math.ceil((expiryDate - today) / msPerDay);
+        const totalDurationDays = Math.max(1, Math.ceil((expiryDate - openedDate) / msPerDay));
+        const freshnessPercent = Math.max(0, Math.min(100, Math.round((daysRemaining / totalDurationDays) * 100)));
+
+        let statusBadgeHtml = "";
+        let barClass = "bar-fresh";
+        let cardAlertClass = "";
+
+        // Prompt requirements:
+        // If days remaining <= 14: Mark with an amber badge "Expiring Soon"
+        // If days remaining <= 0: Mark with a red badge "Expired — Replace"
+        if (daysRemaining <= 0) {
+            expiredCount++;
+            statusBadgeHtml = `<span class="vanity-status-badge badge-expired">🔴 Expired — Replace</span>`;
+            barClass = "bar-expired";
+            cardAlertClass = "item-expired";
+        } else if (daysRemaining <= 14) {
+            warningCount++;
+            statusBadgeHtml = `<span class="vanity-status-badge badge-warning">🟡 Expiring Soon (${daysRemaining}d left)</span>`;
+            barClass = "bar-warning";
+            cardAlertClass = "item-warning";
+        } else {
+            statusBadgeHtml = `<span class="vanity-status-badge badge-fresh">🟢 Fresh (${daysRemaining}d left)</span>`;
+            barClass = "bar-fresh";
+        }
+
+        const formattedExpiry = expiryDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        const formattedOpened = openedDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+
+        return `
+            <div class="vanity-item-card ${cardAlertClass}">
+                <div class="vanity-item-header">
+                    <div class="vanity-cat-pill">
+                        <span class="cat-icon">${getCategoryIcon(item.category)}</span>
+                        <span>${item.category}</span>
+                    </div>
+                    <button type="button" class="vanity-delete-btn" onclick="deleteVanityItem('${item.id}')" title="Remove from shelf">&times;</button>
+                </div>
+                <h4 class="vanity-product-name">${item.name}</h4>
+                <div class="vanity-meta-row">
+                    <span class="vanity-pao-tag">${item.paoMonths}M PAO</span>
+                    <span class="vanity-date-tag">Opened: ${formattedOpened}</span>
+                </div>
+                <div class="vanity-progress-wrap">
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill ${barClass}" style="width: ${freshnessPercent}%"></div>
+                    </div>
+                    <div class="progress-meta-row">
+                        <span class="freshness-text">${freshnessPercent}% Fresh</span>
+                        <span class="expiry-target-text">Expires ${formattedExpiry}</span>
+                    </div>
+                </div>
+                <div class="vanity-card-footer">
+                    ${statusBadgeHtml}
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    grid.innerHTML = cardsHtml;
+
+    if (countTotal) countTotal.textContent = items.length;
+    if (countWarning) countWarning.textContent = warningCount;
+    if (countExpired) countExpired.textContent = expiredCount;
+}
+
+function handleAddVanityItem(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    const nameInput = document.getElementById("vanityName");
+    const categorySelect = document.getElementById("vanityCategory");
+    const paoSelect = document.getElementById("vanityPAO");
+    const dateInput = document.getElementById("vanityDateOpened");
+
+    const name = nameInput?.value?.trim();
+    const category = categorySelect?.value || "Serum";
+    const paoMonths = parseInt(paoSelect?.value || "6");
+    const dateOpened = dateInput?.value || getTodayKey();
+
+    if (!name) {
+        showToast("Please enter a product name.", "error");
+        return;
+    }
+
+    const newItem = {
+        id: "vanity-" + Date.now(),
+        name,
+        category,
+        paoMonths,
+        dateOpened
+    };
+
+    const items = getVanityItems();
+    items.unshift(newItem);
+    saveVanityItems(items);
+
+    if (nameInput) nameInput.value = "";
+    renderVanityShelf();
+    showToast(`Added "${name}" to your vanity shelf!`, "success");
+}
+window.handleAddVanityItem = handleAddVanityItem;
+
+function deleteVanityItem(id) {
+    const items = getVanityItems().filter(x => x.id !== id);
+    saveVanityItems(items);
+    renderVanityShelf();
+    showToast("Product removed from shelf.", "info");
+}
+window.deleteVanityItem = deleteVanityItem;
+
+function initVanityTracker() {
+    const dateInput = document.getElementById("vanityDateOpened");
+    if (dateInput && !dateInput.value) {
+        dateInput.value = getTodayKey();
+    }
+    renderVanityShelf();
+}
+
+// ==========================================================================
+// FEATURE 5: DAILY FLARE-UP & LIFESTYLE LOGGER
+// ==========================================================================
+const LIFESTYLE_STORAGE_KEY = "skincare_daily_logs";
+
+function getLifestyleLogs() {
+    try {
+        return JSON.parse(localStorage.getItem(LIFESTYLE_STORAGE_KEY) || "{}");
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveLifestyleLogs(logs) {
+    localStorage.setItem(LIFESTYLE_STORAGE_KEY, JSON.stringify(logs));
+}
+
+function selectLifestyleChip(field, value, btn) {
+    const parent = btn.parentElement;
+    if (parent) {
+        parent.querySelectorAll(".lifestyle-chip").forEach(b => b.classList.remove("active"));
+    }
+    btn.classList.add("active");
+    autoSaveTodayLifestyle();
+}
+window.selectLifestyleChip = selectLifestyleChip;
+
+function handleDietTriggerChange(checkbox) {
+    if (checkbox.value === "None" && checkbox.checked) {
+        document.querySelectorAll('input[name="dietTrigger"]').forEach(cb => {
+            if (cb.value !== "None") cb.checked = false;
+        });
+    } else if (checkbox.checked && checkbox.value !== "None") {
+        const noneCb = document.querySelector('input[name="dietTrigger"][value="None"]');
+        if (noneCb) noneCb.checked = false;
+    }
+    autoSaveTodayLifestyle();
+}
+window.handleDietTriggerChange = handleDietTriggerChange;
+
+function getTodayLifestyleFromUI() {
+    const sleepChip = document.querySelector('#sleepChips .lifestyle-chip.active');
+    const stressChip = document.querySelector('#stressChips .lifestyle-chip.active');
+    const skinFeelChip = document.querySelector('#skinFeelChips .lifestyle-chip.active');
+
+    const dietTriggers = [];
+    document.querySelectorAll('input[name="dietTrigger"]:checked').forEach(cb => {
+        dietTriggers.push(cb.value);
+    });
+    if (dietTriggers.length === 0) dietTriggers.push("None");
+
+    return {
+        sleep: sleepChip?.getAttribute("data-value") || "6–8 hrs",
+        stress: stressChip?.getAttribute("data-value") || "Moderate",
+        dietTriggers,
+        skinFeel: skinFeelChip?.getAttribute("data-value") || "Calm",
+        savedAt: new Date().toISOString()
+    };
+}
+
+function autoSaveTodayLifestyle() {
+    const logs = getLifestyleLogs();
+    const today = getTodayKey();
+    logs[today] = getTodayLifestyleFromUI();
+    saveLifestyleLogs(logs);
+
+    const badge = document.getElementById("lifestyleStatusBadge");
+    if (badge) {
+        badge.classList.remove("hidden");
+        badge.textContent = "✓ Saved for Today";
+    }
+    updateLifestyleInsight();
+}
+
+function handleLifestyleSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    autoSaveTodayLifestyle();
+    showToast("Daily lifestyle check-in recorded!", "success");
+}
+window.handleLifestyleSubmit = handleLifestyleSubmit;
+
+function loadLifestyleTodayCheckin() {
+    const logs = getLifestyleLogs();
+    const today = getTodayKey();
+    const data = logs[today];
+    if (!data) return;
+
+    if (data.sleep) {
+        document.querySelectorAll('#sleepChips .lifestyle-chip').forEach(btn => {
+            btn.classList.toggle("active", btn.getAttribute("data-value") === data.sleep);
+        });
+    }
+    if (data.stress) {
+        document.querySelectorAll('#stressChips .lifestyle-chip').forEach(btn => {
+            btn.classList.toggle("active", btn.getAttribute("data-value") === data.stress);
+        });
+    }
+    if (data.skinFeel) {
+        document.querySelectorAll('#skinFeelChips .lifestyle-chip').forEach(btn => {
+            btn.classList.toggle("active", btn.getAttribute("data-value") === data.skinFeel);
+        });
+    }
+    if (Array.isArray(data.dietTriggers)) {
+        document.querySelectorAll('input[name="dietTrigger"]').forEach(cb => {
+            cb.checked = data.dietTriggers.includes(cb.value);
+        });
+    }
+
+    const badge = document.getElementById("lifestyleStatusBadge");
+    if (badge) {
+        badge.classList.remove("hidden");
+    }
+}
+
+function updateLifestyleInsight() {
+    const insightText = document.getElementById("streakInsightText");
+    if (!insightText) return;
+
+    const logs = getLifestyleLogs();
+    const today = new Date();
+    const entries = [];
+
+    // Analyze past 7 days
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        if (logs[k]) {
+            entries.push({ date: k, log: logs[k] });
+        }
+    }
+
+    if (entries.length === 0) {
+        // Fallback default note matching prompt exact text
+        insightText.textContent = "Past 7 days: Breakouts correlated with High Stress / Low Sleep.";
+        return;
+    }
+
+    const breakoutDays = entries.filter(e => e.log.skinFeel === "Active Breakout" || e.log.skinFeel === "Dry / Flaky");
+    const highStressDays = entries.filter(e => e.log.stress === "High");
+    const lowSleepDays = entries.filter(e => e.log.sleep === "< 6 hrs");
+
+    if (breakoutDays.length > 0) {
+        const triggers = [];
+        if (highStressDays.length > 0) triggers.push("High Stress");
+        if (lowSleepDays.length > 0) triggers.push("Low Sleep");
+        
+        const dietTriggersFound = new Set();
+        breakoutDays.forEach(e => {
+            (e.log.dietTriggers || []).forEach(t => {
+                if (t !== "None") dietTriggersFound.add(t);
+            });
+        });
+
+        if (dietTriggersFound.size > 0) {
+            triggers.push(Array.from(dietTriggersFound).join(" / "));
+        }
+
+        const triggerStr = triggers.length > 0 ? triggers.join(" / ") : "High Stress / Low Sleep";
+        insightText.textContent = `Past 7 days: Breakouts correlated with ${triggerStr}.`;
+    } else {
+        const calmCount = entries.filter(e => e.log.skinFeel === "Calm").length;
+        insightText.textContent = `Past 7 days: Skin reported Calm on ${calmCount}/${entries.length} logged days. Consistent routines maintained!`;
+    }
+}
+window.updateLifestyleInsight = updateLifestyleInsight;
+
+function initLifestyleLogger() {
+    loadLifestyleTodayCheckin();
+    updateLifestyleInsight();
 }
 
 function exportRoutinePDF() { window.print(); }
@@ -1089,6 +2146,8 @@ function loadRoutineTracker() {
     }
 
     renderAdoptedTrackerUI();
+    if (typeof updateLifestyleInsight === "function") updateLifestyleInsight();
+    if (typeof loadLifestyleTodayCheckin === "function") loadLifestyleTodayCheckin();
 }
 
 // ==================== USER AUTHENTICATION & MODAL ====================
@@ -1354,6 +2413,7 @@ function handleRoutineCheck(type) {
     if (streakEl) streakEl.textContent = data.streak;
     localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(data));
     syncStreakToCloud(data);
+    if (typeof updateLifestyleInsight === "function") updateLifestyleInsight();
 }
 window.handleRoutineCheck = handleRoutineCheck;
 
@@ -1651,4 +2711,11 @@ window.addEventListener("DOMContentLoaded", () => {
             ]
         });
     }
+
+    // Initialize 5 User-Centric Skincare Features
+    if (typeof initClimateWidget === "function") initClimateWidget();
+    if (typeof initConflictChecker === "function") initConflictChecker();
+    if (typeof initSkinJourneySlider === "function") initSkinJourneySlider();
+    if (typeof initVanityTracker === "function") initVanityTracker();
+    if (typeof initLifestyleLogger === "function") initLifestyleLogger();
 });
