@@ -55,16 +55,76 @@ function sanitizeAIResponse(text) {
 
 // POST /api/analysis & POST /api/analysis/routine (Manual Questionnaire Route)
 router.post(["/", "/routine"], async (req, res) => {
-    const { skinType = "combination", concern = "barrier repair" } = req.body;
+    const { skinType = "combination", concern = "barrier repair", climate, recentLifestyle } = req.body;
+
+    // Environmental Context Instruction
+    let climateInstruction = "";
+    if (climate && typeof climate === "object") {
+        const uvIndex = climate.uvIndex !== undefined ? climate.uvIndex : (climate.uv !== undefined ? climate.uv : 5);
+        const humidity = climate.humidity !== undefined ? climate.humidity : 45;
+        const temp = climate.temp !== undefined ? climate.temp : 22;
+        climateInstruction = `Environmental Context: Current UV Index is ${uvIndex}, Humidity is ${humidity}%, Temp is ${temp}°C. Adapt active formulations accordingly (e.g., if UV >= 6, mandate high-PA mineral/hybrid SPF 50; if humidity < 40%, prioritize occlusive hydration like ceramides and squalane).`;
+    }
+
+    // Recent Lifestyle Context Instruction
+    let lifestyleInstruction = "";
+    if (Array.isArray(recentLifestyle) && recentLifestyle.length > 0) {
+        const summaryParts = recentLifestyle.map((entry, idx) => {
+            const parts = [];
+            if (entry.sleep) parts.push(`sleep: ${entry.sleep}`);
+            if (entry.stress) parts.push(`stress: ${entry.stress}`);
+            if (entry.skinFeel || entry.feel) parts.push(`skin feel: ${entry.skinFeel || entry.feel}`);
+            const triggers = entry.triggers || entry.dietTriggers;
+            if (Array.isArray(triggers) && triggers.length > 0 && !triggers.includes("None")) {
+                parts.push(`triggers: ${triggers.join(", ")}`);
+            }
+            return parts.length > 0 ? `(Check-in ${idx + 1}: ${parts.join(", ")})` : null;
+        }).filter(Boolean);
+
+        const recentLifestyleSummary = summaryParts.length > 0 ? summaryParts.join("; ") : "recent variable barrier sensitivity and stress";
+        lifestyleInstruction = `Recent Lifestyle Context: User reported ${recentLifestyleSummary}. Account for stress-induced barrier compromise or sleep-deprivation dullness with soothing, anti-inflammatory compounds (e.g., Centella, Allantoin, Azelaic Acid).`;
+    }
+
+    // Dynamic fallback routine generation if API key is absent or external API call fails
+    const getAdaptedFallback = () => {
+        const routineAm = [...FALLBACK_ROUTINE.routine.am];
+        const routinePm = [...FALLBACK_ROUTINE.routine.pm];
+
+        if (climate && ((climate.uvIndex !== undefined && climate.uvIndex >= 6) || (climate.uv !== undefined && climate.uv >= 6))) {
+            routineAm[3] = "Broad-Spectrum Mineral-Hybrid Sunscreen SPF 50+ (High-UV Defense)";
+        }
+        if (climate && climate.humidity !== undefined && climate.humidity < 40) {
+            routineAm[2] = "Ceramide & Squalane Intensive Barrier Occlusive Lotion";
+            routinePm[2] = "Ceramide Deep Repair Complex + Squalane Night Elixir";
+        }
+        if (lifestyleInstruction) {
+            routineAm[1] = "Centella & Azelaic Acid Soothing Barrier Serum";
+        }
+        return {
+            routine: {
+                am: routineAm,
+                pm: routinePm
+            }
+        };
+    };
 
     const apiKey = process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
         console.warn("AI API key missing. Serving fallback regimen.");
-        return res.status(200).json(FALLBACK_ROUTINE);
+        return res.status(200).json(getAdaptedFallback());
     }
 
-    const prompt = `You are a clinical cosmetic chemist. Provide a targeted morning and evening routine for a user with ${skinType} skin and concerns regarding ${concern}.
+    // Build system prompt and user message
+    let systemPrompt = "You are a clinical cosmetic chemist and dermatologist.";
+    if (climateInstruction) {
+        systemPrompt += `\n${climateInstruction}`;
+    }
+    if (lifestyleInstruction) {
+        systemPrompt += `\n${lifestyleInstruction}`;
+    }
+
+    const userPrompt = `Provide a targeted morning and evening routine for a user with ${skinType} skin and concerns regarding ${concern}.
 Return strictly a valid JSON object without commentary or markdown code blocks:
 {
   "routine": {
@@ -89,7 +149,10 @@ Return strictly a valid JSON object without commentary or markdown code blocks:
             },
             body: JSON.stringify({
                 model,
-                messages: [{ role: "user", content: prompt }],
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
                 temperature: 0.4
             })
         });
@@ -103,10 +166,14 @@ Return strictly a valid JSON object without commentary or markdown code blocks:
         const cleanJSON = sanitizeAIResponse(rawContent);
         const parsedData = JSON.parse(cleanJSON);
 
+        if (!parsedData.routine || !Array.isArray(parsedData.routine.am) || !Array.isArray(parsedData.routine.pm)) {
+            throw new Error("Invalid routine schema received from AI");
+        }
+
         res.status(200).json(parsedData);
     } catch (error) {
         console.error("AI Generation failed, serving fallback payload:", error.message);
-        res.status(200).json(FALLBACK_ROUTINE);
+        res.status(200).json(getAdaptedFallback());
     }
 });
 

@@ -60,6 +60,9 @@ router.post("/register", async (req, res) => {
             lastStreakDate: newUser.lastStreakDate,
             amCompleted: newUser.amCompleted,
             pmCompleted: newUser.pmCompleted,
+            vanity: newUser.vanity || [],
+            lifestyleLogs: newUser.lifestyleLogs || [],
+            progressPhotos: newUser.progressPhotos || { baseline: "", current: "" },
             user: {
                 id: newUser._id,
                 email: newUser.email,
@@ -68,6 +71,9 @@ router.post("/register", async (req, res) => {
                 lastStreakDate: newUser.lastStreakDate,
                 amCompleted: newUser.amCompleted,
                 pmCompleted: newUser.pmCompleted,
+                vanity: newUser.vanity || [],
+                lifestyleLogs: newUser.lifestyleLogs || [],
+                progressPhotos: newUser.progressPhotos || { baseline: "", current: "" },
             },
         });
     } catch (error) {
@@ -122,6 +128,9 @@ router.post("/login", async (req, res) => {
             lastStreakDate: user.lastStreakDate,
             amCompleted: user.amCompleted,
             pmCompleted: user.pmCompleted,
+            vanity: user.vanity || [],
+            lifestyleLogs: user.lifestyleLogs || [],
+            progressPhotos: user.progressPhotos || { baseline: "", current: "" },
             user: {
                 id: user._id,
                 email: user.email,
@@ -130,6 +139,9 @@ router.post("/login", async (req, res) => {
                 lastStreakDate: user.lastStreakDate,
                 amCompleted: user.amCompleted,
                 pmCompleted: user.pmCompleted,
+                vanity: user.vanity || [],
+                lifestyleLogs: user.lifestyleLogs || [],
+                progressPhotos: user.progressPhotos || { baseline: "", current: "" },
             },
         });
     } catch (error) {
@@ -141,45 +153,141 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// GET /api/auth/me (Get profile and streak data for logged in user)
-router.get("/me", async (req, res) => {
+// Authentication Middleware
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "No token provided", message: "No token provided" });
+    }
+    const token = authHeader.split(" ")[1];
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "No token provided" });
-        }
-        const token = authHeader.split(" ")[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET || "defaultsecret");
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: "Invalid token", message: "Invalid or expired token" });
+    }
+}
 
-        const user = await User.findById(decoded.id).select("-password");
+// GET /api/auth/profile (Get full user profile including vanity, lifestyleLogs, progressPhotos, streak)
+router.get("/profile", authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password");
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
 
         return res.status(200).json({
+            id: user._id,
             email: user.email,
             name: user.name,
-            streak: user.streak,
-            lastStreakDate: user.lastStreakDate,
-            amCompleted: user.amCompleted,
-            pmCompleted: user.pmCompleted,
+            streak: user.streak || 0,
+            lastStreakDate: user.lastStreakDate || null,
+            amCompleted: !!user.amCompleted,
+            pmCompleted: !!user.pmCompleted,
+            vanity: user.vanity || [],
+            lifestyleLogs: user.lifestyleLogs || [],
+            progressPhotos: user.progressPhotos || { baseline: "", current: "" },
             user,
         });
     } catch (error) {
-        return res.status(401).json({ error: "Invalid token" });
+        return res.status(500).json({ error: "Failed to retrieve profile", message: error.message });
+    }
+});
+
+// GET /api/auth/me (Get profile and streak data for logged in user)
+router.get("/me", authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password");
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        return res.status(200).json({
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            streak: user.streak || 0,
+            lastStreakDate: user.lastStreakDate || null,
+            amCompleted: !!user.amCompleted,
+            pmCompleted: !!user.pmCompleted,
+            vanity: user.vanity || [],
+            lifestyleLogs: user.lifestyleLogs || [],
+            progressPhotos: user.progressPhotos || { baseline: "", current: "" },
+            user,
+        });
+    } catch (error) {
+        return res.status(500).json({ error: "Failed to retrieve user info", message: error.message });
+    }
+});
+
+// PUT /api/auth/sync (Accepts { vanity, lifestyleLogs, progressPhotos } and merges/updates MongoDB)
+router.put("/sync", authenticateToken, async (req, res) => {
+    try {
+        const { vanity, lifestyleLogs, progressPhotos, streak, lastStreakDate, amCompleted, pmCompleted } = req.body;
+        const updateFields = {};
+
+        if (Array.isArray(vanity)) {
+            updateFields.vanity = vanity.map(item => ({
+                name: String(item.name || ""),
+                category: String(item.category || ""),
+                pao: Number(item.pao ?? item.paoMonths ?? 6),
+                dateOpened: String(item.dateOpened || "")
+            }));
+        }
+
+        if (Array.isArray(lifestyleLogs)) {
+            updateFields.lifestyleLogs = lifestyleLogs.map(log => ({
+                date: String(log.date || ""),
+                sleep: String(log.sleep || ""),
+                stress: String(log.stress || ""),
+                triggers: Array.isArray(log.triggers) ? log.triggers.map(String) : (Array.isArray(log.dietTriggers) ? log.dietTriggers.map(String) : []),
+                feel: String(log.feel || log.skinFeel || "")
+            }));
+        }
+
+        if (progressPhotos && typeof progressPhotos === "object") {
+            const currentPhotos = {};
+            if (progressPhotos.baseline !== undefined) currentPhotos.baseline = String(progressPhotos.baseline);
+            if (progressPhotos.current !== undefined) currentPhotos.current = String(progressPhotos.current);
+            updateFields.progressPhotos = currentPhotos;
+        }
+
+        if (typeof streak === "number") updateFields.streak = streak;
+        if (lastStreakDate !== undefined) updateFields.lastStreakDate = lastStreakDate;
+        if (typeof amCompleted === "boolean") updateFields.amCompleted = amCompleted;
+        if (typeof pmCompleted === "boolean") updateFields.pmCompleted = pmCompleted;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.id,
+            { $set: updateFields },
+            { returnDocument: "after" }
+        ).select("-password");
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        return res.status(200).json({
+            message: "User profile data synced successfully",
+            vanity: updatedUser.vanity || [],
+            lifestyleLogs: updatedUser.lifestyleLogs || [],
+            progressPhotos: updatedUser.progressPhotos || { baseline: "", current: "" },
+            streak: updatedUser.streak,
+            lastStreakDate: updatedUser.lastStreakDate,
+            amCompleted: updatedUser.amCompleted,
+            pmCompleted: updatedUser.pmCompleted,
+            user: updatedUser,
+        });
+    } catch (error) {
+        console.error("Cloud sync error:", error);
+        return res.status(500).json({ error: "Failed to sync user data", details: error.message });
     }
 });
 
 // PUT /api/auth/streak (Sync streak data with MongoDB Atlas)
-router.put("/streak", async (req, res) => {
+router.put("/streak", authenticateToken, async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "No token provided" });
-        }
-        const token = authHeader.split(" ")[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "defaultsecret");
-
         const { streak, lastStreakDate, amCompleted, pmCompleted } = req.body;
         const updateFields = {};
         if (typeof streak === "number") updateFields.streak = streak;
@@ -188,7 +296,7 @@ router.put("/streak", async (req, res) => {
         if (typeof pmCompleted === "boolean") updateFields.pmCompleted = pmCompleted;
 
         const updatedUser = await User.findByIdAndUpdate(
-            decoded.id,
+            req.user.id,
             updateFields,
             { returnDocument: "after" }
         ).select("-password");
@@ -206,7 +314,7 @@ router.put("/streak", async (req, res) => {
             user: updatedUser,
         });
     } catch (error) {
-        return res.status(401).json({ error: "Failed to sync streak", details: error.message });
+        return res.status(500).json({ error: "Failed to sync streak", details: error.message });
     }
 });
 

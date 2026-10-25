@@ -45,6 +45,27 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "09:00",
     },
+    vanity: [
+        {
+            name: { type: String, default: "" },
+            category: { type: String, default: "" },
+            pao: { type: Number, default: 6 },
+            dateOpened: { type: String, default: "" },
+        }
+    ],
+    lifestyleLogs: [
+        {
+            date: { type: String, default: "" },
+            sleep: { type: String, default: "" },
+            stress: { type: String, default: "" },
+            triggers: [{ type: String }],
+            feel: { type: String, default: "" },
+        }
+    ],
+    progressPhotos: {
+        baseline: { type: String, default: "" },
+        current: { type: String, default: "" },
+    },
 });
 
 module.exports = mongoose.models.User || mongoose.model("User", userSchema);
