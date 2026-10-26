@@ -3938,3 +3938,470 @@ body.dark-mode .conflict-chip-btn.active {
         text-align: center;
     }
 }
+
+/* ==========================================================================
+   User Profile & Settings Modal (GDPR & Privacy Compliance)
+   ========================================================================== */
+
+.settings-modal-card {
+    max-width: 620px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2.25rem 2rem;
+    box-shadow: var(--shadow-modal);
+}
+
+html.dark-mode .settings-modal-card,
+body.dark-mode .settings-modal-card {
+    background-color: #0d1b2e;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.settings-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings-modal-icon {
+    font-size: 2.2rem;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(0, 50, 118, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+html.dark-mode .settings-modal-icon,
+body.dark-mode .settings-modal-icon {
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.settings-modal-header h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.2rem;
+}
+
+.settings-modal-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.settings-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.settings-section {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 1.25rem;
+    transition: var(--transition);
+}
+
+.settings-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.settings-section-title .section-icon {
+    font-size: 1.05rem;
+}
+
+/* Section A: Account Overview */
+.settings-user-card {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    flex-wrap: wrap;
+}
+
+.user-avatar-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #003276, #0284c7);
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 50, 118, 0.25);
+    flex-shrink: 0;
+}
+
+.user-info-text {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.user-info-row {
+    font-size: 0.84rem;
+    display: flex;
+    gap: 0.4rem;
+}
+
+.user-info-row .info-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.user-info-row .info-value {
+    color: var(--text-main);
+    word-break: break-all;
+}
+
+.settings-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge-gdpr, .badge-sync {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.02em;
+}
+
+.badge-gdpr {
+    background: rgba(13, 148, 136, 0.12);
+    color: #0f766e;
+    border: 1px solid rgba(13, 148, 136, 0.3);
+}
+
+html.dark-mode .badge-gdpr,
+body.dark-mode .badge-gdpr {
+    background: rgba(45, 212, 191, 0.15);
+    color: #5eead4;
+}
+
+.badge-sync {
+    background: rgba(2, 132, 199, 0.12);
+    color: #0284c7;
+    border: 1px solid rgba(2, 132, 199, 0.3);
+}
+
+html.dark-mode .badge-sync,
+body.dark-mode .badge-sync {
+    background: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+}
+
+/* Section B: Security & Password Form */
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.settings-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+}
+
+@media (max-width: 520px) {
+    .settings-form .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.settings-form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.settings-form-group input {
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-size: 0.88rem;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.settings-form-group input:focus {
+    outline: none;
+    border-color: #003276;
+    box-shadow: 0 0 0 3px rgba(0, 50, 118, 0.15);
+}
+
+html.dark-mode .settings-form-group input:focus,
+body.dark-mode .settings-form-group input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+.primary-action-btn {
+    align-self: flex-start;
+    padding: 0.65rem 1.25rem;
+    background: linear-gradient(135deg, #003276, #0284c7);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(0, 50, 118, 0.18);
+}
+
+.primary-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 50, 118, 0.26);
+}
+
+/* Section C: Data Export */
+.export-data-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.export-desc {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.export-btn {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.export-btn:hover {
+    background: #f0f7ff;
+    border-color: #003276;
+    color: #003276;
+    transform: translateY(-1px);
+}
+
+html.dark-mode .export-btn:hover,
+body.dark-mode .export-btn:hover {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: #38bdf8;
+    color: #7dd3fc;
+}
+
+/* Section D: Privacy & Danger Zone */
+.settings-danger-zone {
+    border: 1px solid rgba(239, 68, 68, 0.25) !important;
+    background: rgba(239, 68, 68, 0.04) !important;
+    border-radius: 14px;
+}
+
+.danger-title {
+    color: #dc2626 !important;
+}
+
+html.dark-mode .danger-title,
+body.dark-mode .danger-title {
+    color: #f87171 !important;
+}
+
+.danger-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 0.85rem;
+}
+
+.danger-actions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.danger-action-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+
+.danger-action-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    max-width: 380px;
+}
+
+.danger-action-info strong {
+    font-size: 0.86rem;
+    color: var(--text-main);
+}
+
+.danger-action-info span {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.btn-danger {
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.outline-danger-btn {
+    border: 1px solid #ef4444;
+    background: transparent;
+    color: #ef4444;
+}
+
+.outline-danger-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.full-danger-btn {
+    border: 1px solid #dc2626;
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.full-danger-btn:hover {
+    background: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.settings-alert {
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.settings-alert.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #b91c1c;
+}
+
+.settings-alert.success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #047857;
+}
+
+/* Nav Settings Gear Button */
+.nav-icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: var(--transition);
+}
+
+.nav-icon-btn:hover {
+    background: var(--bg-subtle);
+    border-color: #003276;
+    color: #003276;
+    transform: translateY(-1px);
+}
+
+html.dark-mode .nav-icon-btn:hover,
+body.dark-mode .nav-icon-btn:hover {
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+/* Mobile Bottom Sheet on screens < 640px */
+@media (max-width: 640px) {
+    #settingsModal {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    #settingsModal .settings-modal-card {
+        max-width: 100%;
+        max-height: 85vh;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        padding: 1.75rem 1.25rem 2.25rem;
+        animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .danger-action-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .danger-action-card .btn-danger {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@keyframes slideUpModal {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}

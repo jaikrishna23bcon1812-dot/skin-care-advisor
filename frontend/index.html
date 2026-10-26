@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css?v=30">
+    <link rel="stylesheet" href="style.css?v=35">
 </head>
 
 <body class="light-mode">
@@ -59,6 +59,108 @@
         </div>
     </div>
 
+    <!-- Settings Modal (User Profile & GDPR Privacy Management) -->
+    <div id="settingsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+        <div class="settings-modal-card modal-card">
+            <button type="button" class="settings-modal-close modal-close" onclick="closeSettingsModal()" aria-label="Close settings modal">&times;</button>
+            <div class="settings-modal-header">
+                <div class="settings-modal-icon">⚙️</div>
+                <div>
+                    <h3 id="settingsModalTitle">Account &amp; Privacy Settings</h3>
+                    <p class="settings-modal-subtitle">Manage your profile, cloud sync, and GDPR data portability</p>
+                </div>
+            </div>
+
+            <div class="settings-modal-body">
+                <!-- Section A: Account Overview -->
+                <div class="settings-section settings-overview-section">
+                    <h4 class="settings-section-title"><span class="section-icon">👤</span> Account Overview</h4>
+                    <div class="settings-user-card">
+                        <div class="user-avatar-badge" id="settingsUserAvatar">U</div>
+                        <div class="user-info-text">
+                            <div class="user-info-row">
+                                <span class="info-label">Name:</span>
+                                <strong id="settingsUserName" class="info-value">User</strong>
+                            </div>
+                            <div class="user-info-row">
+                                <span class="info-label">Email:</span>
+                                <span id="settingsUserEmail" class="info-value">user@example.com</span>
+                            </div>
+                            <div class="user-info-row">
+                                <span class="info-label">Member Since:</span>
+                                <span id="settingsMemberSince" class="info-value">Today</span>
+                            </div>
+                        </div>
+                        <div class="settings-badges">
+                            <span class="badge-gdpr">🛡️ GDPR Compliant</span>
+                            <span class="badge-sync" id="settingsSyncBadge">☁️ Cloud Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section B: Change Password -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title"><span class="section-icon">🔑</span> Security &amp; Password</h4>
+                    <form id="changePasswordForm" onsubmit="handleChangePassword(event)" class="settings-form">
+                        <div id="changePasswordMsg" class="settings-alert hidden" role="alert"></div>
+                        <div class="form-row">
+                            <div class="settings-form-group">
+                                <label for="currentPasswordInput">Current Password</label>
+                                <input type="password" id="currentPasswordInput" name="currentPassword" placeholder="••••••••" required autocomplete="current-password" />
+                            </div>
+                            <div class="settings-form-group">
+                                <label for="newPasswordInput">New Password (min 6 chars)</label>
+                                <input type="password" id="newPasswordInput" name="newPassword" placeholder="••••••••" required minlength="6" autocomplete="new-password" />
+                            </div>
+                        </div>
+                        <button type="submit" id="changePasswordBtn" class="action-btn primary-action-btn">Update Password</button>
+                    </form>
+                </div>
+
+                <!-- Section C: Clinical Data Export (GDPR) -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title"><span class="section-icon">📥</span> Clinical Data Export (GDPR)</h4>
+                    <div class="export-data-card">
+                        <p class="export-desc">
+                            Download a full copy of your skin profile, vanity items, streak adherence, and lifestyle logs in JSON format.
+                        </p>
+                        <button type="button" id="downloadDataBtn" class="action-btn export-btn" onclick="handleExportData()">
+                            <span>📥</span> Download My Clinical Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section D: Privacy & Danger Zone -->
+                <div class="settings-section settings-danger-zone">
+                    <h4 class="settings-section-title danger-title"><span class="section-icon">⚠️</span> Privacy &amp; Danger Zone</h4>
+                    <p class="danger-desc">Actions in this section permanently remove data from both cloud storage and local memory.</p>
+                    
+                    <div class="danger-actions-grid">
+                        <div class="danger-action-card">
+                            <div class="danger-action-info">
+                                <strong>Wipe Progress Photos</strong>
+                                <span>Permanently removes Day 1 / Day 30 photos from cloud and local storage without deleting your account.</span>
+                            </div>
+                            <button type="button" id="wipePhotosBtn" class="btn-danger outline-danger-btn" onclick="handleWipeProgressPhotos()">
+                                Wipe Progress Photos
+                            </button>
+                        </div>
+
+                        <div class="danger-action-card">
+                            <div class="danger-action-info">
+                                <strong>Permanently Delete Account</strong>
+                                <span>Erases your entire account, clinical analysis records, vanity shelf, and adherence history. This action cannot be reversed.</span>
+                            </div>
+                            <button type="button" id="deleteAccountBtn" class="btn-danger full-danger-btn" onclick="handleDeleteAccount()">
+                                Permanently Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Clean, Friendly App Header -->
     <header class="app-header">
         <div class="header-container">
@@ -77,6 +179,7 @@
                 <button type="button" id="themeToggle" class="theme-btn" onclick="toggleDarkMode()" aria-label="Toggle light or dark theme">
                     <span id="themeIcon">🌙</span>
                 </button>
+                <button type="button" id="openSettingsBtn" class="nav-icon-btn hidden" onclick="openSettingsModal()" title="Account &amp; Privacy Settings" aria-label="Account &amp; Privacy Settings">⚙️ Settings</button>
                 <button type="button" id="authModalBtn" class="auth-btn" onclick="openAuthModal()">Sign In</button>
             </div>
         </div>
@@ -823,7 +926,7 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="script.js?v=30"></script>
+    <script src="script.js?v=35"></script>
 </body>
 
 </html>

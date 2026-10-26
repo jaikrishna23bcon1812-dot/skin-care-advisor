@@ -2508,9 +2508,20 @@ function loadRoutineTracker() {
 let currentAuthMode = "login"; // "login" or "register"
 
 function updateAuthUI() {
-    const token = localStorage.getItem("skin_token") || localStorage.getItem("token");
+    const token = localStorage.getItem("skin_token") || localStorage.getItem("token") || localStorage.getItem("authToken");
     const email = localStorage.getItem("skin_email");
     const authBtn = document.getElementById("authModalBtn");
+    const settingsBtn = document.getElementById("openSettingsBtn");
+
+    if (settingsBtn) {
+        if (token) {
+            settingsBtn.classList.remove("hidden");
+            settingsBtn.style.display = "inline-flex";
+        } else {
+            settingsBtn.classList.add("hidden");
+            settingsBtn.style.display = "none";
+        }
+    }
 
     if (!authBtn) return;
 
@@ -2527,7 +2538,7 @@ function updateAuthUI() {
 window.updateAuthUI = updateAuthUI;
 
 function openAuthModal() {
-    const token = localStorage.getItem("skin_token") || localStorage.getItem("token");
+    const token = localStorage.getItem("skin_token") || localStorage.getItem("token") || localStorage.getItem("authToken");
     if (token) {
         handleSignOut();
         return;
@@ -2701,6 +2712,7 @@ function handleSignOut() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     updateAuthUI();
+    closeSettingsModal();
     showToast("Signed out successfully", "info");
 }
 window.handleSignOut = handleSignOut;
@@ -2709,6 +2721,319 @@ function getAuthToken() {
     return localStorage.getItem("authToken") || localStorage.getItem("skin_token") || localStorage.getItem("token");
 }
 window.getAuthToken = getAuthToken;
+
+// ============================================================================
+// USER PROFILE & DATA MANAGEMENT (GDPR / PRIVACY COMPLIANCE)
+// ============================================================================
+
+async function openSettingsModal() {
+    const token = getAuthToken();
+    if (!token) {
+        showToast("Please sign in to access account settings.", "info");
+        openAuthModal();
+        return;
+    }
+
+    const modal = document.getElementById("settingsModal");
+    if (!modal) return;
+
+    // Optimistic fallback display from local storage
+    const email = localStorage.getItem("skin_email") || "User";
+    let storedUser = null;
+    try {
+        storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    } catch (e) {}
+
+    const nameEl = document.getElementById("settingsUserName");
+    const emailEl = document.getElementById("settingsUserEmail");
+    const memberEl = document.getElementById("settingsMemberSince");
+    const avatarEl = document.getElementById("settingsUserAvatar");
+
+    if (nameEl) nameEl.textContent = storedUser?.name || email.split("@")[0] || "User";
+    if (emailEl) emailEl.textContent = email;
+    if (avatarEl) avatarEl.textContent = ((storedUser?.name || email)[0] || "U").toUpperCase();
+    if (memberEl) {
+        const createdDate = storedUser?.createdAt ? new Date(storedUser.createdAt) : new Date();
+        memberEl.textContent = createdDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+
+    // Reset password message alert
+    const pwMsg = document.getElementById("changePasswordMsg");
+    if (pwMsg) {
+        pwMsg.textContent = "";
+        pwMsg.className = "settings-alert hidden";
+    }
+
+    modal.classList.remove("hidden");
+    modal.classList.add("active");
+
+    // Fetch fresh profile details from API
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const u = data.user || data;
+            if (nameEl) nameEl.textContent = u.name || u.email?.split("@")[0] || "User";
+            if (emailEl) emailEl.textContent = u.email || email;
+            if (avatarEl) avatarEl.textContent = ((u.name || u.email || "U")[0]).toUpperCase();
+            if (memberEl && u.createdAt) {
+                memberEl.textContent = new Date(u.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            }
+            if (u) {
+                localStorage.setItem("user", JSON.stringify(u));
+            }
+        }
+    } catch (err) {
+        console.warn("Could not fetch remote profile:", err);
+    }
+}
+window.openSettingsModal = openSettingsModal;
+
+function closeSettingsModal() {
+    const modal = document.getElementById("settingsModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("active");
+
+    const pwMsg = document.getElementById("changePasswordMsg");
+    if (pwMsg) {
+        pwMsg.textContent = "";
+        pwMsg.className = "settings-alert hidden";
+    }
+    const pwForm = document.getElementById("changePasswordForm");
+    if (pwForm) pwForm.reset();
+}
+window.closeSettingsModal = closeSettingsModal;
+
+async function handleChangePassword(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const token = getAuthToken();
+    if (!token) {
+        showToast("Please sign in to update your password.", "error");
+        return;
+    }
+
+    const currentPwInput = document.getElementById("currentPasswordInput");
+    const newPwInput = document.getElementById("newPasswordInput");
+    const submitBtn = document.getElementById("changePasswordBtn");
+    const msgEl = document.getElementById("changePasswordMsg");
+
+    const currentPassword = currentPwInput?.value;
+    const newPassword = newPwInput?.value;
+
+    if (!currentPassword) {
+        if (msgEl) {
+            msgEl.textContent = "Please enter your current password.";
+            msgEl.className = "settings-alert error";
+        }
+        return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+        if (msgEl) {
+            msgEl.textContent = "New password must be at least 6 characters long.";
+            msgEl.className = "settings-alert error";
+        }
+        return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Updating...";
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            const errText = data.message || data.error || "Failed to update password.";
+            if (msgEl) {
+                msgEl.textContent = errText;
+                msgEl.className = "settings-alert error";
+            }
+            showToast(errText, "error");
+            return;
+        }
+
+        if (msgEl) {
+            msgEl.textContent = "✓ Password updated successfully!";
+            msgEl.className = "settings-alert success";
+        }
+        showToast("Password updated successfully", "success");
+        if (currentPwInput) currentPwInput.value = "";
+        if (newPwInput) newPwInput.value = "";
+    } catch (err) {
+        const netErr = "Network error. Could not connect to server.";
+        if (msgEl) {
+            msgEl.textContent = netErr;
+            msgEl.className = "settings-alert error";
+        }
+        showToast(netErr, "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Update Password";
+        }
+    }
+}
+window.handleChangePassword = handleChangePassword;
+
+async function handleExportData() {
+    const token = getAuthToken();
+    const downloadBtn = document.getElementById("downloadDataBtn");
+
+    if (downloadBtn) {
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = "<span>⏳</span> Exporting Data...";
+    }
+
+    try {
+        let exportData = null;
+
+        if (token) {
+            const res = await fetch(`${API_BASE_URL}/api/auth/export-data`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.ok) {
+                exportData = await res.json();
+            }
+        }
+
+        // Fallback / client data compilation if offline or guest
+        if (!exportData) {
+            exportData = {
+                exportMetadata: {
+                    appName: "SkinCare AI",
+                    compliance: "GDPR Article 20 - Right to Data Portability",
+                    exportedAt: new Date().toISOString()
+                },
+                profile: {
+                    email: localStorage.getItem("skin_email") || "guest_user",
+                    exportedAt: new Date().toISOString()
+                },
+                routineTracker: JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}"),
+                vanityShelf: (typeof getVanityItems === "function") ? getVanityItems() : JSON.parse(localStorage.getItem(VANITY_STORAGE_KEY) || "[]"),
+                lifestyleLogs: (typeof getLifestyleLogs === "function") ? getLifestyleLogs() : JSON.parse(localStorage.getItem(LIFESTYLE_STORAGE_KEY) || "{}"),
+                progressPhotos: JSON.parse(localStorage.getItem(JOURNEY_PHOTOS_KEY) || "{}")
+            };
+        }
+
+        const dataBlob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        const downloadUrl = URL.createObjectURL(dataBlob);
+        const downloadLink = document.createElement("a");
+        downloadLink.href = downloadUrl;
+        downloadLink.download = "my-skincare-data.json";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(downloadUrl);
+
+        showToast("Clinical data downloaded successfully (JSON).", "success");
+    } catch (err) {
+        console.error("Export data error:", err);
+        showToast("Failed to export data: " + err.message, "error");
+    } finally {
+        if (downloadBtn) {
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = "<span>📥</span> Download My Clinical Data";
+        }
+    }
+}
+window.handleExportData = handleExportData;
+
+async function handleWipeProgressPhotos() {
+    const confirmed = confirm("Are you sure you want to wipe your progress photos? This will permanently delete your Day 1 baseline and Day 30 photos from both cloud storage and device memory.");
+    if (!confirmed) return;
+
+    const token = getAuthToken();
+    try {
+        if (token) {
+            await fetch(`${API_BASE_URL}/api/auth/progress-photos`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+        }
+
+        localStorage.removeItem(JOURNEY_PHOTOS_KEY);
+        localStorage.removeItem("skincare_progress_photos");
+
+        if (typeof loadJourneyPhotos === "function") loadJourneyPhotos();
+        if (typeof setJourneySliderPosition === "function") setJourneySliderPosition(50);
+
+        showToast("Progress photos deleted.", "success");
+    } catch (err) {
+        console.error("Wipe photos error:", err);
+        showToast("Failed to wipe progress photos: " + err.message, "error");
+    }
+}
+window.handleWipeProgressPhotos = handleWipeProgressPhotos;
+
+async function handleDeleteAccount() {
+    const confirmation = prompt('Type DELETE to permanently erase your account and all data.');
+    if (confirmation !== "DELETE") {
+        if (confirmation !== null) {
+            showToast("Deletion cancelled. Confirmation text did not match 'DELETE'.", "info");
+        }
+        return;
+    }
+
+    const token = getAuthToken();
+    try {
+        if (token) {
+            const res = await fetch(`${API_BASE_URL}/api/auth/account`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ confirmation: "DELETE" })
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data.message || data.error || "Failed to delete account on server.", "error");
+                return;
+            }
+        }
+
+        // Wipe all local records & caches
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("skin_token");
+        localStorage.removeItem("skin_email");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("skincare_vanity_items");
+        localStorage.removeItem("skincare_daily_logs");
+        localStorage.removeItem("skincare_progress_photos");
+        localStorage.removeItem(JOURNEY_PHOTOS_KEY);
+        localStorage.removeItem(TRACKER_STORAGE_KEY);
+
+        updateAuthUI();
+        if (typeof loadJourneyPhotos === "function") loadJourneyPhotos();
+        if (typeof renderVanityShelf === "function") renderVanityShelf();
+        if (typeof loadRoutineTracker === "function") loadRoutineTracker();
+        closeSettingsModal();
+
+        showToast("Account and all associated clinical data permanently deleted.", "info");
+    } catch (err) {
+        console.error("Delete account error:", err);
+        showToast("Failed to delete account: " + err.message, "error");
+    }
+}
+window.handleDeleteAccount = handleDeleteAccount;
+
 
 let cloudSyncTimeout = null;
 
@@ -3538,6 +3863,14 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const openSettingsBtn = document.getElementById("openSettingsBtn");
+    if (openSettingsBtn) {
+        openSettingsBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            openSettingsModal();
+        });
+    }
+
     const authToggleLink = document.getElementById("authToggleLink");
     if (authToggleLink) {
         authToggleLink.addEventListener("click", (e) => {
@@ -3556,10 +3889,54 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const authForm = document.getElementById("authForm");
+    if (authForm) {
+        authForm.addEventListener("submit", handleAuthSubmit);
+    }
+
+    const settingsModal = document.getElementById("settingsModal");
+    if (settingsModal) {
+        settingsModal.addEventListener("click", (e) => {
+            if (e.target === settingsModal) {
+                closeSettingsModal();
+            }
+        });
+    }
+
+    const changePasswordForm = document.getElementById("changePasswordForm");
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener("submit", handleChangePassword);
+    }
+
+    const downloadDataBtn = document.getElementById("downloadDataBtn");
+    if (downloadDataBtn) {
+        downloadDataBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            handleExportData();
+        });
+    }
+
+    const wipePhotosBtn = document.getElementById("wipePhotosBtn");
+    if (wipePhotosBtn) {
+        wipePhotosBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            handleWipeProgressPhotos();
+        });
+    }
+
+    const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            handleDeleteAccount();
+        });
+    }
+
     // Escape key listener to close modal
     window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
             closeAuthModal();
+            closeSettingsModal();
         }
     });
 

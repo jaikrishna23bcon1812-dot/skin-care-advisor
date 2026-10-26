@@ -2,7 +2,81 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const User = require("../models/User");
+
+// In-Memory Storage Adapter for local development or when MONGO_URI is omitted
+const inMemoryUsers = new Map();
+
+function isMongoConnected() {
+    return mongoose.connection && mongoose.connection.readyState === 1;
+}
+
+async function findUserByEmail(email) {
+    if (isMongoConnected()) {
+        return await User.findOne({ email });
+    }
+    return inMemoryUsers.get(email) || null;
+}
+
+async function findUserById(id) {
+    if (isMongoConnected()) {
+        return await User.findById(id);
+    }
+    for (const u of inMemoryUsers.values()) {
+        if (String(u._id) === String(id) || String(u.id) === String(id)) {
+            return u;
+        }
+    }
+    return null;
+}
+
+async function createUser(userData) {
+    if (isMongoConnected()) {
+        return await User.create(userData);
+    }
+    const id = "user_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+    const user = {
+        _id: id,
+        id: id,
+        ...userData,
+        vanity: userData.vanity || [],
+        lifestyleLogs: userData.lifestyleLogs || [],
+        progressPhotos: userData.progressPhotos || { baseline: "", current: "" },
+        async save() {
+            inMemoryUsers.set(this.email, this);
+            return this;
+        }
+    };
+    inMemoryUsers.set(user.email, user);
+    return user;
+}
+
+async function updateUserById(id, updateFields) {
+    if (isMongoConnected()) {
+        return await User.findByIdAndUpdate(id, updateFields, { returnDocument: "after" }).select("-password");
+    }
+    const user = await findUserById(id);
+    if (!user) return null;
+    const fields = updateFields.$set ? { ...updateFields, ...updateFields.$set } : { ...updateFields };
+    delete fields.$set;
+    Object.assign(user, fields);
+    if (user.save) await user.save();
+    return user;
+}
+
+async function deleteUserById(id) {
+    if (isMongoConnected()) {
+        return await User.findByIdAndDelete(id);
+    }
+    for (const [email, u] of inMemoryUsers.entries()) {
+        if (String(u._id) === String(id) || String(u.id) === String(id)) {
+            inMemoryUsers.delete(email);
+            return u;
+        }
+    }
+    return null;
+}
 
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
@@ -24,7 +98,7 @@ router.post("/register", async (req, res) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        const existingUser = await User.findOne({ email: normalizedEmail });
+        const existingUser = await findUserByEmail(normalizedEmail);
         if (existingUser) {
             return res.status(400).json({
                 error: "User already exists with this email",
@@ -35,7 +109,7 @@ router.post("/register", async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = await User.create({
+        const newUser = await createUser({
             email: normalizedEmail,
             password: hashedPassword,
             name: name || normalizedEmail.split("@")[0],
@@ -98,7 +172,7 @@ router.post("/login", async (req, res) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        const user = await User.findOne({ email: normalizedEmail });
+        const user = await findUserByEmail(normalizedEmail);
         if (!user) {
             return res.status(400).json({
                 error: "Invalid email or password",
@@ -172,10 +246,14 @@ function authenticateToken(req, res, next) {
 // GET /api/auth/profile (Get full user profile including vanity, lifestyleLogs, progressPhotos, streak)
 router.get("/profile", authenticateToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select("-password");
+        const user = await findUserById(req.user.id);
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
+
+        const cleanUser = { ...user };
+        if (cleanUser.toObject) cleanUser = user.toObject();
+        delete cleanUser.password;
 
         return res.status(200).json({
             id: user._id,
@@ -188,7 +266,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
             vanity: user.vanity || [],
             lifestyleLogs: user.lifestyleLogs || [],
             progressPhotos: user.progressPhotos || { baseline: "", current: "" },
-            user,
+            user: cleanUser,
         });
     } catch (error) {
         return res.status(500).json({ error: "Failed to retrieve profile", message: error.message });
@@ -198,10 +276,14 @@ router.get("/profile", authenticateToken, async (req, res) => {
 // GET /api/auth/me (Get profile and streak data for logged in user)
 router.get("/me", authenticateToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select("-password");
+        const user = await findUserById(req.user.id);
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
+
+        const cleanUser = { ...user };
+        if (cleanUser.toObject) cleanUser = user.toObject();
+        delete cleanUser.password;
 
         return res.status(200).json({
             id: user._id,
@@ -214,7 +296,7 @@ router.get("/me", authenticateToken, async (req, res) => {
             vanity: user.vanity || [],
             lifestyleLogs: user.lifestyleLogs || [],
             progressPhotos: user.progressPhotos || { baseline: "", current: "" },
-            user,
+            user: cleanUser,
         });
     } catch (error) {
         return res.status(500).json({ error: "Failed to retrieve user info", message: error.message });
@@ -258,11 +340,7 @@ router.put("/sync", authenticateToken, async (req, res) => {
         if (typeof amCompleted === "boolean") updateFields.amCompleted = amCompleted;
         if (typeof pmCompleted === "boolean") updateFields.pmCompleted = pmCompleted;
 
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user.id,
-            { $set: updateFields },
-            { returnDocument: "after" }
-        ).select("-password");
+        const updatedUser = await updateUserById(req.user.id, { $set: updateFields });
 
         if (!updatedUser) {
             return res.status(404).json({ error: "User not found" });
@@ -295,11 +373,7 @@ router.put("/streak", authenticateToken, async (req, res) => {
         if (typeof amCompleted === "boolean") updateFields.amCompleted = amCompleted;
         if (typeof pmCompleted === "boolean") updateFields.pmCompleted = pmCompleted;
 
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user.id,
-            updateFields,
-            { returnDocument: "after" }
-        ).select("-password");
+        const updatedUser = await updateUserById(req.user.id, updateFields);
 
         if (!updatedUser) {
             return res.status(404).json({ error: "User not found" });
@@ -315,6 +389,155 @@ router.put("/streak", authenticateToken, async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({ error: "Failed to sync streak", details: error.message });
+    }
+});
+
+// ============================================================================
+// GDPR / PRIVACY COMPLIANCE & USER PROFILE DATA MANAGEMENT ENDPOINTS
+// ============================================================================
+
+// PUT /api/auth/change-password
+router.put("/change-password", authenticateToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword) {
+            return res.status(400).json({
+                error: "Current password is required",
+                message: "Current password is required"
+            });
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({
+                error: "New password must be at least 6 characters long",
+                message: "New password must be at least 6 characters long"
+            });
+        }
+
+        const user = await findUserById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found", message: "User not found" });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({
+                error: "Current password is incorrect",
+                message: "Current password is incorrect"
+            });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        if (user.save) {
+            await user.save();
+        }
+
+        return res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        console.error("Change Password Error:", error);
+        return res.status(500).json({
+            error: "Failed to update password",
+            message: error.message
+        });
+    }
+});
+
+// DELETE /api/auth/progress-photos
+router.delete("/progress-photos", authenticateToken, async (req, res) => {
+    try {
+        const updatedUser = await updateUserById(
+            req.user.id,
+            { $set: { progressPhotos: { baseline: "", current: "" } } }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: "User not found", message: "User not found" });
+        }
+
+        return res.status(200).json({ message: "Progress photos deleted from cloud storage" });
+    } catch (error) {
+        console.error("Delete Progress Photos Error:", error);
+        return res.status(500).json({
+            error: "Failed to delete progress photos",
+            message: error.message
+        });
+    }
+});
+
+// GET /api/auth/export-data
+router.get("/export-data", authenticateToken, async (req, res) => {
+    try {
+        const user = await findUserById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found", message: "User not found" });
+        }
+
+        const exportData = {
+            exportMetadata: {
+                appName: "SkinCare AI",
+                compliance: "GDPR Article 20 - Right to Data Portability",
+                exportedAt: new Date().toISOString()
+            },
+            profile: {
+                id: user._id,
+                name: user.name || "",
+                email: user.email,
+                createdAt: user.createdAt,
+                memberSince: user.createdAt
+            },
+            routineHistory: {
+                streak: user.streak || 0,
+                lastStreakDate: user.lastStreakDate || null,
+                amCompleted: !!user.amCompleted,
+                pmCompleted: !!user.pmCompleted,
+                reminderEnabled: !!user.reminderEnabled,
+                reminderTime: user.reminderTime || "09:00"
+            },
+            vanityShelf: user.vanity || [],
+            lifestyleLogs: user.lifestyleLogs || [],
+            progressPhotos: {
+                baseline: user.progressPhotos?.baseline || "",
+                current: user.progressPhotos?.current || ""
+            }
+        };
+
+        res.setHeader("Content-Disposition", 'attachment; filename="skincare-ai-user-data.json"');
+        res.setHeader("Content-Type", "application/json");
+        return res.status(200).send(JSON.stringify(exportData, null, 2));
+    } catch (error) {
+        console.error("Export Data Error:", error);
+        return res.status(500).json({
+            error: "Failed to export data",
+            message: error.message
+        });
+    }
+});
+
+// DELETE /api/auth/account
+router.delete("/account", authenticateToken, async (req, res) => {
+    try {
+        const { confirmation } = req.body || {};
+        if (confirmation && confirmation !== "DELETE") {
+            return res.status(400).json({
+                error: "Invalid confirmation. Type DELETE to confirm.",
+                message: "Invalid confirmation code"
+            });
+        }
+
+        const deletedUser = await deleteUserById(req.user.id);
+        if (!deletedUser) {
+            return res.status(404).json({ error: "User not found", message: "User not found" });
+        }
+
+        return res.status(200).json({ message: "Account and all associated clinical data permanently deleted" });
+    } catch (error) {
+        console.error("Delete Account Error:", error);
+        return res.status(500).json({
+            error: "Failed to delete account",
+            message: error.message
+        });
     }
 });
 
