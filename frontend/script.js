@@ -622,6 +622,59 @@ function getClinicalTimingTag(stepText, timeOfDay) {
     }
 }
 
+// Dynamic Multi-Step Consultation Progress Tracker (Requirement 1)
+function updateConsultationProgress(stepOverride = null) {
+    const labelEl = document.getElementById("consultationStepLabel");
+    const pctEl = document.getElementById("consultationProgressPct");
+    const barEl = document.getElementById("consultationProgressBar");
+    const crumb1 = document.getElementById("crumbStep1");
+    const crumb2 = document.getElementById("crumbStep2");
+    const crumb3 = document.getElementById("crumbStep3");
+
+    if (!labelEl || !barEl) return;
+
+    let step = 1;
+    if (stepOverride) {
+        step = stepOverride;
+    } else {
+        const skinTypeSelect = document.getElementById("skinType");
+        const concernSelect = document.getElementById("primaryConcern");
+        const hasSelectedType = !!skinTypeSelect?.value;
+        const hasSelectedConcern = !!concernSelect?.value;
+
+        if (typeof lastGeneratedRoutine !== "undefined" && lastGeneratedRoutine && (lastGeneratedRoutine.am || lastGeneratedRoutine.pm)) {
+            step = 3;
+        } else if (hasSelectedType && hasSelectedConcern) {
+            step = 2;
+        }
+    }
+
+    if (crumb1) crumb1.classList.remove("active");
+    if (crumb2) crumb2.classList.remove("active");
+    if (crumb3) crumb3.classList.remove("active");
+
+    if (step === 1) {
+        labelEl.textContent = "Step 1 of 3: Skin Biome";
+        if (pctEl) pctEl.textContent = "33%";
+        barEl.style.width = "33.33%";
+        if (crumb1) crumb1.classList.add("active");
+    } else if (step === 2) {
+        labelEl.textContent = "Step 2 of 3: Target Concerns";
+        if (pctEl) pctEl.textContent = "66%";
+        barEl.style.width = "66.66%";
+        if (crumb1) crumb1.classList.add("active");
+        if (crumb2) crumb2.classList.add("active");
+    } else if (step >= 3) {
+        labelEl.textContent = "Step 3 of 3: Personalized Regimen";
+        if (pctEl) pctEl.textContent = "100%";
+        barEl.style.width = "100%";
+        if (crumb1) crumb1.classList.add("active");
+        if (crumb2) crumb2.classList.add("active");
+        if (crumb3) crumb3.classList.add("active");
+    }
+}
+window.updateConsultationProgress = updateConsultationProgress;
+
 // Technical Parameter Matrix Pill Selectors
 function selectTechPill(selectId, value, buttonEl) {
     const select = document.getElementById(selectId);
@@ -634,6 +687,15 @@ function selectTechPill(selectId, value, buttonEl) {
         parentGroup.querySelectorAll(".tech-pill").forEach((p) => p.classList.remove("active"));
     }
     if (buttonEl) buttonEl.classList.add("active");
+
+    // Dynamic Multi-Step Progress Tracker update
+    if (selectId === "skinType") {
+        updateConsultationProgress(2);
+    } else if (selectId === "primaryConcern") {
+        updateConsultationProgress(3);
+    } else {
+        updateConsultationProgress();
+    }
 }
 window.selectTechPill = selectTechPill;
 window.selectCardOption = selectTechPill;
@@ -746,11 +808,119 @@ function formatActivesBadges(compounds) {
     return items.map((item) => `<span class="active-badge">${item}</span>`).join(" ");
 }
 
-// Build a clean, spacious routine step card with plain English product name, one key ingredient badge, and a 1-sentence tip
+// Clinical Science Metadata Matrix for 3D Action Cards (Requirement 4)
+function getClinicalScienceData(stepText, timeOfDay) {
+    const lower = (stepText || "").toLowerCase();
+
+    if (lower.includes("cleanse") || lower.includes("wash") || lower.includes("cleanser")) {
+        return {
+            molecularBreakdown: "Coco-Betaine, Glycerin & Decyl Glucoside",
+            skinLayer: "Stratum Corneum Surface",
+            optimalTiming: "60s gentle contact time, lukewarm rinse",
+            bioMechanism: "Solubilizes environmental PM2.5 particulates and oxidized surface sebum without stripping the intercorneocyte lipid matrix."
+        };
+    }
+    if (lower.includes("pre-cleanse") || lower.includes("oil") || lower.includes("balm")) {
+        return {
+            molecularBreakdown: "Simmondsia Chinensis (Jojoba) & Plant Squalane",
+            skinLayer: "Superficial Lipid Film",
+            optimalTiming: "60s dry massage, emulsify with water",
+            bioMechanism: "Mimics natural human sebum to dissolve water-resistant UV filters and stubborn lipophilic impurities."
+        };
+    }
+    if (lower.includes("spf") || lower.includes("sunscreen") || lower.includes("shield")) {
+        return {
+            molecularBreakdown: "Micronized Zinc Oxide & Photostable UV Filters",
+            skinLayer: "Epidermal Protective Surface",
+            optimalTiming: "2 finger-lengths, apply 15m prior to exposure",
+            bioMechanism: "Forms a uniform physical lattice that reflects UVA (320-400nm) and blocks UVB photons, preventing photo-aging and DNA strand breaks."
+        };
+    }
+    if (lower.includes("niacinamide")) {
+        return {
+            molecularBreakdown: "5% Niacinamide (Vitamin B3) + Zinc PCA",
+            skinLayer: "Viable Epidermis & Dermal Papillae",
+            optimalTiming: "3-4 drops, pat for 30s before moisturizer",
+            bioMechanism: "Downregulates sebaceous gland lipogenesis, upregulates de novo ceramide biosynthesis, and calms inflammatory cytokines."
+        };
+    }
+    if (lower.includes("retinol") || lower.includes("retinal") || lower.includes("retinoid")) {
+        return {
+            molecularBreakdown: "Micro-encapsulated Retinaldehyde (0.05%)",
+            skinLayer: "Basal Stratum Germinativum & Dermis",
+            optimalTiming: "Night use only; pea-sized on dry skin",
+            bioMechanism: "Direct precursor to retinoic acid that stimulates gene transcription for type I collagen and accelerates epidermal turnover."
+        };
+    }
+    if (lower.includes("vitamin c") || lower.includes("ascorbic")) {
+        return {
+            molecularBreakdown: "15% L-Ascorbic Acid + Ferulic Acid (pH 3.0)",
+            skinLayer: "Viable Epidermis & Extracellular Matrix",
+            optimalTiming: "Morning application; wait 60s to absorb",
+            bioMechanism: "Scavenges reactive oxygen species (ROS), neutralizes pollution free-radicals, and competitively suppresses tyrosinase."
+        };
+    }
+    if (lower.includes("hyaluronic")) {
+        return {
+            molecularBreakdown: "Multi-Weight Hyaluronate (5kDa - 1,800kDa)",
+            skinLayer: "Stratum Corneum & Stratum Spinosum",
+            optimalTiming: "Press into damp skin; lock with cream in 45s",
+            bioMechanism: "Binds up to 1,000x its molecular weight in water to dramatically reduce Transepidermal Water Loss (TEWL)."
+        };
+    }
+    if (lower.includes("azelaic")) {
+        return {
+            molecularBreakdown: "10% Pure Azelaic Acid + Centella Asiatica",
+            skinLayer: "Follicular Infundibulum & Epidermis",
+            optimalTiming: "Dab thin layer, wait 60s before hydration",
+            bioMechanism: "Selective antimicrobial action against C. acnes and normalization of follicular keratinization to diminish erythema."
+        };
+    }
+    if (lower.includes("salicylic") || lower.includes("bha") || lower.includes("aha") || lower.includes("glycolic")) {
+        return {
+            molecularBreakdown: "2% Salicylic Acid (BHA) & Glycolic Acid (AHA)",
+            skinLayer: "Sebaceous Ducts & Corneocyte Desmosomes",
+            optimalTiming: "Night use 2-3x/week; 5 min dwell time",
+            bioMechanism: "Lipophilic penetration dissolves follicular sebum plugs and enzymatically cleaves corneodesmosomes for cellular clarity."
+        };
+    }
+    if (lower.includes("ceramide") || lower.includes("moistur") || lower.includes("cream") || lower.includes("lotion") || lower.includes("emulsion") || lower.includes("barrier") || lower.includes("complex")) {
+        return {
+            molecularBreakdown: "Ceramides NP/AP/EOP + Phytosphingosine + Cholesterol",
+            skinLayer: "Intercellular Lipid Bilayer",
+            optimalTiming: "Nickel-sized amount; smooth across face and neck",
+            bioMechanism: "Restores the physiological 3:1:1 lipid barrier ratio, reinforcing the cellular mortar against transepidermal moisture leakage."
+        };
+    }
+
+    return {
+        molecularBreakdown: "Bio-Compatible Peptides & Squalane Matrix",
+        skinLayer: "Epidermis & Stratum Corneum",
+        optimalTiming: timeOfDay === "am" ? "Morning protocol, smooth evenly" : "Evening restorative protocol",
+        bioMechanism: "Bolsters cell membrane resilience and reinforces cellular repair against environmental oxidative stress."
+    };
+}
+window.getClinicalScienceData = getClinicalScienceData;
+
+// Toggle 3D Flip Card for Routine Steps
+function toggleStepCardFlip(cardId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const card = document.getElementById(`card-${cardId}`);
+    if (card) {
+        card.classList.toggle("is-flipped");
+    }
+}
+window.toggleStepCardFlip = toggleStepCardFlip;
+
+// Build interactive 3D Flip Action Card with plain English product name, key ingredient badge, tip, and pharmacology back face
 function createClinicalStepCard(stepText, index, timeOfDay) {
     const stepNumber = index + 1;
     const cleanTitle = (stepText || "").replace(/^(step\s*\d+[\s:.-]*)/i, "").trim();
     const lower = cleanTitle.toLowerCase();
+    const cardId = `${timeOfDay}-${index}`;
 
     // Determine one single key ingredient badge
     let keyIngredient = "Glycerin";
@@ -793,15 +963,61 @@ function createClinicalStepCard(stepText, index, timeOfDay) {
         tip = "Smooth a pea-sized amount over face and neck to lock in long-lasting hydration.";
     }
 
+    const science = getClinicalScienceData(stepText, timeOfDay);
+
     return `
-        <li class="routine-step-item">
-            <div class="step-num-pill">Step ${stepNumber}</div>
-            <div class="step-info">
-                <div class="step-title-row">
-                    <h4 class="step-product-title">${cleanTitle}</h4>
-                    <span class="key-ingredient-tag">${keyIngredient}</span>
+        <li class="routine-step-item tactile-flip-card" id="card-${cardId}">
+            <div class="flip-card-inner">
+                <!-- Front Face: Product Overview -->
+                <div class="flip-card-face flip-card-front">
+                    <div>
+                        <div class="step-card-header">
+                            <span class="step-num-pill">Step ${stepNumber}</span>
+                            <span class="key-ingredient-tag">${keyIngredient}</span>
+                        </div>
+                        <div class="step-info">
+                            <h4 class="step-product-title">${cleanTitle}</h4>
+                            <p class="step-usage-tip">${tip}</p>
+                        </div>
+                    </div>
+                    <div class="step-action-bar">
+                        <button type="button" class="flip-card-toggle-btn" onclick="toggleStepCardFlip('${cardId}', event)" title="View Molecular Breakdown & Clinical Science">
+                            <span>🧪</span>
+                            <span>Flip for Science</span>
+                            <span class="flip-btn-arrow">↻</span>
+                        </button>
+                    </div>
                 </div>
-                <p class="step-usage-tip">${tip}</p>
+
+                <!-- Back Face: Molecular Pharmacology & Layer Target -->
+                <div class="flip-card-face flip-card-back">
+                    <div class="science-header">
+                        <span class="science-pill">🔬 Molecular Pharmacology</span>
+                        <button type="button" class="flip-close-btn" onclick="toggleStepCardFlip('${cardId}', event)" aria-label="Return to product step">
+                            ✕
+                        </button>
+                    </div>
+                    <div class="science-body">
+                        <div class="science-metric">
+                            <span class="science-metric-label">Molecular Actives</span>
+                            <span class="science-metric-value">${science.molecularBreakdown}</span>
+                        </div>
+                        <div class="science-metric">
+                            <span class="science-metric-label">Target Skin Layer</span>
+                            <span class="science-metric-value layer-target-badge">🎯 ${science.skinLayer}</span>
+                        </div>
+                        <div class="science-metric">
+                            <span class="science-metric-label">Application Protocol</span>
+                            <span class="science-metric-value">⏱️ ${science.optimalTiming}</span>
+                        </div>
+                        <p class="science-mechanism-desc">${science.bioMechanism}</p>
+                    </div>
+                    <div class="science-footer">
+                        <button type="button" class="flip-return-btn" onclick="toggleStepCardFlip('${cardId}', event)">
+                            ‹ Return to Step
+                        </button>
+                    </div>
+                </div>
             </div>
         </li>
     `;
@@ -822,6 +1038,9 @@ function renderRoutineResults(routine) {
     
     if (typeof renderClimateAlerts === "function") {
         renderClimateAlerts();
+    }
+    if (typeof updateConsultationProgress === "function") {
+        updateConsultationProgress(3);
     }
     
     const ctx = document.getElementById("skinMetricsChart")?.getContext("2d");
@@ -887,16 +1106,72 @@ function getCachedClimate() {
     return null;
 }
 
+// Rolling number animation helper (Requirement 3)
+function animateNumberRollUp(element, start, end, duration = 800, decimals = 1) {
+    if (!element) return;
+    const startTime = performance.now();
+    const startVal = Number(start) || 0;
+    const endVal = Number(end) || 0;
+
+    function step(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = startVal + (endVal - startVal) * ease;
+        element.textContent = current.toFixed(decimals);
+        if (progress < 1) {
+            requestAnimationFrame(step);
+        } else {
+            element.textContent = endVal.toFixed(decimals);
+        }
+    }
+    requestAnimationFrame(step);
+}
+window.animateNumberRollUp = animateNumberRollUp;
+
+// Circular UV Gauge Outer Stroke & Telemetry Animation (Requirement 3)
+function updateUVGauge(uvValue) {
+    const circle = document.getElementById("uvGaugeCircle");
+    const uvValEl = document.getElementById("climateUVValue");
+    const numUV = typeof uvValue === "number" ? uvValue : parseFloat(uvValue) || 0;
+
+    if (uvValEl) {
+        const prevText = uvValEl.textContent.trim();
+        const prev = prevText === "--" ? 0 : parseFloat(prevText) || 0;
+        animateNumberRollUp(uvValEl, prev, numUV, 750, 1);
+    }
+
+    if (circle) {
+        // Circumference for r=18 is 2 * Math.PI * 18 ~ 113.1
+        const circumference = 113.1;
+        const maxUV = 11;
+        const ratio = Math.min(Math.max(numUV / maxUV, 0), 1);
+        const offset = circumference * (1 - ratio);
+        circle.style.strokeDasharray = `${circumference}`;
+        circle.style.strokeDashoffset = `${offset}`;
+
+        if (numUV < 3) {
+            circle.style.stroke = "#10b981"; // Low / Emerald
+        } else if (numUV < 6) {
+            circle.style.stroke = "#f59e0b"; // Moderate / Amber
+        } else {
+            circle.style.stroke = "#ef4444"; // High / Red
+        }
+    }
+}
+window.updateUVGauge = updateUVGauge;
+
 function applyClimateUI(data) {
     currentClimateData = data;
     const tempEl = document.getElementById("climateTemp");
     const humidityEl = document.getElementById("climateHumidity");
-    const uvValEl = document.getElementById("climateUVValue");
     const uvDotEl = document.getElementById("climateUVDot");
 
     if (tempEl) tempEl.textContent = `${data.temp}°C`;
     if (humidityEl) humidityEl.textContent = `💧 ${data.humidity}%`;
-    if (uvValEl) uvValEl.textContent = `${data.uv}`;
+
+    // Animate circular gauge and smooth number counter roll up
+    updateUVGauge(data.uv);
 
     if (uvDotEl) {
         uvDotEl.className = "uv-status-dot";
@@ -2162,8 +2437,16 @@ function handleAdoptedStepCheck(type, idx, isChecked) {
         masterCheck.checked = allChecked;
     }
 
+    if (isChecked) {
+        const subCheckEl = document.querySelector(`.sub-step-check[data-type="${type}"][data-idx="${idx}"]`);
+        if (subCheckEl && typeof triggerParticleBurst === "function") {
+            triggerParticleBurst(subCheckEl);
+        }
+    }
+
     handleRoutineCheck(type);
     renderAdoptedTrackerUI();
+    if (typeof updateStreakAdherenceRing === "function") updateStreakAdherenceRing();
 }
 window.handleAdoptedStepCheck = handleAdoptedStepCheck;
 
@@ -2216,6 +2499,7 @@ function loadRoutineTracker() {
     }
 
     renderAdoptedTrackerUI();
+    if (typeof updateStreakAdherenceRing === "function") updateStreakAdherenceRing();
     if (typeof updateLifestyleInsight === "function") updateLifestyleInsight();
     if (typeof loadLifestyleTodayCheckin === "function") loadLifestyleTodayCheckin();
 }
@@ -2893,6 +3177,89 @@ async function syncStreakToCloud(trackerData) {
     }
 }
 
+// Lightweight Particle Burst Celebration (Requirement 5)
+function triggerParticleBurst(anchorEl) {
+    if (!anchorEl) return;
+    const rect = anchorEl.getBoundingClientRect();
+    const burstContainer = document.createElement("div");
+    burstContainer.className = "particle-burst";
+    burstContainer.style.position = "fixed";
+    burstContainer.style.left = `${rect.left + rect.width / 2}px`;
+    burstContainer.style.top = `${rect.top + rect.height / 2}px`;
+
+    const colors = ["#003276", "#0d9488", "#0284c7", "#f59e0b", "#ec4899", "#8b5cf6"];
+    const particleCount = 8;
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement("span");
+        particle.className = "burst-particle";
+        const angle = (i * (360 / particleCount)) * (Math.PI / 180);
+        const dist = 28 + Math.random() * 16;
+        const tx = Math.round(Math.cos(angle) * dist);
+        const ty = Math.round(Math.sin(angle) * dist);
+        particle.style.setProperty("--tx", `${tx}px`);
+        particle.style.setProperty("--ty", `${ty}px`);
+        particle.style.setProperty("--particle-color", colors[i % colors.length]);
+        burstContainer.appendChild(particle);
+    }
+
+    document.body.appendChild(burstContainer);
+    setTimeout(() => {
+        if (burstContainer.parentElement) burstContainer.remove();
+    }, 700);
+}
+window.triggerParticleBurst = triggerParticleBurst;
+
+// Animated Circular Adherence Ring Tracker (Requirement 3 & 5)
+function updateStreakAdherenceRing() {
+    const ring = document.getElementById("routineAdherenceRing");
+    const pctEl = document.getElementById("routineAdherencePct");
+    if (!ring && !pctEl) return;
+
+    let ratio = 0;
+    const savedRegimen = JSON.parse(localStorage.getItem(ADOPTED_REGIMEN_KEY) || "null");
+    const today = getTodayKey();
+
+    if (savedRegimen && ((savedRegimen.am && savedRegimen.am.length) || (savedRegimen.pm && savedRegimen.pm.length))) {
+        const checks = getAdoptedChecks();
+        const amSteps = savedRegimen.am || [];
+        const pmSteps = savedRegimen.pm || [];
+        const total = amSteps.length + pmSteps.length;
+        if (total > 0) {
+            const amDone = amSteps.filter((_, i) => !!checks.am?.[i]).length;
+            const pmDone = pmSteps.filter((_, i) => !!checks.pm?.[i]).length;
+            ratio = (amDone + pmDone) / total;
+        }
+    } else {
+        const trackerData = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
+        const checkAM = document.getElementById("checkAM");
+        const checkPM = document.getElementById("checkPM");
+        const amDone = (checkAM && checkAM.checked) || (trackerData.am && trackerData.currentDay === today);
+        const pmDone = (checkPM && checkPM.checked) || (trackerData.pm && trackerData.currentDay === today);
+        let count = 0;
+        if (amDone) count++;
+        if (pmDone) count++;
+        ratio = count / 2;
+    }
+
+    const circumference = 150.8;
+    const offset = circumference * (1 - ratio);
+
+    if (ring) {
+        ring.style.strokeDasharray = `${circumference}`;
+        ring.style.strokeDashoffset = `${offset}`;
+        if (ratio >= 1) {
+            ring.classList.add("ring-celebrate");
+        } else {
+            ring.classList.remove("ring-celebrate");
+        }
+    }
+
+    if (pctEl) {
+        pctEl.textContent = `${Math.round(ratio * 100)}%`;
+    }
+}
+window.updateStreakAdherenceRing = updateStreakAdherenceRing;
+
 function handleRoutineCheck(type) {
     const data = JSON.parse(localStorage.getItem(TRACKER_STORAGE_KEY) || "{}");
     const today = getTodayKey();
@@ -2913,6 +3280,11 @@ function handleRoutineCheck(type) {
     if (checkAM) data.am = checkAM.checked;
     if (checkPM) data.pm = checkPM.checked;
 
+    const checkedEl = type === "am" ? checkAM : checkPM;
+    if (checkedEl && checkedEl.checked) {
+        triggerParticleBurst(checkedEl);
+    }
+
     if (data.am && data.pm && data.lastDate !== today) {
         data.streak = data.lastDate === yesterday ? data.streak + 1 : 1;
         data.lastDate = today;
@@ -2921,9 +3293,16 @@ function handleRoutineCheck(type) {
         if (statusMsg) statusMsg.textContent = "";
     }
 
-    if (streakEl) streakEl.textContent = data.streak;
+    if (streakEl) {
+        streakEl.textContent = data.streak;
+        streakEl.classList.remove("bounce-up");
+        void streakEl.offsetWidth;
+        streakEl.classList.add("bounce-up");
+    }
+
     localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(data));
     syncStreakToCloud(data);
+    updateStreakAdherenceRing();
     if (typeof updateLifestyleInsight === "function") updateLifestyleInsight();
 }
 window.handleRoutineCheck = handleRoutineCheck;
@@ -3113,8 +3492,15 @@ function scheduleLocalRoutineReminders() {
     window._reminderInterval = setInterval(checkSchedule, 60000);
 }
 
+function initImageComparison() {
+    if (typeof initSkinJourneySlider === "function") initSkinJourneySlider();
+}
+window.initImageComparison = initImageComparison;
+
 window.addEventListener("DOMContentLoaded", () => {
-    initImageComparison();
+    if (typeof initImageComparison === "function") {
+        initImageComparison();
+    }
     loadRoutineTracker();
     updateAuthUI();
     setupNotificationUI();
@@ -3232,4 +3618,32 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof initSkinJourneySlider === "function") initSkinJourneySlider();
     if (typeof initVanityTracker === "function") initVanityTracker();
     if (typeof initLifestyleLogger === "function") initLifestyleLogger();
+
+    // Initialize Tactile Skincare Experience (Requirements 1, 2, 3)
+    if (typeof updateConsultationProgress === "function") updateConsultationProgress();
+    if (typeof updateStreakAdherenceRing === "function") updateStreakAdherenceRing();
+
+    // Tactile Ripple & Active Pulse Micro-Interaction
+    document.addEventListener("click", function (e) {
+        const target = e.target.closest(".selectable-tile, .tech-pill, .concern-pill, .primary-btn, .action-btn, .flip-card-toggle-btn");
+        if (!target) return;
+
+        target.classList.remove("pulse-click");
+        void target.offsetWidth;
+        target.classList.add("pulse-click");
+
+        const rect = target.getBoundingClientRect();
+        const ripple = document.createElement("span");
+        ripple.className = "tactile-ripple";
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = `${size}px`;
+        ripple.style.height = `${size}px`;
+        ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+        ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+
+        target.appendChild(ripple);
+        setTimeout(() => {
+            if (ripple.parentElement) ripple.remove();
+        }, 500);
+    });
 });

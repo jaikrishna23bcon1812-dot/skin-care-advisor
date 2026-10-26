@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css?v=20">
+    <link rel="stylesheet" href="style.css?v=30">
 </head>
 
 <body class="light-mode">
@@ -88,6 +88,27 @@
         <!-- 1. Focused 2-Step Consultation Card -->
         <section id="advisor" class="consultation-section">
             <div class="consultation-card card">
+                <!-- 1. Sticky / Fluid Consultation Progress Tracker -->
+                <div class="consultation-tracker-sticky" id="consultationTracker">
+                    <div class="tracker-status-bar">
+                        <div class="tracker-step-title">
+                            <span class="tracker-step-icon">🔬</span>
+                            <span class="tracker-title-text" id="consultationStepLabel">Step 1 of 3: Skin Biome</span>
+                        </div>
+                        <span class="tracker-progress-percentage" id="consultationProgressPct">33%</span>
+                    </div>
+                    <div class="tracker-bar-track">
+                        <div class="tracker-bar-fill" id="consultationProgressBar" style="width: 33%;"></div>
+                    </div>
+                    <div class="tracker-breadcrumbs-row">
+                        <span class="breadcrumb-item active" id="crumbStep1">1. Skin Biome</span>
+                        <span class="breadcrumb-arrow">›</span>
+                        <span class="breadcrumb-item" id="crumbStep2">2. Target Concerns</span>
+                        <span class="breadcrumb-arrow">›</span>
+                        <span class="breadcrumb-item" id="crumbStep3">3. Personalized Regimen</span>
+                    </div>
+                </div>
+
                 <div class="consultation-intro">
                     <span class="pill-badge">Personalized Advisor</span>
                     <h1>Find Your Ideal Skincare Routine</h1>
@@ -123,8 +144,12 @@
                         </div>
                         <div class="skin-cards-grid tech-pill-group" data-target="skinType">
                             <!-- Dry Card -->
-                            <button type="button" class="skin-card tech-pill" data-value="dry" onclick="selectCardOption('skinType', 'dry', this)">
-                                <div class="card-check-icon">✓</div>
+                            <button type="button" class="skin-card selectable-tile tech-pill" data-value="dry" onclick="selectCardOption('skinType', 'dry', this)">
+                                <div class="card-check-icon" aria-hidden="true">
+                                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
                                 <div class="card-icon">💧</div>
                                 <div class="card-info">
                                     <span class="card-title">Dry</span>
@@ -133,8 +158,12 @@
                             </button>
 
                             <!-- Normal Card (Default active) -->
-                            <button type="button" class="skin-card tech-pill active" data-value="normal" onclick="selectCardOption('skinType', 'normal', this)">
-                                <div class="card-check-icon">✓</div>
+                            <button type="button" class="skin-card selectable-tile tech-pill active" data-value="normal" onclick="selectCardOption('skinType', 'normal', this)">
+                                <div class="card-check-icon" aria-hidden="true">
+                                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
                                 <div class="card-icon">🌿</div>
                                 <div class="card-info">
                                     <span class="card-title">Normal</span>
@@ -143,8 +172,12 @@
                             </button>
 
                             <!-- Oily Card -->
-                            <button type="button" class="skin-card tech-pill" data-value="oily" onclick="selectCardOption('skinType', 'oily', this)">
-                                <div class="card-check-icon">✓</div>
+                            <button type="button" class="skin-card selectable-tile tech-pill" data-value="oily" onclick="selectCardOption('skinType', 'oily', this)">
+                                <div class="card-check-icon" aria-hidden="true">
+                                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
                                 <div class="card-icon">✨</div>
                                 <div class="card-info">
                                     <span class="card-title">Oily</span>
@@ -153,12 +186,30 @@
                             </button>
 
                             <!-- Sensitive Card -->
-                            <button type="button" class="skin-card tech-pill" data-value="sensitive" onclick="selectCardOption('skinType', 'sensitive', this)">
-                                <div class="card-check-icon">✓</div>
+                            <button type="button" class="skin-card selectable-tile tech-pill" data-value="sensitive" onclick="selectCardOption('skinType', 'sensitive', this)">
+                                <div class="card-check-icon" aria-hidden="true">
+                                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
                                 <div class="card-icon">🛡️</div>
                                 <div class="card-info">
                                     <span class="card-title">Sensitive</span>
                                     <span class="card-caption">Easily irritated or flushed</span>
+                                </div>
+                            </button>
+
+                            <!-- Combination Card -->
+                            <button type="button" class="skin-card selectable-tile tech-pill" data-value="combination" onclick="selectCardOption('skinType', 'combination', this)">
+                                <div class="card-check-icon" aria-hidden="true">
+                                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="card-icon">⚖️</div>
+                                <div class="card-info">
+                                    <span class="card-title">Combination</span>
+                                    <span class="card-caption">Oily T-zone, dry cheeks</span>
                                 </div>
                             </button>
                         </div>
@@ -171,19 +222,19 @@
                             <h2 class="step-heading">What would you like to focus on?</h2>
                         </div>
                         <div class="concern-pills-wrap tech-pill-group" data-target="primaryConcern">
-                            <button type="button" class="concern-pill tech-pill" data-value="acne" onclick="selectCardOption('primaryConcern', 'acne', this)">
+                            <button type="button" class="concern-pill selectable-tile tech-pill" data-value="acne" onclick="selectCardOption('primaryConcern', 'acne', this)">
                                 Acne &amp; Blemishes
                             </button>
-                            <button type="button" class="concern-pill tech-pill active" data-value="dryness" onclick="selectCardOption('primaryConcern', 'dryness', this)">
+                            <button type="button" class="concern-pill selectable-tile tech-pill active" data-value="dryness" onclick="selectCardOption('primaryConcern', 'dryness', this)">
                                 Dryness &amp; Flaking
                             </button>
-                            <button type="button" class="concern-pill tech-pill" data-value="hyperpigmentation" onclick="selectCardOption('primaryConcern', 'hyperpigmentation', this)">
+                            <button type="button" class="concern-pill selectable-tile tech-pill" data-value="hyperpigmentation" onclick="selectCardOption('primaryConcern', 'hyperpigmentation', this)">
                                 Dark Spots / Glow
                             </button>
-                            <button type="button" class="concern-pill tech-pill" data-value="aging" onclick="selectCardOption('primaryConcern', 'aging', this)">
+                            <button type="button" class="concern-pill selectable-tile tech-pill" data-value="aging" onclick="selectCardOption('primaryConcern', 'aging', this)">
                                 Anti-Aging
                             </button>
-                            <button type="button" class="concern-pill tech-pill" data-value="redness" onclick="selectCardOption('primaryConcern', 'redness', this)">
+                            <button type="button" class="concern-pill selectable-tile tech-pill" data-value="redness" onclick="selectCardOption('primaryConcern', 'redness', this)">
                                 Redness / Calm
                             </button>
                         </div>
@@ -268,23 +319,33 @@
                         <p id="routineSubtitle" class="section-desc">Tailored daily morning and evening protocol.</p>
                     </div>
                     <div class="results-header-actions">
-                        <!-- Feature 1: Live UV Index & Climate-Adaptive Routine Badge -->
-                        <div id="climateWidget" class="climate-widget">
+                        <!-- Feature 1: Live UV Index & Climate-Adaptive Routine Badge with Animated Circular Telemetry Gauge -->
+                        <div id="climateWidget" class="climate-widget tactile-telemetry-widget">
                             <div class="climate-widget-content">
-                                <span class="climate-icon" aria-hidden="true">🌤️</span>
-                                <div class="climate-metrics">
-                                    <span id="climateTemp" class="climate-metric" title="Local Temperature">--°C</span>
-                                    <span class="climate-sep">•</span>
-                                    <span id="climateHumidity" class="climate-metric" title="Relative Humidity">💧 --%</span>
-                                    <span class="climate-sep">•</span>
-                                    <span id="climateUVWrap" class="climate-metric climate-uv-metric" title="Current UV Index">
-                                        UV <span id="climateUVValue">--</span>
-                                        <span id="climateUVDot" class="uv-status-dot dot-low">🟢 Low</span>
-                                    </span>
+                                <div class="uv-circular-gauge-box" title="UV Radiation Telemetry">
+                                    <svg class="uv-gauge-svg" viewBox="0 0 44 44" width="44" height="44">
+                                        <circle class="gauge-bg" cx="22" cy="22" r="18" stroke-width="3.5" fill="none"></circle>
+                                        <circle class="gauge-fill" id="uvGaugeCircle" cx="22" cy="22" r="18" stroke-width="3.5" fill="none" stroke-dasharray="113.1" stroke-dashoffset="113.1" transform="rotate(-90 22 22)"></circle>
+                                    </svg>
+                                    <span class="uv-center-icon" aria-hidden="true">☀️</span>
                                 </div>
-                                <button type="button" id="detectClimateBtn" class="detect-climate-btn" onclick="detectClimate(true)" title="Detect Local Climate via GPS">
-                                    📍 Detect Local Climate
-                                </button>
+                                <div class="climate-details-col">
+                                    <div class="climate-metrics">
+                                        <span id="climateUVWrap" class="climate-metric climate-uv-metric" title="Current UV Index">
+                                            UV <span id="climateUVValue">--</span>
+                                            <span id="climateUVDot" class="uv-status-dot dot-low">🟢 Low</span>
+                                        </span>
+                                        <span class="climate-sep">•</span>
+                                        <span id="climateTemp" class="climate-metric" title="Local Temperature">--°C</span>
+                                        <span class="climate-sep">•</span>
+                                        <span id="climateHumidity" class="climate-metric" title="Relative Humidity">💧 --%</span>
+                                    </div>
+                                    <div class="climate-action-row">
+                                        <button type="button" id="detectClimateBtn" class="detect-climate-btn" onclick="detectClimate(true)" title="Detect Local Climate via GPS">
+                                            📍 Detect Local Climate
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -352,8 +413,17 @@
                         <p class="section-desc">Check off your morning and evening steps to stay consistent.</p>
                     </div>
                     <div class="tracker-header-right">
-                        <div class="streak-pill-box">
-                            <span class="streak-icon">🔥</span>
+                        <div class="streak-adherence-card">
+                            <div class="streak-ring-wrapper" title="30-Day Routine Adherence Ring">
+                                <svg class="adherence-circular-svg" viewBox="0 0 60 60" width="60" height="60">
+                                    <circle class="adherence-ring-bg" cx="30" cy="30" r="24" stroke-width="5" fill="none"></circle>
+                                    <circle class="adherence-ring-fill" id="routineAdherenceRing" cx="30" cy="30" r="24" stroke-width="5" fill="none" stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"></circle>
+                                </svg>
+                                <div class="streak-ring-content">
+                                    <span class="streak-icon">🔥</span>
+                                    <span class="adherence-mini-pct" id="routineAdherencePct">0%</span>
+                                </div>
+                            </div>
                             <div class="streak-data">
                                 <span class="streak-count"><span id="streakCount">0</span> Days</span>
                                 <span class="streak-label">Daily Streak</span>
@@ -753,7 +823,7 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="script.js?v=20"></script>
+    <script src="script.js?v=30"></script>
 </body>
 
 </html>
