@@ -1029,18 +1029,28 @@ function renderRoutineResults(routine) {
     const amList = document.getElementById("amStepsList");
     const pmList = document.getElementById("pmStepsList");
     
-    if (amList) {
-        amList.innerHTML = (routine.am || []).map((step, idx) => createClinicalStepCard(step, idx, "am")).join("");
-    }
-    if (pmList) {
-        pmList.innerHTML = (routine.pm || []).map((step, idx) => createClinicalStepCard(step, idx, "pm")).join("");
-    }
-    
-    if (typeof renderClimateAlerts === "function") {
-        renderClimateAlerts();
-    }
-    if (typeof updateConsultationProgress === "function") {
-        updateConsultationProgress(3);
+    const updateRoutineDOM = () => {
+        if (amList) {
+            amList.innerHTML = (routine.am || []).map((step, idx) => createClinicalStepCard(step, idx, "am")).join("");
+        }
+        if (pmList) {
+            pmList.innerHTML = (routine.pm || []).map((step, idx) => createClinicalStepCard(step, idx, "pm")).join("");
+        }
+        
+        if (typeof renderClimateAlerts === "function") {
+            renderClimateAlerts();
+        }
+        if (typeof updateConsultationProgress === "function") {
+            updateConsultationProgress(3);
+        }
+    };
+
+    if (typeof document.startViewTransition === "function") {
+        document.startViewTransition(() => {
+            updateRoutineDOM();
+        });
+    } else {
+        updateRoutineDOM();
     }
     
     const ctx = document.getElementById("skinMetricsChart")?.getContext("2d");
@@ -4023,4 +4033,173 @@ window.addEventListener("DOMContentLoaded", () => {
             if (ripple.parentElement) ripple.remove();
         }, 500);
     });
+
+    // Initialize Motion Interactions
+    initMotionInteractions();
 });
+
+// ==========================================================================
+// MOTION INTERACTIONS (3D Tilt & Glare, Magnetic Spring, Water Ripple)
+// ==========================================================================
+
+let motionInteractionsInitialized = false;
+
+function initMotionInteractions() {
+    if (motionInteractionsInitialized) return;
+    motionInteractionsInitialized = true;
+
+    // 1. Delegate pointermove and pointerleave on .selectable-tile, .flip-card-front, .card
+    let activeTiltTarget = null;
+
+    function resetTilt(el) {
+        if (!el) return;
+        el.style.setProperty("--rx", "0");
+        el.style.setProperty("--ry", "0");
+        el.style.setProperty("--gx", "50%");
+        el.style.setProperty("--gy", "50%");
+        el.style.setProperty("--glare", "0");
+    }
+
+    document.addEventListener("pointermove", function (e) {
+        const target = e.target && e.target.closest ? e.target.closest(".selectable-tile, .flip-card-front, .card") : null;
+
+        if (activeTiltTarget && activeTiltTarget !== target) {
+            resetTilt(activeTiltTarget);
+            activeTiltTarget = null;
+        }
+
+        if (!target) return;
+        activeTiltTarget = target;
+
+        const rect = target.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Normalized offsets from center (-1 to 1)
+        const normX = (x - rect.width / 2) / (rect.width / 2);
+        const normY = (y - rect.height / 2) / (rect.height / 2);
+
+        // Standard 3D card tilt: vertical movement tilts on X-axis, horizontal on Y-axis
+        const rx = -normY;
+        const ry = normX;
+
+        // Radial glare coordinates as percentages
+        const gx = (x / rect.width) * 100;
+        const gy = (y / rect.height) * 100;
+
+        target.style.setProperty("--rx", rx.toFixed(4));
+        target.style.setProperty("--ry", ry.toFixed(4));
+        target.style.setProperty("--gx", `${gx.toFixed(2)}%`);
+        target.style.setProperty("--gy", `${gy.toFixed(2)}%`);
+        target.style.setProperty("--glare", "1");
+    });
+
+    // Capture phase pointerleave listener to handle non-bubbling pointerleave on any matching element
+    document.addEventListener("pointerleave", function (e) {
+        const target = e.target && e.target.closest ? e.target.closest(".selectable-tile, .flip-card-front, .card") : null;
+        if (target) {
+            resetTilt(target);
+            if (activeTiltTarget === target) activeTiltTarget = null;
+        }
+    }, true);
+
+    document.addEventListener("pointerout", function (e) {
+        const target = e.target && e.target.closest ? e.target.closest(".selectable-tile, .flip-card-front, .card") : null;
+        if (target && (!e.relatedTarget || !target.contains(e.relatedTarget))) {
+            resetTilt(target);
+            if (activeTiltTarget === target) activeTiltTarget = null;
+        }
+    });
+
+    // 2. Magnetic spring on #generateBtn, #detectClimateBtn, .adopt-regimen-btn
+    const magneticSelector = "#generateBtn, #detectClimateBtn, .adopt-regimen-btn";
+
+    function resetMagnetic(btn) {
+        if (!btn) return;
+        btn._isMagneticActive = false;
+        btn.style.transition = "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)";
+        btn.style.transform = "translate(0px, 0px)";
+    }
+
+    document.addEventListener("pointermove", function (e) {
+        const buttons = document.querySelectorAll(magneticSelector);
+        buttons.forEach((btn) => {
+            const rect = btn.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const deltaX = e.clientX - centerX;
+            const deltaY = e.clientY - centerY;
+
+            // Distance to button's outer boundary (0 if inside)
+            const dx = Math.max(rect.left - e.clientX, 0, e.clientX - rect.right);
+            const dy = Math.max(rect.top - e.clientY, 0, e.clientY - rect.bottom);
+            const distToBox = Math.hypot(dx, dy);
+            const distToCenter = Math.hypot(deltaX, deltaY);
+
+            // Within 50px of button
+            if (distToBox <= 50 || distToCenter <= 50) {
+                btn._isMagneticActive = true;
+                btn.style.transition = "transform 0.1s ease-out";
+                btn.style.transform = `translate(${deltaX * 0.25}px, ${deltaY * 0.25}px)`;
+            } else if (btn._isMagneticActive) {
+                resetMagnetic(btn);
+            }
+        });
+    });
+
+    document.addEventListener("pointerleave", function (e) {
+        const btn = e.target && e.target.closest ? e.target.closest(magneticSelector) : null;
+        if (btn) {
+            resetMagnetic(btn);
+        }
+    }, true);
+
+    document.addEventListener("pointerout", function (e) {
+        const btn = e.target && e.target.closest ? e.target.closest(magneticSelector) : null;
+        if (btn && (!e.relatedTarget || !btn.contains(e.relatedTarget))) {
+            resetMagnetic(btn);
+        }
+    });
+
+    // Direct element listeners for testing & edge events
+    document.querySelectorAll(magneticSelector).forEach((btn) => {
+        btn.addEventListener("pointerleave", () => resetMagnetic(btn));
+        btn.addEventListener("mouseleave", () => resetMagnetic(btn));
+    });
+
+    // 3. Attach click listener to .chip-btn, .concern-chip, #detectClimateBtn creating .water-ripple element
+    document.addEventListener("click", function (e) {
+        const target = e.target && e.target.closest ? e.target.closest(".chip-btn, .concern-chip, #detectClimateBtn") : null;
+        if (!target) return;
+
+        const rect = target.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height, 40);
+
+        const clickX = (e.clientX !== undefined && e.clientX !== 0) ? (e.clientX - rect.left) : (rect.width / 2);
+        const clickY = (e.clientY !== undefined && e.clientY !== 0) ? (e.clientY - rect.top) : (rect.height / 2);
+
+        const ripple = document.createElement("span");
+        ripple.className = "water-ripple";
+        ripple.style.width = `${size}px`;
+        ripple.style.height = `${size}px`;
+        ripple.style.left = `${clickX - size / 2}px`;
+        ripple.style.top = `${clickY - size / 2}px`;
+
+        target.appendChild(ripple);
+
+        setTimeout(() => {
+            if (ripple.parentElement) {
+                ripple.remove();
+            }
+        }, 500);
+    });
+}
+
+// Fallback initialization if script executes after DOM is already loaded
+if (typeof document !== "undefined" && document.readyState !== "loading") {
+    initMotionInteractions();
+}
