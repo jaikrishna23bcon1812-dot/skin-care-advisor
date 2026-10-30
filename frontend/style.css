@@ -2067,6 +2067,42 @@ textarea#ingredientInput:focus {
     margin-top: 0.5rem;
 }
 
+/* Auth Divider & Google Sign-In */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.15rem 0 0.95rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auth-divider span {
+    padding: 0 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+.google-btn-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    margin-bottom: 0.85rem;
+}
+
+.google-btn-wrapper > div {
+    margin: 0 auto !important;
+}
+
 .auth-error-msg {
     padding: 0.65rem 0.85rem;
     border-radius: 8px;

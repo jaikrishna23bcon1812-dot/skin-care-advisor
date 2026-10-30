@@ -2570,6 +2570,10 @@ function openAuthModal() {
     if (emailInput) {
         setTimeout(() => emailInput.focus(), 100);
     }
+
+    if (typeof initGoogleSignIn === "function") {
+        initGoogleSignIn();
+    }
 }
 window.openAuthModal = openAuthModal;
 
@@ -2714,6 +2718,120 @@ async function handleAuthSubmit(e) {
     }
 }
 window.handleAuthSubmit = handleAuthSubmit;
+
+// ============================================================================
+// GOOGLE IDENTITY SERVICES (GIS) SIGN-IN & REGISTRATION
+// ============================================================================
+
+const GOOGLE_CLIENT_ID = window.GOOGLE_CLIENT_ID || "1025585501861-YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
+function initGoogleSignIn() {
+    const btnContainer = document.getElementById("googleSignInBtn");
+    if (!btnContainer) return;
+
+    if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
+        try {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGoogleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true,
+            });
+
+            const isDark = document.documentElement.classList.contains("dark-mode") || document.body.classList.contains("dark-mode");
+            google.accounts.id.renderButton(btnContainer, {
+                theme: isDark ? "filled_black" : "outline",
+                size: "large",
+                text: "continue_with",
+                shape: "rectangular",
+                width: 280,
+                logo_alignment: "left",
+            });
+        } catch (e) {
+            console.warn("Google Sign-In initialization:", e.message);
+        }
+    } else {
+        // Retry when GSI script loads
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
+                clearInterval(interval);
+                initGoogleSignIn();
+            } else if (attempts > 30) {
+                clearInterval(interval);
+            }
+        }, 200);
+    }
+}
+window.initGoogleSignIn = initGoogleSignIn;
+
+async function handleGoogleCredentialResponse(response) {
+    if (!response || !response.credential) {
+        const errorMsg = document.getElementById("authErrorMsg");
+        if (errorMsg) {
+            errorMsg.textContent = "Google authentication failed: no credential received.";
+            errorMsg.classList.remove("hidden");
+        }
+        showToast("Google authentication failed. No credential received.", "error");
+        return;
+    }
+
+    const errorMsg = document.getElementById("authErrorMsg");
+    if (errorMsg) {
+        errorMsg.textContent = "";
+        errorMsg.classList.add("hidden");
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ credential: response.credential }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            const errText = data.message || data.error || "Google Sign-In failed. Please try again.";
+            if (errorMsg) {
+                errorMsg.textContent = errText;
+                errorMsg.classList.remove("hidden");
+            }
+            showToast(errText, "error");
+            return;
+        }
+
+        // On success: store authToken, run hydrateUserDataFromCloud(), update authentication UI, and close the modal
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("skin_token", data.token);
+        localStorage.setItem("token", data.token);
+        if (data.email) {
+            localStorage.setItem("skin_email", data.email);
+        } else if (data.user && data.user.email) {
+            localStorage.setItem("skin_email", data.user.email);
+        }
+        if (data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
+        await hydrateUserDataFromCloud(data);
+        updateAuthUI();
+        closeAuthModal();
+
+        const displayName = data.user?.name || data.user?.email || data.email || "Google User";
+        showToast(`Signed in successfully as ${displayName}!`, "success");
+    } catch (err) {
+        console.error("Google authentication error:", err);
+        const netErr = "Failed to connect to authentication server. Please try again.";
+        if (errorMsg) {
+            errorMsg.textContent = netErr;
+            errorMsg.classList.remove("hidden");
+        }
+        showToast(netErr, "error");
+    }
+}
+window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
 
 function handleSignOut() {
     localStorage.removeItem("skin_token");
@@ -3903,6 +4021,9 @@ window.addEventListener("DOMContentLoaded", () => {
     if (authForm) {
         authForm.addEventListener("submit", handleAuthSubmit);
     }
+
+    // Initialize Google Sign-In if GIS client is loaded
+    initGoogleSignIn();
 
     const settingsModal = document.getElementById("settingsModal");
     if (settingsModal) {

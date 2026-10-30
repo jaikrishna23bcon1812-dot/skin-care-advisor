@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=10">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -34,6 +36,10 @@
                 </div>
                 <button type="submit" id="authSubmitBtn" class="primary-btn auth-submit-btn">Sign In</button>
             </form>
+            <div class="auth-divider">
+                <span>or continue with</span>
+            </div>
+            <div id="googleSignInBtn" class="google-btn-wrapper"></div>
             <div class="auth-modal-footer">
                 <span id="authToggleText">Don't have an account?</span>
                 <a href="javascript:void(0)" id="authToggleLink" class="auth-toggle-link" onclick="toggleAuthMode(event)">Register</a>

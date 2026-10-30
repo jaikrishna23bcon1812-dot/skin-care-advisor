@@ -3,7 +3,10 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // In-Memory Storage Adapter for local development or when MONGO_URI is omitted
 const inMemoryUsers = new Map();
@@ -222,6 +225,154 @@ router.post("/login", async (req, res) => {
         console.error("Login Error:", error);
         return res.status(500).json({
             error: "Server error during login",
+            message: error.message,
+        });
+    }
+});
+
+// POST /api/auth/google
+router.post("/google", async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({
+                error: "Google credential is required",
+                message: "Please provide Google credential token",
+            });
+        }
+
+        let payload;
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: credential,
+                ...(process.env.GOOGLE_CLIENT_ID ? { audience: process.env.GOOGLE_CLIENT_ID } : {}),
+            });
+            payload = ticket.getPayload();
+        } catch (verifyError) {
+            // Support mock tokens during testing if applicable
+            if (process.env.NODE_ENV === "test" && credential.includes(".")) {
+                try {
+                    const decoded = jwt.decode(credential);
+                    if (decoded && (decoded.email || decoded.sub)) {
+                        payload = decoded;
+                    }
+                } catch (_) {}
+            }
+            if (!payload) {
+                console.error("Google token verification error:", verifyError);
+                return res.status(401).json({
+                    error: "Invalid Google credential",
+                    message: verifyError.message || "Google token verification failed",
+                });
+            }
+        }
+
+        const googleId = payload.sub;
+        const email = payload.email ? payload.email.toLowerCase().trim() : null;
+        const name = payload.name || (email ? email.split("@")[0] : "Google User");
+        const picture = payload.picture || "";
+
+        if (!email) {
+            return res.status(400).json({
+                error: "Google account missing email",
+                message: "Google account does not provide an email address",
+            });
+        }
+
+        let user = null;
+        if (isMongoConnected()) {
+            user = await User.findOne({ $or: [{ googleId }, { email }] });
+        } else {
+            for (const u of inMemoryUsers.values()) {
+                if (u.googleId === googleId || u.email === email) {
+                    user = u;
+                    break;
+                }
+            }
+        }
+
+        if (user) {
+            // User exists: if user exists without googleId, link it
+            let hasUpdates = false;
+            if (!user.googleId) {
+                user.googleId = googleId;
+                hasUpdates = true;
+            }
+            if (!user.picture && picture) {
+                user.picture = picture;
+                hasUpdates = true;
+            }
+            if (!user.name && name) {
+                user.name = name;
+                hasUpdates = true;
+            }
+
+            if (hasUpdates) {
+                if (isMongoConnected()) {
+                    user = await User.findByIdAndUpdate(
+                        user._id,
+                        { googleId: user.googleId, picture: user.picture, name: user.name },
+                        { returnDocument: "after" }
+                    );
+                } else if (user.save) {
+                    await user.save();
+                }
+            }
+        } else {
+            // New user registration via Google
+            user = await createUser({
+                email,
+                googleId,
+                picture,
+                name,
+                streak: 0,
+                lastStreakDate: null,
+                amCompleted: false,
+                pmCompleted: false,
+                createdAt: new Date(),
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET || "defaultsecret",
+            { expiresIn: "7d" }
+        );
+
+        const userProfile = {
+            id: user._id,
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            picture: user.picture || "",
+            googleId: user.googleId,
+            streak: user.streak || 0,
+            lastStreakDate: user.lastStreakDate || null,
+            amCompleted: !!user.amCompleted,
+            pmCompleted: !!user.pmCompleted,
+            vanity: user.vanity || [],
+            lifestyleLogs: user.lifestyleLogs || [],
+            progressPhotos: user.progressPhotos || { baseline: "", current: "" },
+        };
+
+        return res.status(200).json({
+            message: "Google sign-in successful",
+            token,
+            user: userProfile,
+            email: user.email,
+            streak: user.streak || 0,
+            lastStreakDate: user.lastStreakDate || null,
+            amCompleted: !!user.amCompleted,
+            pmCompleted: !!user.pmCompleted,
+            vanity: user.vanity || [],
+            lifestyleLogs: user.lifestyleLogs || [],
+            progressPhotos: user.progressPhotos || { baseline: "", current: "" },
+        });
+    } catch (error) {
+        console.error("Google Auth Route Error:", error);
+        return res.status(500).json({
+            error: "Server error during Google authentication",
             message: error.message,
         });
     }

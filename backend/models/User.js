@@ -10,7 +10,16 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, "Password is required"],
+        required: function () {
+            return !this.googleId;
+        },
+    },
+    googleId: {
+        type: String,
+        sparse: true,
+    },
+    picture: {
+        type: String,
     },
     streak: {
         type: Number,
