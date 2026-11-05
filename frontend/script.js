@@ -2574,6 +2574,7 @@ function openAuthModal() {
     if (typeof initGoogleSignIn === "function") {
         initGoogleSignIn();
     }
+    renderRemoveGoogleAccountUI();
 }
 window.openAuthModal = openAuthModal;
 
@@ -2748,6 +2749,8 @@ function initGoogleSignIn() {
       width: 280
     });
   }
+
+  renderRemoveGoogleAccountUI();
 }
 window.initGoogleSignIn = initGoogleSignIn;
 
@@ -2800,6 +2803,19 @@ async function handleGoogleCredentialResponse(response) {
             localStorage.setItem("user", JSON.stringify(data.user));
         }
 
+        if (data.user && data.user.email) {
+            localStorage.setItem('rememberedGoogleEmail', data.user.email);
+            localStorage.setItem('rememberedGoogleName', data.user.name || data.user.email);
+        } else if (data.email) {
+            localStorage.setItem('rememberedGoogleEmail', data.email);
+            localStorage.setItem('rememberedGoogleName', data.email);
+        }
+
+        const removeBox = document.getElementById("removeGoogleAccBox");
+        if (removeBox) {
+            removeBox.remove();
+        }
+
         await hydrateUserDataFromCloud(data);
         updateAuthUI();
         closeAuthModal();
@@ -2818,12 +2834,85 @@ async function handleGoogleCredentialResponse(response) {
 }
 window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
 
+function renderRemoveGoogleAccountUI() {
+    const btnContainer = document.getElementById("googleSignInBtn");
+    if (!btnContainer) return;
+
+    const rememberedEmail = localStorage.getItem("rememberedGoogleEmail");
+    const isLoggedIn = !!localStorage.getItem("authToken");
+
+    let box = document.getElementById("removeGoogleAccBox");
+
+    if (!rememberedEmail || isLoggedIn) {
+        if (box) {
+            box.remove();
+        }
+        return;
+    }
+
+    if (!box) {
+        box = document.createElement("div");
+        box.id = "removeGoogleAccBox";
+        box.className = "remove-google-acc-box";
+        btnContainer.insertAdjacentElement("afterend", box);
+    }
+
+    box.innerHTML = `
+        <span class="remembered-account-info" title="${rememberedEmail}">Saved: <strong>${rememberedEmail}</strong></span>
+        <button type="button" id="removeGoogleAccBtn" class="remove-google-acc-btn">✕ Remove this account</button>
+    `;
+
+    const removeBtn = document.getElementById("removeGoogleAccBtn");
+    if (removeBtn) {
+        removeBtn.onclick = removeSavedGoogleAccount;
+    }
+}
+window.renderRemoveGoogleAccountUI = renderRemoveGoogleAccountUI;
+
+function removeSavedGoogleAccount() {
+    const email = localStorage.getItem("rememberedGoogleEmail");
+    localStorage.removeItem("rememberedGoogleEmail");
+    localStorage.removeItem("rememberedGoogleName");
+
+    if (window.google?.accounts?.id) {
+        google.accounts.id.disableAutoSelect();
+        if (email) {
+            try {
+                google.accounts.id.revoke(email, () => {
+                    initGoogleSignIn();
+                });
+            } catch (err) {
+                console.warn("Failed to revoke Google account:", err);
+                initGoogleSignIn();
+            }
+        } else {
+            initGoogleSignIn();
+        }
+    } else {
+        initGoogleSignIn();
+    }
+
+    const box = document.getElementById("removeGoogleAccBox");
+    if (box) {
+        box.remove();
+    }
+
+    showToast("Google account removed. Please sign in again to use it.", "info");
+}
+window.removeSavedGoogleAccount = removeSavedGoogleAccount;
+
 function handleSignOut() {
     localStorage.removeItem("skin_token");
     localStorage.removeItem("authToken");
     localStorage.removeItem("skin_email");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
+    if (window.google?.accounts?.id) {
+        google.accounts.id.disableAutoSelect();
+    }
+    renderRemoveGoogleAccountUI();
+
     updateAuthUI();
     closeSettingsModal();
     showToast("Signed out successfully", "info");
@@ -3127,6 +3216,10 @@ async function handleDeleteAccount() {
         localStorage.removeItem("skin_email");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        if (window.google?.accounts?.id) {
+            google.accounts.id.disableAutoSelect();
+        }
+        renderRemoveGoogleAccountUI();
         localStorage.removeItem("skincare_vanity_items");
         localStorage.removeItem("skincare_daily_logs");
         localStorage.removeItem("skincare_progress_photos");

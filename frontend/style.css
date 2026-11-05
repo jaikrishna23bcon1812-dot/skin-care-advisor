@@ -2103,6 +2103,77 @@ textarea#ingredientInput:focus {
     margin: 0 auto !important;
 }
 
+/* Remove Saved Google Account (Compact Pill) */
+.remove-google-acc-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    max-width: 280px;
+    margin: -0.25rem auto 0.85rem;
+    padding: 0.35rem 0.65rem 0.35rem 0.85rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+.remove-google-acc-box .remembered-account-info {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+}
+
+.remove-google-acc-box .remembered-account-info strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.remove-google-acc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.22rem 0.55rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+    line-height: 1.2;
+}
+
+.remove-google-acc-btn:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+    background-color: var(--accent-red-light);
+}
+
+html.dark-mode .remove-google-acc-box,
+body.dark-mode .remove-google-acc-box {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+html.dark-mode .remove-google-acc-btn,
+body.dark-mode .remove-google-acc-btn {
+    background: var(--bg-subtle);
+}
+
+html.dark-mode .remove-google-acc-btn:hover,
+body.dark-mode .remove-google-acc-btn:hover {
+    color: #f87171;
+    border-color: #f87171;
+    background-color: rgba(239, 68, 68, 0.15);
+}
+
 .auth-error-msg {
     padding: 0.65rem 0.85rem;
     border-radius: 8px;
