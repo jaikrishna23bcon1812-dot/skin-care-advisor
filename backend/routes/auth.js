@@ -6,7 +6,8 @@ const mongoose = require("mongoose");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "617618231396-bg7tpm8agijtenmjuqqobaoc0bghjj4p.apps.googleusercontent.com";
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // In-Memory Storage Adapter for local development or when MONGO_URI is omitted
 const inMemoryUsers = new Map();
@@ -246,7 +247,7 @@ router.post("/google", async (req, res) => {
         try {
             const ticket = await googleClient.verifyIdToken({
                 idToken: credential,
-                ...(process.env.GOOGLE_CLIENT_ID ? { audience: process.env.GOOGLE_CLIENT_ID } : {}),
+                audience: GOOGLE_CLIENT_ID,
             });
             payload = ticket.getPayload();
         } catch (verifyError) {

@@ -2723,46 +2723,31 @@ window.handleAuthSubmit = handleAuthSubmit;
 // GOOGLE IDENTITY SERVICES (GIS) SIGN-IN & REGISTRATION
 // ============================================================================
 
-const GOOGLE_CLIENT_ID = window.GOOGLE_CLIENT_ID || "1025585501861-YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "617618231396-bg7tpm8agijtenmjuqqobaoc0bghjj4p.apps.googleusercontent.com";
 
 function initGoogleSignIn() {
-    const btnContainer = document.getElementById("googleSignInBtn");
-    if (!btnContainer) return;
+  if (typeof google === 'undefined' || !google.accounts) {
+    setTimeout(initGoogleSignIn, 150);
+    return;
+  }
 
-    if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
-        try {
-            google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleGoogleCredentialResponse,
-                auto_select: false,
-                cancel_on_tap_outside: true,
-            });
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredentialResponse,
+    auto_select: false
+  });
 
-            const isDark = document.documentElement.classList.contains("dark-mode") || document.body.classList.contains("dark-mode");
-            google.accounts.id.renderButton(btnContainer, {
-                theme: isDark ? "filled_black" : "outline",
-                size: "large",
-                text: "continue_with",
-                shape: "rectangular",
-                width: 280,
-                logo_alignment: "left",
-            });
-        } catch (e) {
-            console.warn("Google Sign-In initialization:", e.message);
-        }
-    } else {
-        // Retry when GSI script loads
-        let attempts = 0;
-        const interval = setInterval(() => {
-            attempts++;
-            if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
-                clearInterval(interval);
-                initGoogleSignIn();
-            } else if (attempts > 30) {
-                clearInterval(interval);
-            }
-        }, 200);
-    }
+  const btnContainer = document.getElementById('googleSignInBtn');
+  if (btnContainer) {
+    btnContainer.innerHTML = '';
+    google.accounts.id.renderButton(btnContainer, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'pill',
+      text: 'continue_with',
+      width: 280
+    });
+  }
 }
 window.initGoogleSignIn = initGoogleSignIn;
 
