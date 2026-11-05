@@ -53,9 +53,57 @@ function sanitizeAIResponse(text) {
     return clean.trim();
 }
 
+/**
+ * Post-processing guardrail: scans routine steps and sanitizes ingredients
+ * against pregnancy contraindications and declared allergies.
+ */
+function enforceSafetySanitizer(routineObj, safetyProfile) {
+    if (!routineObj || !routineObj.routine) return routineObj;
+    const isPregSafe = !!safetyProfile?.pregnancySafe;
+    const allergies = Array.isArray(safetyProfile?.allergies) ? safetyProfile.allergies : [];
+
+    const sanitizeStep = (step) => {
+        if (typeof step !== "string") return step;
+        let s = step;
+        if (isPregSafe) {
+            // Strictly prohibit Retinoids, Hydroquinone, Arbutin, high-dose Salicylic Acid
+            const retinoidRegex = /\b(retinol|retinal|adapalene|tretinoin|retinoid|bakuchiol|hydroquinone|arbutin)\b/i;
+            if (retinoidRegex.test(s)) {
+                return "10% Azelaic Acid Barrier Serum";
+            }
+        }
+        if (allergies.includes("salicylates")) {
+            const salicylRegex = /\b(salicylic\s*acid|betaine\s*salicylate|willow\s*bark)\b/i;
+            if (salicylRegex.test(s)) {
+                return "5% Lactic Acid Gentle Exfoliating Serum";
+            }
+        }
+        if (allergies.includes("nuts")) {
+            const nutsRegex = /\b(mandelic\s*acid|sweet\s*almond|almond\s*oil|argan\s*oil|shea\s*butter)\b/i;
+            if (nutsRegex.test(s)) {
+                return "Jojoba & Squalane Restorative Emulsion";
+            }
+        }
+        if (allergies.includes("fragrance")) {
+            if (/\b(fragrance|essential\s*oils?|perfume|parfum)\b/i.test(s)) {
+                s = s.replace(/\b(fragrance|essential\s*oils?|perfume|parfum)\b/gi, "Fragrance-Free");
+            }
+        }
+        return s;
+    };
+
+    if (Array.isArray(routineObj.routine.am)) {
+        routineObj.routine.am = routineObj.routine.am.map(sanitizeStep);
+    }
+    if (Array.isArray(routineObj.routine.pm)) {
+        routineObj.routine.pm = routineObj.routine.pm.map(sanitizeStep);
+    }
+    return routineObj;
+}
+
 // POST /api/analysis & POST /api/analysis/routine (Manual Questionnaire Route)
 router.post(["/", "/routine"], async (req, res) => {
-    const { skinType = "combination", concern = "barrier repair", climate, recentLifestyle } = req.body;
+    const { skinType = "combination", concern = "barrier repair", climate, recentLifestyle, safetyProfile } = req.body;
 
     // Environmental Context Instruction
     let climateInstruction = "";
@@ -85,6 +133,23 @@ router.post(["/", "/routine"], async (req, res) => {
         lifestyleInstruction = `Recent Lifestyle Context: User reported ${recentLifestyleSummary}. Account for stress-induced barrier compromise or sleep-deprivation dullness with soothing, anti-inflammatory compounds (e.g., Centella, Allantoin, Azelaic Acid).`;
     }
 
+    // Safety & Contraindications Instruction
+    const safetyInstructions = [];
+    if (safetyProfile?.pregnancySafe === true) {
+        safetyInstructions.push("CRITICAL MEDICAL CONSTRAINT: User is pregnant or nursing. STRICTLY PROHIBIT all Retinoids (Retinol, Retinal, Adapalene, Tretinoin, Bakuchiol if unverified), Hydroquinone, Arbutin, and high-dose Salicylic Acid (>2%). Substitute with Azelaic Acid, Niacinamide, Vitamin C, Peptides, or Lactic/Glycolic Acid (<10%).");
+    }
+    if (Array.isArray(safetyProfile?.allergies)) {
+        if (safetyProfile.allergies.includes("salicylates")) {
+            safetyInstructions.push("PROHIBIT Salicylic Acid, Betaine Salicylate, and Willow Bark Extract.");
+        }
+        if (safetyProfile.allergies.includes("nuts")) {
+            safetyInstructions.push("PROHIBIT Mandelic Acid, Sweet Almond Oil, Argan Oil, and Shea Butter.");
+        }
+        if (safetyProfile.allergies.includes("fragrance")) {
+            safetyInstructions.push("Enforce 100% Fragrance-Free and Essential-Oil-Free formulations.");
+        }
+    }
+
     // Dynamic fallback routine generation if API key is absent or external API call fails
     const getAdaptedFallback = () => {
         const routineAm = [...FALLBACK_ROUTINE.routine.am];
@@ -112,7 +177,7 @@ router.post(["/", "/routine"], async (req, res) => {
 
     if (!apiKey) {
         console.warn("AI API key missing. Serving fallback regimen.");
-        return res.status(200).json(getAdaptedFallback());
+        return res.status(200).json(enforceSafetySanitizer(getAdaptedFallback(), safetyProfile));
     }
 
     // Build system prompt and user message
@@ -123,9 +188,15 @@ router.post(["/", "/routine"], async (req, res) => {
     if (lifestyleInstruction) {
         systemPrompt += `\n${lifestyleInstruction}`;
     }
+    if (safetyInstructions.length > 0) {
+        systemPrompt += `\nClinical Safety Constraints:\n${safetyInstructions.join("\n")}`;
+    }
 
-    const userPrompt = `Provide a targeted morning and evening routine for a user with ${skinType} skin and concerns regarding ${concern}.
-Return strictly a valid JSON object without commentary or markdown code blocks:
+    let userPrompt = `Provide a targeted morning and evening routine for a user with ${skinType} skin and concerns regarding ${concern}.`;
+    if (safetyInstructions.length > 0) {
+        userPrompt += `\nStrict Safety Contraindications:\n${safetyInstructions.join("\n")}`;
+    }
+    userPrompt += `\nReturn strictly a valid JSON object without commentary or markdown code blocks:
 {
   "routine": {
     "am": ["Step 1", "Step 2", "Step 3", "Step 4"],
@@ -170,10 +241,10 @@ Return strictly a valid JSON object without commentary or markdown code blocks:
             throw new Error("Invalid routine schema received from AI");
         }
 
-        res.status(200).json(parsedData);
+        res.status(200).json(enforceSafetySanitizer(parsedData, safetyProfile));
     } catch (error) {
         console.error("AI Generation failed, serving fallback payload:", error.message);
-        res.status(200).json(getAdaptedFallback());
+        res.status(200).json(enforceSafetySanitizer(getAdaptedFallback(), safetyProfile));
     }
 });
 

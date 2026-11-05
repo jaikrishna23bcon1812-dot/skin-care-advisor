@@ -350,6 +350,24 @@
                         </div>
                     </div>
 
+                    <!-- Safety Gate Block -->
+                    <div id="safetyGateBox" class="safety-gate-box">
+                        <div class="safety-gate-header">
+                            <span class="safety-gate-title">🛡️ Clinical Safety &amp; Contraindications (Optional)</span>
+                        </div>
+                        <div class="safety-gate-controls">
+                            <label class="safety-toggle-pill" for="pregnancySafeToggle">
+                                <input type="checkbox" id="pregnancySafeToggle"> 🤰 Pregnant / Nursing Safe
+                            </label>
+                            <div class="allergy-chips-wrap">
+                                <button type="button" class="allergy-chip chip-btn selectable-tile" data-allergy="salicylates">Salicylates / Aspirin (No BHA)</button>
+                                <button type="button" class="allergy-chip chip-btn selectable-tile" data-allergy="fragrance">Fragrance &amp; Essential Oils</button>
+                                <button type="button" class="allergy-chip chip-btn selectable-tile" data-allergy="nuts">Nuts / Almonds (No Mandelic)</button>
+                                <button type="button" class="allergy-chip chip-btn selectable-tile" data-allergy="rosacea">High Sensitivity / Rosacea</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Actions Row -->
                     <div class="consultation-actions">
                         <button type="submit" id="generateBtn" class="primary-btn main-cta-btn">
@@ -479,23 +497,25 @@
 
                 <!-- Real Content -->
                 <div id="resultsContent">
-                    <div class="routine-cards-grid">
-                        <!-- Morning Routine Card -->
-                        <div class="routine-card routine-col am-card">
-                            <div class="routine-card-header">
-                                <div class="routine-pill am-pill">☀️ Morning Routine</div>
-                                <span class="routine-meta">Protect &amp; Hydrate</span>
+                    <div id="routineOutput" class="routine-output">
+                        <div class="routine-cards-grid">
+                            <!-- Morning Routine Card -->
+                            <div class="routine-card routine-col am-card">
+                                <div class="routine-card-header">
+                                    <div class="routine-pill am-pill">☀️ Morning Routine</div>
+                                    <span class="routine-meta">Protect &amp; Hydrate</span>
+                                </div>
+                                <ul id="amStepsList" class="routine-steps-list"></ul>
                             </div>
-                            <ul id="amStepsList" class="routine-steps-list"></ul>
-                        </div>
 
-                        <!-- Evening Routine Card -->
-                        <div class="routine-card routine-col pm-card">
-                            <div class="routine-card-header">
-                                <div class="routine-pill pm-pill">🌙 Evening Routine</div>
-                                <span class="routine-meta">Repair &amp; Restore</span>
+                            <!-- Evening Routine Card -->
+                            <div class="routine-card routine-col pm-card">
+                                <div class="routine-card-header">
+                                    <div class="routine-pill pm-pill">🌙 Evening Routine</div>
+                                    <span class="routine-meta">Repair &amp; Restore</span>
+                                </div>
+                                <ul id="pmStepsList" class="routine-steps-list"></ul>
                             </div>
-                            <ul id="pmStepsList" class="routine-steps-list"></ul>
                         </div>
                     </div>
 

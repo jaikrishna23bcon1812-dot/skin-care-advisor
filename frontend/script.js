@@ -543,9 +543,15 @@ async function handleAnalyze(e) {
         console.warn("Could not read recent lifestyle logs:", err);
     }
 
+    // 3. Package Clinical Safety & Contraindications profile
+    const pregnancySafe = document.getElementById("pregnancySafeToggle")?.checked || false;
+    const allergies = Array.from(document.querySelectorAll(".allergy-chip.active")).map(el => el.dataset.allergy).filter(Boolean);
+    const safetyProfile = { pregnancySafe, allergies };
+
     const payload = {
         skinType,
         concern,
+        safetyProfile,
         ...(climate ? { climate } : {}),
         ...(recentLifestyle && recentLifestyle.length > 0 ? { recentLifestyle } : {})
     };
@@ -557,10 +563,10 @@ async function handleAnalyze(e) {
             body: JSON.stringify(payload),
         });
         const data = await res.json();
-        renderRoutineResults(data.routine);
+        renderRoutineResults(data.routine, safetyProfile);
         showToast("Personalized AI regimen generated with climate & lifestyle context!", "success");
     } catch (err) {
-        // Clinical fallback adjusted for environmental and barrier needs
+        // Clinical fallback adjusted for environmental, barrier, and safety needs
         const fallbackAm = [
             "Gentle Balancing Gel Cleanser",
             recentLifestyle.length > 0 ? "Centella & Azelaic Acid Calming Barrier Serum" : "5% Niacinamide + Zinc Serum",
@@ -571,13 +577,13 @@ async function handleAnalyze(e) {
             "Jojoba Oil Pre-Cleanse",
             "Squalane Hydrating Cleanser",
             (climate && climate.humidity < 40) ? "Ceramide Deep Repair Lipid Complex + Squalane" : "Ceramide Deep Repair Complex",
-            "Overnight Calming Blemish Spot Balm"
+            pregnancySafe ? "10% Azelaic Acid Barrier Serum" : "Overnight Calming Blemish Spot Balm"
         ];
 
         renderRoutineResults({
             am: fallbackAm,
             pm: fallbackPm
-        });
+        }, safetyProfile);
         showToast("Personalized clinical regimen generated!", "success");
     } finally {
         toggleSkeleton(false);
@@ -1023,7 +1029,39 @@ function createClinicalStepCard(stepText, index, timeOfDay) {
     `;
 }
 
-function renderRoutineResults(routine) {
+function renderSafetyBadge(safetyProfile) {
+    const routineOutput = document.getElementById("routineOutput");
+    if (!routineOutput) return;
+
+    let isPregSafe = false;
+    let allergies = [];
+
+    if (safetyProfile && typeof safetyProfile === "object") {
+        isPregSafe = !!safetyProfile.pregnancySafe;
+        allergies = Array.isArray(safetyProfile.allergies) ? safetyProfile.allergies : [];
+    } else {
+        isPregSafe = !!document.getElementById("pregnancySafeToggle")?.checked;
+        allergies = Array.from(document.querySelectorAll(".allergy-chip.active")).map(el => el.dataset.allergy).filter(Boolean);
+    }
+
+    const isSafetyActive = isPregSafe || (allergies && allergies.length > 0);
+    let badgeEl = document.getElementById("safetyRegimenBadge");
+
+    if (isSafetyActive) {
+        if (!badgeEl) {
+            badgeEl = document.createElement("div");
+            badgeEl.id = "safetyRegimenBadge";
+            badgeEl.className = "safety-filtered-badge";
+            routineOutput.prepend(badgeEl);
+        }
+        badgeEl.innerHTML = `<span>🛡️ Safety-Filtered Regimen</span>`;
+        badgeEl.style.display = "inline-flex";
+    } else if (badgeEl) {
+        badgeEl.remove();
+    }
+}
+
+function renderRoutineResults(routine, safetyProfile) {
     lastGeneratedRoutine = routine;
 
     const amList = document.getElementById("amStepsList");
@@ -1037,6 +1075,8 @@ function renderRoutineResults(routine) {
             pmList.innerHTML = (routine.pm || []).map((step, idx) => createClinicalStepCard(step, idx, "pm")).join("");
         }
         
+        renderSafetyBadge(safetyProfile);
+
         if (typeof renderClimateAlerts === "function") {
             renderClimateAlerts();
         }
@@ -4204,6 +4244,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof initSkinJourneySlider === "function") initSkinJourneySlider();
     if (typeof initVanityTracker === "function") initVanityTracker();
     if (typeof initLifestyleLogger === "function") initLifestyleLogger();
+    if (typeof initSafetyGate === "function") initSafetyGate();
 
     // Initialize Tactile Skincare Experience (Requirements 1, 2, 3)
     if (typeof updateConsultationProgress === "function") updateConsultationProgress();
@@ -4401,4 +4442,43 @@ function initMotionInteractions() {
 // Fallback initialization if script executes after DOM is already loaded
 if (typeof document !== "undefined" && document.readyState !== "loading") {
     initMotionInteractions();
+    initSafetyGate();
+}
+
+// ==========================================================================
+// CLINICAL SAFETY & CONTRAINDICATION SAFETY GATE
+// ==========================================================================
+
+let safetyGateInitialized = false;
+
+function initSafetyGate() {
+    if (safetyGateInitialized) return;
+    safetyGateInitialized = true;
+
+    // Delegated click handler for .allergy-chip
+    document.addEventListener("click", function (e) {
+        const chip = e.target && e.target.closest ? e.target.closest(".allergy-chip") : null;
+        if (!chip) return;
+        e.preventDefault();
+        chip.classList.toggle("active");
+    });
+
+    // Direct click listeners for existing allergy chips
+    document.querySelectorAll(".allergy-chip").forEach((chip) => {
+        chip.addEventListener("click", function (e) {
+            e.preventDefault();
+            chip.classList.toggle("active");
+        });
+    });
+
+    // Pregnancy Safe toggle active class handling
+    const pregToggle = document.getElementById("pregnancySafeToggle");
+    if (pregToggle) {
+        pregToggle.addEventListener("change", function () {
+            const pill = pregToggle.closest(".safety-toggle-pill");
+            if (pill) {
+                pill.classList.toggle("active", pregToggle.checked);
+            }
+        });
+    }
 }
