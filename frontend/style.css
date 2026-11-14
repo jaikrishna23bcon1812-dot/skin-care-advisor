@@ -4600,6 +4600,9 @@ body.dark-mode .nav-icon-btn:hover {
         transform: none !important;
         transition: none !important;
     }
+    #organicWebglCanvas {
+        display: none !important;
+    }
 }
 
 /* ==========================================================================
@@ -4807,4 +4810,33 @@ body.dark-mode .safety-filtered-badge {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ==========================================================================
+   Organic Cellular Fluid WebGL Background (Organimo Aesthetic)
+   ========================================================================== */
+#organicWebglCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.85;
+    transition: opacity 0.4s ease;
+}
+
+/* Frosted Translucency for Organic Fluid Refraction */
+.card,
+.routine-col {
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    background-color: rgba(255, 255, 255, 0.90);
+}
+
+html.dark-mode .card,
+html.dark-mode .routine-col,
+body.dark-mode .card,
+body.dark-mode .routine-col {
+    background-color: rgba(30, 41, 59, 0.88);
 }

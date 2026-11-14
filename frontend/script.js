@@ -4069,6 +4069,7 @@ function initImageComparison() {
 window.initImageComparison = initImageComparison;
 
 window.addEventListener("DOMContentLoaded", () => {
+    initOrganicWebGL();
     if (typeof initImageComparison === "function") {
         initImageComparison();
     }
@@ -4443,6 +4444,7 @@ function initMotionInteractions() {
 if (typeof document !== "undefined" && document.readyState !== "loading") {
     initMotionInteractions();
     initSafetyGate();
+    initOrganicWebGL();
 }
 
 // ==========================================================================
@@ -4482,3 +4484,333 @@ function initSafetyGate() {
         });
     }
 }
+
+// ==========================================================================
+// ORGANIC CELLULAR FLUID WEBGL BACKGROUND (ORGANIMO AESTHETIC)
+// ==========================================================================
+
+let organicWebGLInitialized = false;
+
+function initOrganicWebGL() {
+    if (organicWebGLInitialized) return;
+    const canvas = document.getElementById("organicWebglCanvas");
+    if (!canvas) return;
+
+    // Respect reduced motion accessibility setting
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        canvas.style.display = "none";
+        return;
+    }
+
+    let gl = null;
+    try {
+        const glOptions = {
+            alpha: true,
+            antialias: false,
+            depth: false,
+            stencil: false,
+            powerPreference: "low-power"
+        };
+        gl = canvas.getContext("webgl", glOptions) || canvas.getContext("experimental-webgl", glOptions);
+    } catch (e) {
+        gl = null;
+    }
+
+    if (!gl) {
+        console.warn("WebGL not supported; organic fluid background disabled.");
+        canvas.style.display = "none";
+        return;
+    }
+
+    organicWebGLInitialized = true;
+
+    // Full-screen quad vertex shader
+    const vsSource = `
+        attribute vec2 a_position;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    `;
+
+    // Organimo cellular fluid metaballs fragment shader
+    const fsSource = `
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        precision highp float;
+        #else
+        precision mediump float;
+        #endif
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform vec2 u_mouse;
+        uniform float u_scroll;
+        uniform float u_dark;
+
+        // Smooth polynomial minimum for organic cellular metaball fusion
+        float smin(float a, float b, float k) {
+            float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+            return mix(b, a, h) - k * h * (1.0 - h);
+        }
+
+        // Pseudo noise for cellular micro-texture
+        float hash(vec2 p) {
+            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+        }
+
+        void main() {
+            vec2 aspect = vec2(u_resolution.x / min(u_resolution.x, u_resolution.y),
+                               u_resolution.y / min(u_resolution.x, u_resolution.y));
+            vec2 uv = (gl_FragCoord.xy / u_resolution.xy - 0.5) * aspect;
+            vec2 mousePos = (u_mouse - 0.5) * aspect;
+
+            float t = u_time * 0.42;
+            float scrollMorph = u_scroll * 3.14159265;
+
+            // Fluid organic warp
+            vec2 warp = vec2(
+                sin(uv.y * 2.8 + t * 0.7 + scrollMorph * 0.6),
+                cos(uv.x * 2.8 + t * 0.6 - scrollMorph * 0.6)
+            ) * (0.07 + 0.03 * sin(t * 0.3));
+
+            vec2 p = uv + warp;
+
+            // Interactive organic metaballs & cellular droplets
+            // Droplet 1: Primary central serum droplet
+            vec2 c1 = vec2(sin(t * 0.5) * 0.35, cos(t * 0.4) * 0.28 - u_scroll * 0.3) + mousePos * 0.16;
+            float r1 = 0.34 + 0.03 * sin(t * 0.9 + scrollMorph);
+            float d = length(p - c1) - r1;
+
+            // Droplet 2: Electric sky satellite
+            vec2 c2 = vec2(cos(t * 0.6 + 1.4) * 0.46, sin(t * 0.5 + 2.1) * 0.32 + u_scroll * 0.25) + mousePos * 0.22;
+            float r2 = 0.25 + 0.025 * cos(t * 1.1);
+            d = smin(d, length(p - c2) - r2, 0.28);
+
+            // Droplet 3: Wandering lipid cell
+            vec2 c3 = vec2(sin(t * 0.42 + 3.2) * 0.52, cos(t * 0.68 + 0.9) * 0.36 - u_scroll * 0.18) + mousePos * 0.12;
+            float r3 = 0.21 + 0.02 * sin(t * 1.3);
+            d = smin(d, length(p - c3) - r3, 0.26);
+
+            // Droplet 4: Mouse-attracted responsive serum droplet
+            vec2 c4 = mousePos * 0.62 + vec2(sin(t * 1.1) * 0.08, cos(t * 0.9) * 0.08);
+            float r4 = 0.17 + 0.02 * sin(t * 1.4 + scrollMorph * 2.0);
+            d = smin(d, length(p - c4) - r4, 0.22);
+
+            // Droplet 5: Upper peripheral lipid bubble
+            vec2 c5 = vec2(cos(t * 0.32 + 4.6) * 0.58, sin(t * 0.44 + 1.6) * 0.44 - u_scroll * 0.35) + mousePos * 0.14;
+            float r5 = 0.23 + 0.025 * cos(t * 0.8);
+            d = smin(d, length(p - c5) - r5, 0.25);
+
+            // Droplet 6: Lower peripheral balancing bubble
+            vec2 c6 = vec2(sin(t * 0.52 + 5.3) * 0.56, cos(t * 0.38 + 4.1) * 0.42 + u_scroll * 0.28) + mousePos * 0.1;
+            float r6 = 0.19 + 0.02 * sin(t * 1.0 + 1.2);
+            d = smin(d, length(p - c6) - r6, 0.24);
+
+            // Palette: #f4f8fc background, #003276 royal blue, #0084d6 electric sky
+            vec3 bgLight = vec3(0.957, 0.973, 0.988); // #f4f8fc
+            vec3 bgDark  = vec3(0.043, 0.067, 0.118); // #0b111e
+            vec3 bg = mix(bgLight, bgDark, u_dark);
+
+            vec3 royalBlue   = vec3(0.0, 0.196, 0.463);  // #003276
+            vec3 electricSky = vec3(0.0, 0.518, 0.839);  // #0084d6
+            vec3 cyanSheen   = vec3(0.42, 0.86, 0.98);   // Translucent sheen
+
+            // Cellular interior & lipid membrane
+            float depth = clamp(-d * 3.2, 0.0, 1.0);
+            float membrane = 1.0 - smoothstep(0.0, 0.045, abs(d));
+            float microNoise = noise(p * 6.0 + t * 0.25) * 0.12;
+
+            // Fluid color gradient within serum droplets
+            vec3 fluidColor = mix(electricSky, royalBlue, depth + microNoise);
+            float fresnel = pow(clamp(1.0 - abs(d) * 2.5, 0.0, 1.0), 3.0);
+            fluidColor = mix(fluidColor, cyanSheen, fresnel * 0.45);
+
+            // Modulate luminosity with scroll ratio
+            float scrollLuma = 0.92 + 0.16 * sin(u_scroll * 3.14159);
+            fluidColor *= scrollLuma;
+
+            // Translucent fluid blend with background
+            float alpha = smoothstep(0.18, -0.06, d) * (mix(0.24, 0.42, depth) + fresnel * 0.22);
+            alpha = mix(alpha, alpha * 1.4 + fresnel * 0.32, u_dark);
+
+            vec3 color = mix(bg, fluidColor, clamp(alpha, 0.0, 0.88));
+
+            // Cellular membrane luminescence
+            color += electricSky * membrane * mix(0.14, 0.32, u_dark);
+
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `;
+
+    function createShader(glCtx, type, source) {
+        const shader = glCtx.createShader(type);
+        glCtx.shaderSource(shader, source);
+        glCtx.compileShader(shader);
+        if (!glCtx.getShaderParameter(shader, glCtx.COMPILE_STATUS)) {
+            console.warn("WebGL shader compile error:", glCtx.getShaderInfoLog(shader));
+            glCtx.deleteShader(shader);
+            return null;
+        }
+        return shader;
+    }
+
+    const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+    const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+    if (!vs || !fs) {
+        canvas.style.display = "none";
+        return;
+    }
+
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.warn("WebGL program link error:", gl.getProgramInfoLog(program));
+        canvas.style.display = "none";
+        return;
+    }
+
+    gl.useProgram(program);
+
+    // Fullscreen quad buffer
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions = new Float32Array([
+        -1, -1,
+         1, -1,
+        -1,  1,
+        -1,  1,
+         1, -1,
+         1,  1
+    ]);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+    const posLoc = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // Uniform locations
+    const locResolution = gl.getUniformLocation(program, "u_resolution");
+    const locTime = gl.getUniformLocation(program, "u_time");
+    const locMouse = gl.getUniformLocation(program, "u_mouse");
+    const locScroll = gl.getUniformLocation(program, "u_scroll");
+    const locDark = gl.getUniformLocation(program, "u_dark");
+
+    // Pointer coordinates with smooth lerp damping
+    let targetMouseX = 0.5;
+    let targetMouseY = 0.5;
+    let currentMouseX = 0.5;
+    let currentMouseY = 0.5;
+
+    function handlePointer(e) {
+        if (!e) return;
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : window.innerWidth / 2);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : window.innerHeight / 2);
+        targetMouseX = Math.max(0, Math.min(1, clientX / window.innerWidth));
+        targetMouseY = Math.max(0, Math.min(1, 1.0 - (clientY / window.innerHeight)));
+    }
+
+    window.addEventListener("pointermove", handlePointer, { passive: true });
+    window.addEventListener("touchmove", handlePointer, { passive: true });
+
+    // Scroll ratio with smooth lerp damping
+    let targetScroll = 0;
+    let currentScroll = 0;
+
+    function handleScroll() {
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        targetScroll = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    // Dark mode state lerping
+    let currentDark = (document.body.classList.contains("dark-mode") || document.documentElement.classList.contains("dark-mode")) ? 1.0 : 0.0;
+
+    // Viewport resizing
+    function resize() {
+        if (!canvas || !gl) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const width = Math.floor(window.innerWidth * dpr);
+        const height = Math.floor(window.innerHeight * dpr);
+        if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+            gl.viewport(0, 0, width, height);
+        }
+    }
+
+    window.addEventListener("resize", resize, { passive: true });
+    resize();
+
+    // Animation loop with pause on document.hidden to save battery
+    let animId = null;
+    let isLoopRunning = false;
+    let startTime = performance.now();
+    let pausedTime = 0;
+    let lastActiveTime = performance.now();
+
+    function render(now) {
+        if (!isLoopRunning) return;
+
+        // Smooth damping
+        currentMouseX += (targetMouseX - currentMouseX) * 0.05;
+        currentMouseY += (targetMouseY - currentMouseY) * 0.05;
+        currentScroll += (targetScroll - currentScroll) * 0.08;
+
+        const isDark = (document.body.classList.contains("dark-mode") || document.documentElement.classList.contains("dark-mode")) ? 1.0 : 0.0;
+        currentDark += (isDark - currentDark) * 0.08;
+
+        const elapsedSeconds = (now - startTime - pausedTime) * 0.001;
+
+        gl.uniform2f(locResolution, canvas.width, canvas.height);
+        gl.uniform1f(locTime, elapsedSeconds);
+        gl.uniform2f(locMouse, currentMouseX, currentMouseY);
+        gl.uniform1f(locScroll, currentScroll);
+        gl.uniform1f(locDark, currentDark);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        lastActiveTime = now;
+        animId = requestAnimationFrame(render);
+    }
+
+    function startLoop() {
+        if (isLoopRunning) return;
+        isLoopRunning = true;
+        lastActiveTime = performance.now();
+        animId = requestAnimationFrame(render);
+    }
+
+    function stopLoop() {
+        isLoopRunning = false;
+        if (animId) {
+            cancelAnimationFrame(animId);
+            animId = null;
+        }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            stopLoop();
+        } else {
+            const now = performance.now();
+            pausedTime += (now - lastActiveTime);
+            startLoop();
+        }
+    });
+
+    startLoop();
+}
+
+window.initOrganicWebGL = initOrganicWebGL;
