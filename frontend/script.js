@@ -1061,7 +1061,7 @@ function renderSafetyBadge(safetyProfile) {
     }
 }
 
-function renderRoutineResults(routine, safetyProfile) {
+function renderRoutineResults(routine, safetyProfile, shouldSwitchView = true) {
     lastGeneratedRoutine = routine;
 
     const amList = document.getElementById("amStepsList");
@@ -1091,6 +1091,10 @@ function renderRoutineResults(routine, safetyProfile) {
         });
     } else {
         updateRoutineDOM();
+    }
+
+    if (shouldSwitchView && typeof switchAppView === "function") {
+        switchAppView('regimen');
     }
     
     const ctx = document.getElementById("skinMetricsChart")?.getContext("2d");
@@ -4216,7 +4220,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 "Restorative Ceramide Night Cream",
                 "Overnight Calming Treatment"
             ]
-        });
+        }, null, false);
     }
 
     // Wire Export Dermatologist Summary button
@@ -4814,3 +4818,67 @@ function initOrganicWebGL() {
 }
 
 window.initOrganicWebGL = initOrganicWebGL;
+
+// ==========================================================================
+// MULTI-VIEW APP ARCHITECTURE (HERO HOMEPAGE & SEPARATE FEATURE VIEWS)
+// ==========================================================================
+
+function switchAppView(viewName) {
+    if (!viewName) return;
+
+    const baseName = viewName.replace(/^view-/, '');
+    const targetId = `view-${baseName}`;
+    const targetSection = document.getElementById(targetId);
+    if (!targetSection) {
+        console.warn(`Target view #${targetId} not found.`);
+        return;
+    }
+
+    const applyViewSwitch = () => {
+        // 1. Toggle .active-view on all .app-view containers
+        const allViews = document.querySelectorAll('.app-view');
+        allViews.forEach(view => {
+            view.classList.remove('active-view');
+        });
+        targetSection.classList.add('active-view');
+
+        // 2. Update .active state on all navigation buttons
+        const navBtns = document.querySelectorAll('.app-view-nav [data-target]');
+        navBtns.forEach(btn => {
+            const btnTarget = btn.getAttribute('data-target')?.replace(/^view-/, '');
+            if (btnTarget === baseName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // 3. Scroll to top smoothly
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Trigger resize event for canvas / image slider refits
+        window.dispatchEvent(new Event('resize'));
+    };
+
+    if (typeof document.startViewTransition === 'function') {
+        document.startViewTransition(() => {
+            applyViewSwitch();
+        });
+    } else {
+        applyViewSwitch();
+    }
+}
+window.switchAppView = switchAppView;
+
+// Bind click events for all [data-target] elements
+document.addEventListener('click', function(e) {
+    const trigger = e.target && e.target.closest ? e.target.closest('[data-target]') : null;
+    if (!trigger) return;
+
+    const target = trigger.getAttribute('data-target');
+    if (target) {
+        e.preventDefault();
+        switchAppView(target);
+    }
+});
+

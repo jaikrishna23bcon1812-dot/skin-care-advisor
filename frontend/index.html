@@ -172,16 +172,17 @@
     <!-- Clean, Friendly App Header -->
     <header class="app-header">
         <div class="header-container">
-            <a href="index.html" class="brand" aria-label="SkinCare AI Home">
+            <a href="index.html" class="brand" aria-label="SkinCare AI Home" data-target="home">
                 <span class="brand-logo">✨ SkinCare AI</span>
             </a>
-            <nav class="nav-links">
-                <a href="#advisor" class="nav-link active">Advisor</a>
-                <a href="#routineResults" class="nav-link">Daily Plan</a>
-                <a href="#routineTracker" class="nav-link">Streak &amp; Logger</a>
-                <a href="#vanityTracker" class="nav-link">Vanity Shelf</a>
-                <a href="#skinJourneySlider" class="nav-link">Skin Journey</a>
-                <a href="#conflictChecker" class="nav-link">Active Conflicts</a>
+            <nav id="appViewNav" class="app-view-nav">
+                <button type="button" class="view-nav-btn active" data-target="home">Overview</button>
+                <button type="button" class="view-nav-btn" data-target="consult">AI Consultation</button>
+                <button type="button" class="view-nav-btn" data-target="regimen">Active Regimen</button>
+                <button type="button" class="view-nav-btn" data-target="climate">Climate &amp; UV</button>
+                <button type="button" class="view-nav-btn" data-target="vanity">My Vanity &amp; Logs</button>
+                <button type="button" class="view-nav-btn" data-target="lab">Ingredient Lab</button>
+                <button type="button" class="view-nav-btn" data-target="journey">Skin Journey</button>
             </nav>
             <div class="header-actions">
                 <button type="button" id="themeToggle" class="theme-btn" onclick="toggleDarkMode()" aria-label="Toggle light or dark theme">
@@ -196,8 +197,104 @@
     <!-- Main Content Area -->
     <main class="main-container">
 
-        <!-- 1. Focused 2-Step Consultation Card -->
-        <section id="advisor" class="consultation-section">
+        <!-- View 1: Hero Homepage Overview & Feature Bento Grid -->
+        <section id="view-home" class="app-view active-view">
+            <div class="hero-home-block">
+                <div class="hero-badge-pill">✨ AI-Powered Dermatological Intelligence</div>
+                <h1 class="hero-title">Precision Skincare Engineered for Your Biology &amp; Climate.</h1>
+                <p class="hero-subtitle">
+                    Experience clinical-grade diagnostic intelligence: custom AM/PM formulation protocols, live GPS UV environmental defense, active ingredient conflict screening, and longitudinal barrier tracking.
+                </p>
+                <div class="hero-actions-row">
+                    <button type="button" class="primary-btn hero-primary-btn" data-target="consult">
+                        Start Skin Consultation →
+                    </button>
+                    <button type="button" class="secondary-ghost-btn hero-secondary-btn" data-target="climate">
+                        Check Live UV &amp; Climate
+                    </button>
+                </div>
+            </div>
+
+            <!-- 6-Card Interactive Feature Bento Grid -->
+            <div class="bento-nav-grid">
+                <div class="bento-nav-card card selectable-tile" data-target="consult">
+                    <div class="bento-card-header">
+                        <span class="bento-icon">🔬</span>
+                        <span class="bento-chip">Diagnostic</span>
+                    </div>
+                    <h3 class="bento-title">AI Skin Consultation</h3>
+                    <p class="bento-desc">Formulate a clinical AM/PM protocol calibrated to your skin biome, barrier condition, and contraindication safety gate.</p>
+                    <div class="bento-action-row">
+                        <span class="bento-link">Start Consultation →</span>
+                    </div>
+                </div>
+
+                <div class="bento-nav-card card selectable-tile" data-target="regimen">
+                    <div class="bento-card-header">
+                        <span class="bento-icon">☀️🌙</span>
+                        <span class="bento-chip">Protocol</span>
+                    </div>
+                    <h3 class="bento-title">Active Regimen</h3>
+                    <p class="bento-desc">View your prescribed clinical steps, track daily adherence rings, maintain your 30-day streak, and export reports.</p>
+                    <div class="bento-action-row">
+                        <span class="bento-link">Open Regimen →</span>
+                    </div>
+                </div>
+
+                <div class="bento-nav-card card selectable-tile" data-target="climate">
+                    <div class="bento-card-header">
+                        <span class="bento-icon">⛅</span>
+                        <span class="bento-chip">Telemetry</span>
+                    </div>
+                    <h3 class="bento-title">Climate &amp; UV Shield</h3>
+                    <p class="bento-desc">Real-time localized UV radiation index, relative humidity sensing, and environmental barrier stress defenses.</p>
+                    <div class="bento-action-row">
+                        <span class="bento-link">Inspect Climate →</span>
+                    </div>
+                </div>
+
+                <div class="bento-nav-card card selectable-tile" data-target="vanity">
+                    <div class="bento-card-header">
+                        <span class="bento-icon">🧴</span>
+                        <span class="bento-chip">Vanity &amp; Logs</span>
+                    </div>
+                    <h3 class="bento-title">My Vanity &amp; Logs</h3>
+                    <p class="bento-desc">Track PAO product expiration dates, log daily flare-ups, and review 7-day sleep &amp; stress correlation insights.</p>
+                    <div class="bento-action-row">
+                        <span class="bento-link">Manage Shelf →</span>
+                    </div>
+                </div>
+
+                <div class="bento-nav-card card selectable-tile" data-target="lab">
+                    <div class="bento-card-header">
+                        <span class="bento-icon">⚡</span>
+                        <span class="bento-chip">Lab Safety</span>
+                    </div>
+                    <h3 class="bento-title">Ingredient Lab</h3>
+                    <p class="bento-desc">Cross-check potent clinical actives for chemical conflicts, pH deactivation, and scan formulations for comedogens.</p>
+                    <div class="bento-action-row">
+                        <span class="bento-link">Analyze Actives →</span>
+                    </div>
+                </div>
+
+                <div class="bento-nav-card card selectable-tile" data-target="journey">
+                    <div class="bento-card-header">
+                        <span class="bento-icon">✨</span>
+                        <span class="bento-chip">Clinical Proof</span>
+                    </div>
+                    <h3 class="bento-title">Skin Journey</h3>
+                    <p class="bento-desc">Compare baseline Day 1 facial texture against Day 30 clinical clarity using an interactive 50/50 split-drag viewer.</p>
+                    <div class="bento-action-row">
+                        <span class="bento-link">View Journey →</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View 2: AI Consultation -->
+        <section id="view-consult" class="app-view">
+            <button type="button" class="back-overview-btn" data-target="home">← Back to Overview</button>
+            <section id="advisor" class="consultation-section">
             <div class="consultation-card card">
                 <!-- 1. Sticky / Fluid Consultation Progress Tracker -->
                 <div class="consultation-tracker-sticky" id="consultationTracker">
@@ -437,508 +534,541 @@
                 </div>
             </div>
         </section>
+        </section> <!-- End #view-consult -->
 
-        <!-- 2. Simplified Routine Results Output with Climate-Adaptive UV Widget -->
-        <section id="routineResults" class="routine-results-section">
-            <div class="results-container">
-                <div class="results-header-clean">
-                    <div class="results-header-text">
-                        <span class="pill-badge">Custom Plan</span>
-                        <h2 id="routineTitle">Your Prescribed Routine</h2>
-                        <p id="routineSubtitle" class="section-desc">Tailored daily morning and evening protocol.</p>
-                    </div>
-                    <div class="results-header-actions">
-                        <!-- Feature 1: Live UV Index & Climate-Adaptive Routine Badge with Animated Circular Telemetry Gauge -->
-                        <div id="climateWidget" class="climate-widget tactile-telemetry-widget">
-                            <div class="climate-widget-content">
-                                <div class="uv-circular-gauge-box" title="UV Radiation Telemetry">
-                                    <svg class="uv-gauge-svg" viewBox="0 0 44 44" width="44" height="44">
-                                        <circle class="gauge-bg" cx="22" cy="22" r="18" stroke-width="3.5" fill="none"></circle>
-                                        <circle class="gauge-fill" id="uvGaugeCircle" cx="22" cy="22" r="18" stroke-width="3.5" fill="none" stroke-dasharray="113.1" stroke-dashoffset="113.1" transform="rotate(-90 22 22)"></circle>
-                                    </svg>
-                                    <span class="uv-center-icon" aria-hidden="true">☀️</span>
-                                </div>
-                                <div class="climate-details-col">
-                                    <div class="climate-metrics">
-                                        <span id="climateUVWrap" class="climate-metric climate-uv-metric" title="Current UV Index">
-                                            UV <span id="climateUVValue">--</span>
-                                            <span id="climateUVDot" class="uv-status-dot dot-low">🟢 Low</span>
-                                        </span>
-                                        <span class="climate-sep">•</span>
-                                        <span id="climateTemp" class="climate-metric" title="Local Temperature">--°C</span>
-                                        <span class="climate-sep">•</span>
-                                        <span id="climateHumidity" class="climate-metric" title="Relative Humidity">💧 --%</span>
-                                    </div>
-                                    <div class="climate-action-row">
-                                        <button type="button" id="detectClimateBtn" class="detect-climate-btn" onclick="detectClimate(true)" title="Detect Local Climate via GPS">
-                                            📍 Detect Local Climate
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+        <!-- View 3: Active Regimen & Adherence Tracker -->
+        <section id="view-regimen" class="app-view">
+            <button type="button" class="back-overview-btn" data-target="home">← Back to Overview</button>
+
+            <!-- 2. Simplified Routine Results Output -->
+            <section id="routineResults" class="routine-results-section">
+                <div class="results-container">
+                    <div class="results-header-clean">
+                        <div class="results-header-text">
+                            <span class="pill-badge">Custom Plan</span>
+                            <h2 id="routineTitle">Your Prescribed Routine</h2>
+                            <p id="routineSubtitle" class="section-desc">Tailored daily morning and evening protocol.</p>
                         </div>
-
-                        <button type="button" id="adoptRegimenBtn" class="primary-btn adopt-regimen-btn" onclick="adoptCurrentRegimen()">
-                            ✨ Adopt This Routine
-                        </button>
-                        <button type="button" id="exportSummaryBtn" class="secondary-ghost-btn export-summary-btn" onclick="exportDermatologistSummary()">
-                            📄 Export Dermatologist Summary
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Feature 1: Dynamic Climate Alert Chips Container -->
-                <div id="climateAlerts" class="climate-alerts-wrap" aria-live="polite"></div>
-
-                <!-- Skeleton Loader -->
-                <div id="resultsSkeleton" class="skeleton-wrapper hidden">
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                </div>
-
-                <!-- Real Content -->
-                <div id="resultsContent">
-                    <div id="routineOutput" class="routine-output">
-                        <div class="routine-cards-grid">
-                            <!-- Morning Routine Card -->
-                            <div class="routine-card routine-col am-card">
-                                <div class="routine-card-header">
-                                    <div class="routine-pill am-pill">☀️ Morning Routine</div>
-                                    <span class="routine-meta">Protect &amp; Hydrate</span>
-                                </div>
-                                <ul id="amStepsList" class="routine-steps-list"></ul>
-                            </div>
-
-                            <!-- Evening Routine Card -->
-                            <div class="routine-card routine-col pm-card">
-                                <div class="routine-card-header">
-                                    <div class="routine-pill pm-pill">🌙 Evening Routine</div>
-                                    <span class="routine-meta">Repair &amp; Restore</span>
-                                </div>
-                                <ul id="pmStepsList" class="routine-steps-list"></ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Adopt Banner -->
-                    <div class="adopt-banner-card">
-                        <div class="adopt-banner-text">
-                            <h4>Ready to start your journey?</h4>
-                            <p>Sync these morning and evening steps directly to your daily routine checklist below.</p>
-                        </div>
-                        <button type="button" class="primary-btn adopt-banner-btn" onclick="adoptCurrentRegimen()">
-                            ✨ Adopt This Routine to Daily Tracker
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. Daily Routine & Streak Tracker with Lifestyle Logger -->
-        <section id="routineTracker" class="tracker-section">
-            <div class="tracker-card card">
-                <div class="tracker-header">
-                    <div>
-                        <span class="pill-badge">Daily Adherence</span>
-                        <h2>My Routine &amp; Streak</h2>
-                        <p class="section-desc">Check off your morning and evening steps to stay consistent.</p>
-                    </div>
-                    <div class="tracker-header-right">
-                        <div class="streak-adherence-card">
-                            <div class="streak-ring-wrapper" title="30-Day Routine Adherence Ring">
-                                <svg class="adherence-circular-svg" viewBox="0 0 60 60" width="60" height="60">
-                                    <circle class="adherence-ring-bg" cx="30" cy="30" r="24" stroke-width="5" fill="none"></circle>
-                                    <circle class="adherence-ring-fill" id="routineAdherenceRing" cx="30" cy="30" r="24" stroke-width="5" fill="none" stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"></circle>
-                                </svg>
-                                <div class="streak-ring-content">
-                                    <span class="streak-icon">🔥</span>
-                                    <span class="adherence-mini-pct" id="routineAdherencePct">0%</span>
-                                </div>
-                            </div>
-                            <div class="streak-data">
-                                <span class="streak-count"><span id="streakCount">0</span> Days</span>
-                                <span class="streak-label">Daily Streak</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 5: Lifestyle Historical Correlation Insight Banner -->
-                <div id="lifestyleStreakInsight" class="streak-correlation-banner">
-                    <span class="insight-sparkle">💡</span>
-                    <span id="streakInsightText">Past 7 days: Breakouts correlated with High Stress / Low Sleep.</span>
-                </div>
-
-                <!-- Daily Checklist Container (Dynamically updated when routine is adopted) -->
-                <div class="tracker-checklist" id="trackerChecklistContainer">
-                    <label class="check-container">
-                        <input type="checkbox" id="checkAM" onchange="handleRoutineCheck('am')" />
-                        <span class="check-label">
-                            <span class="check-title">☀️ Morning Routine Completed</span>
-                            <span class="check-time">Cleanse • Hydrate • SPF 50</span>
-                        </span>
-                    </label>
-                    <label class="check-container">
-                        <input type="checkbox" id="checkPM" onchange="handleRoutineCheck('pm')" />
-                        <span class="check-label">
-                            <span class="check-title">🌙 Evening Routine Completed</span>
-                            <span class="check-time">Pre-Cleanse • Treatment • Barrier Moisturizer</span>
-                        </span>
-                    </label>
-                </div>
-                <div id="trackerStatusMsg" class="tracker-msg"></div>
-
-                <!-- Feature 5: 10-Second Daily Flare-Up & Lifestyle Logger -->
-                <div id="lifestyleLogger" class="lifestyle-logger-card">
-                    <div class="lifestyle-logger-header">
-                        <div class="lifestyle-title-row">
-                            <span class="lifestyle-icon">⚡</span>
-                            <div>
-                                <h3 class="lifestyle-heading">10-Second Daily Flare-Up &amp; Lifestyle Logger</h3>
-                                <p class="lifestyle-desc">Record key triggers alongside routine completion to isolate cause-and-effect patterns.</p>
-                            </div>
-                        </div>
-                        <div class="lifestyle-badge-wrap">
-                            <span id="lifestyleStatusBadge" class="lifestyle-saved-badge hidden">✓ Saved for Today</span>
-                        </div>
-                    </div>
-
-                    <form id="lifestyleForm" onsubmit="handleLifestyleSubmit(event)">
-                        <div class="lifestyle-grid">
-                            <!-- Sleep Duration -->
-                            <div class="lifestyle-field">
-                                <span class="field-title">😴 Sleep Duration</span>
-                                <div class="lifestyle-chips-group" id="sleepChips">
-                                    <button type="button" class="lifestyle-chip" data-field="sleep" data-value="< 6 hrs" onclick="selectLifestyleChip('sleep', '< 6 hrs', this)">&lt; 6 hrs</button>
-                                    <button type="button" class="lifestyle-chip active" data-field="sleep" data-value="6–8 hrs" onclick="selectLifestyleChip('sleep', '6–8 hrs', this)">6–8 hrs</button>
-                                    <button type="button" class="lifestyle-chip" data-field="sleep" data-value="8+ hrs" onclick="selectLifestyleChip('sleep', '8+ hrs', this)">8+ hrs</button>
-                                </div>
-                            </div>
-
-                            <!-- Stress Level -->
-                            <div class="lifestyle-field">
-                                <span class="field-title">🧠 Stress Level</span>
-                                <div class="lifestyle-chips-group" id="stressChips">
-                                    <button type="button" class="lifestyle-chip" data-field="stress" data-value="Low" onclick="selectLifestyleChip('stress', 'Low', this)">Low</button>
-                                    <button type="button" class="lifestyle-chip active" data-field="stress" data-value="Moderate" onclick="selectLifestyleChip('stress', 'Moderate', this)">Moderate</button>
-                                    <button type="button" class="lifestyle-chip" data-field="stress" data-value="High" onclick="selectLifestyleChip('stress', 'High', this)">High</button>
-                                </div>
-                            </div>
-
-                            <!-- Diet Triggers -->
-                            <div class="lifestyle-field">
-                                <span class="field-title">🥗 Diet Triggers</span>
-                                <div class="lifestyle-checkbox-group" id="dietTriggersGroup">
-                                    <label class="lifestyle-check-chip">
-                                        <input type="checkbox" name="dietTrigger" value="Dairy" onchange="handleDietTriggerChange(this)" />
-                                        <span>🧀 Dairy</span>
-                                    </label>
-                                    <label class="lifestyle-check-chip">
-                                        <input type="checkbox" name="dietTrigger" value="High Sugar" onchange="handleDietTriggerChange(this)" />
-                                        <span>🍭 High Sugar</span>
-                                    </label>
-                                    <label class="lifestyle-check-chip">
-                                        <input type="checkbox" name="dietTrigger" value="Alcohol" onchange="handleDietTriggerChange(this)" />
-                                        <span>🍷 Alcohol</span>
-                                    </label>
-                                    <label class="lifestyle-check-chip">
-                                        <input type="checkbox" name="dietTrigger" value="None" checked onchange="handleDietTriggerChange(this)" />
-                                        <span>🌿 None</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Skin Feel -->
-                            <div class="lifestyle-field">
-                                <span class="field-title">✨ Skin Feel Today</span>
-                                <div class="lifestyle-chips-group" id="skinFeelChips">
-                                    <button type="button" class="lifestyle-chip active" data-field="skinFeel" data-value="Calm" onclick="selectLifestyleChip('skinFeel', 'Calm', this)">🌿 Calm</button>
-                                    <button type="button" class="lifestyle-chip" data-field="skinFeel" data-value="Oily" onclick="selectLifestyleChip('skinFeel', 'Oily', this)">💧 Oily</button>
-                                    <button type="button" class="lifestyle-chip" data-field="skinFeel" data-value="Dry / Flaky" onclick="selectLifestyleChip('skinFeel', 'Dry / Flaky', this)">🍂 Dry / Flaky</button>
-                                    <button type="button" class="lifestyle-chip" data-field="skinFeel" data-value="Active Breakout" onclick="selectLifestyleChip('skinFeel', 'Active Breakout', this)">⚠️ Active Breakout</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="lifestyle-footer-row">
-                            <button type="submit" id="saveLifestyleBtn" class="action-btn save-lifestyle-btn">
-                                💾 Save Daily Lifestyle Check-In
+                        <div class="results-header-actions">
+                            <button type="button" class="secondary-ghost-btn climate-jump-btn" data-target="climate">
+                                ⛅ Check UV &amp; Climate Telemetry
                             </button>
-                            <span class="lifestyle-auto-note">Changes auto-save with your daily streak</span>
+                            <button type="button" id="adoptRegimenBtn" class="primary-btn adopt-regimen-btn" onclick="adoptCurrentRegimen()">
+                                ✨ Adopt This Routine
+                            </button>
+                            <button type="button" id="exportSummaryBtn" class="secondary-ghost-btn export-summary-btn" onclick="exportDermatologistSummary()">
+                                📄 Export Dermatologist Summary
+                            </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
 
-                <!-- Gentle Local Notifications Reminder Box -->
-                <div class="reminder-clean-box" id="reminderCard">
-                    <div class="reminder-text-wrap">
-                        <span class="reminder-bell">🔔</span>
+                    <!-- Skeleton Loader -->
+                    <div id="resultsSkeleton" class="skeleton-wrapper hidden">
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
+
+                    <!-- Real Content -->
+                    <div id="resultsContent">
+                        <div id="routineOutput" class="routine-output">
+                            <div class="routine-cards-grid">
+                                <!-- Morning Routine Card -->
+                                <div class="routine-card routine-col am-card">
+                                    <div class="routine-card-header">
+                                        <div class="routine-pill am-pill">☀️ Morning Routine</div>
+                                        <span class="routine-meta">Protect &amp; Hydrate</span>
+                                    </div>
+                                    <ul id="amStepsList" class="routine-steps-list"></ul>
+                                </div>
+
+                                <!-- Evening Routine Card -->
+                                <div class="routine-card routine-col pm-card">
+                                    <div class="routine-card-header">
+                                        <div class="routine-pill pm-pill">🌙 Evening Routine</div>
+                                        <span class="routine-meta">Repair &amp; Restore</span>
+                                    </div>
+                                    <ul id="pmStepsList" class="routine-steps-list"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Adopt Banner -->
+                        <div class="adopt-banner-card">
+                            <div class="adopt-banner-text">
+                                <h4>Ready to start your journey?</h4>
+                                <p>Sync these morning and evening steps directly to your daily routine checklist below.</p>
+                            </div>
+                            <button type="button" class="primary-btn adopt-banner-btn" onclick="adoptCurrentRegimen()">
+                                ✨ Adopt This Routine to Daily Tracker
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Daily Routine & Streak Tracker with Lifestyle Logger -->
+            <section id="routineTracker" class="tracker-section">
+                <div class="tracker-card card">
+                    <div class="tracker-header">
                         <div>
-                            <strong>Daily Routine Reminders</strong>
-                            <p>Receive gentle notifications at 8:00 AM &amp; 9:00 PM to keep your streak going.</p>
+                            <span class="pill-badge">Daily Adherence</span>
+                            <h2>My Routine &amp; Streak</h2>
+                            <p class="section-desc">Check off your morning and evening steps to stay consistent.</p>
                         </div>
-                    </div>
-                    <div class="reminder-actions-wrap">
-                        <button type="button" id="pushNotificationBtn" class="action-btn reminder-btn" onclick="requestNotificationPermission()">
-                            Enable Reminders
-                        </button>
-                        <span id="notificationStatus" class="notification-status-badge status-disabled">Disabled</span>
-                        <button type="button" id="testNotificationBtn" class="ghost-btn test-btn" onclick="testNotification()" title="Send test notification">Test</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Feature 4: "My Vanity" Product Expiry & PAO Tracker -->
-        <section id="vanityTracker" class="vanity-section">
-            <div class="vanity-card card">
-                <div class="vanity-header">
-                    <div>
-                        <span class="pill-badge">Freshness &amp; Safety</span>
-                        <h2>My Vanity Shelf</h2>
-                        <p class="section-desc">Track Period After Opening (PAO) and eliminate expired formulations before they trigger irritation or lose efficacy.</p>
-                    </div>
-                    <div class="vanity-stats-row">
-                        <div class="vanity-stat-pill">
-                            <span class="vanity-stat-count" id="vanityTotalCount">0</span>
-                            <span class="vanity-stat-label">Products</span>
-                        </div>
-                        <div class="vanity-stat-pill stat-amber">
-                            <span class="vanity-stat-count" id="vanityWarningCount">0</span>
-                            <span class="vanity-stat-label">Expiring Soon</span>
-                        </div>
-                        <div class="vanity-stat-pill stat-red">
-                            <span class="vanity-stat-count" id="vanityExpiredCount">0</span>
-                            <span class="vanity-stat-label">Expired</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick-Add Form -->
-                <form id="vanityForm" class="vanity-add-form" onsubmit="handleAddVanityItem(event)">
-                    <div class="vanity-form-row">
-                        <div class="vanity-form-group flex-2">
-                            <label for="vanityName">Product Name</label>
-                            <input type="text" id="vanityName" placeholder="e.g. Ceramide Barrier Cream" required autocomplete="off" />
-                        </div>
-                        <div class="vanity-form-group flex-1">
-                            <label for="vanityCategory">Category</label>
-                            <select id="vanityCategory" required>
-                                <option value="Cleanser">Cleanser</option>
-                                <option value="Serum" selected>Serum</option>
-                                <option value="Moisturizer">Moisturizer</option>
-                                <option value="SPF">SPF Sunscreen</option>
-                                <option value="Treatment">Treatment / Acid</option>
-                                <option value="Eye Cream">Eye Cream</option>
-                            </select>
-                        </div>
-                        <div class="vanity-form-group flex-1">
-                            <label for="vanityPAO">PAO (Shelf Life)</label>
-                            <select id="vanityPAO" required>
-                                <option value="3">3 Months (3M)</option>
-                                <option value="6" selected>6 Months (6M)</option>
-                                <option value="12">12 Months (12M)</option>
-                                <option value="24">24 Months (24M)</option>
-                            </select>
-                        </div>
-                        <div class="vanity-form-group flex-1">
-                            <label for="vanityDateOpened">Date Opened</label>
-                            <input type="date" id="vanityDateOpened" required />
-                        </div>
-                        <div class="vanity-form-group btn-col">
-                            <button type="submit" id="addVanityBtn" class="primary-btn vanity-submit-btn">
-                                + Add to Shelf
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <!-- Shelf List Cards Grid -->
-                <div id="vanityShelfGrid" class="vanity-shelf-grid">
-                    <!-- Populated dynamically via script.js -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Feature 3: Interactive Visual Skin Journey (Day 1 vs. Day 30 Slider) -->
-        <section id="skinJourneySlider" class="journey-section">
-            <div class="journey-card card">
-                <div class="journey-header">
-                    <div>
-                        <span class="pill-badge">Visual Progression</span>
-                        <h2>Visual Skin Journey</h2>
-                        <p class="section-desc">Track real clinical barrier transformation over your 30-day regimen with interactive before-and-after comparison.</p>
-                    </div>
-                    <div class="journey-actions">
-                        <button type="button" class="secondary-ghost-btn reset-slider-btn" onclick="resetJourneyPhotos()" title="Reset to clinical demonstration photos">
-                            🔄 Reset Demo
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 50/50 Horizontal Drag Slider Interactive Viewer -->
-                <div class="slider-viewport-container" id="journeyViewport">
-                    <!-- Under Image: Current / Day 30 -->
-                    <div class="slider-image-layer layer-after">
-                        <img id="journeyAfterImg" src="" alt="Current (Day 30) skin progress" />
-                        <span class="slider-tag tag-after">Day 30 (Current)</span>
-                    </div>
-                    <!-- Overlay Image: Baseline / Day 1 -->
-                    <div class="slider-image-layer layer-before" id="journeyBeforeLayer">
-                        <img id="journeyBeforeImg" src="" alt="Baseline (Day 1) skin progress" />
-                        <span class="slider-tag tag-before">Day 1 (Baseline)</span>
-                    </div>
-                    <!-- Interactive Divider Handle -->
-                    <div class="slider-handle" id="journeyHandle" tabindex="0" role="slider" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Before and after split handle">
-                        <div class="slider-line"></div>
-                        <div class="slider-button" aria-hidden="true">
-                            <span>‹</span><span>›</span>
-                        </div>
-                    </div>
-                </div>
-                <p class="slider-hint">⇄ Drag the circular handle left or right to compare baseline texture vs. current clarity</p>
-
-                <!-- Two Image Dropzones: Baseline & Current -->
-                <div class="journey-dropzones-grid">
-                    <!-- Dropzone 1: Baseline -->
-                    <div class="dropzone-box" id="baselineDropzone">
-                        <input type="file" id="baselinePhotoInput" accept="image/*" class="visually-hidden" onchange="handleJourneyPhotoUpload(event, 'baseline')" />
-                        <label for="baselinePhotoInput" class="dropzone-label">
-                            <span class="dropzone-icon">📷</span>
-                            <div class="dropzone-text">
-                                <strong>Upload Baseline Photo (Day 1)</strong>
-                                <small>Initial texture, redness, or barrier baseline</small>
-                            </div>
-                            <span class="dropzone-action-btn">Choose File</span>
-                        </label>
-                    </div>
-                    <!-- Dropzone 2: Current -->
-                    <div class="dropzone-box" id="currentDropzone">
-                        <input type="file" id="currentPhotoInput" accept="image/*" class="visually-hidden" onchange="handleJourneyPhotoUpload(event, 'current')" />
-                        <label for="currentPhotoInput" class="dropzone-label">
-                            <span class="dropzone-icon">✨</span>
-                            <div class="dropzone-text">
-                                <strong>Upload Current Photo (Day 14 / 30)</strong>
-                                <small>Updated skin clarity after daily adherence</small>
-                            </div>
-                            <span class="dropzone-action-btn">Choose File</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Feature 2: Active Ingredient Conflict & Interaction Checker + Pore Scanner -->
-        <section id="ingredientChecker" class="checker-section">
-            <div class="checker-hub-container">
-                <!-- Clean Sub-Tabs Navigation to avoid clutter -->
-                <div class="checker-tabs-nav" role="tablist">
-                    <button type="button" id="tabConflictBtn" class="checker-tab active" role="tab" aria-selected="true" onclick="switchCheckerTab('conflict')">
-                        ⚡ Active Compatibility Checker
-                    </button>
-                    <button type="button" id="tabPoreBtn" class="checker-tab" role="tab" aria-selected="false" onclick="switchCheckerTab('pore')">
-                        🔍 Pore-Clogging Scanner
-                    </button>
-                </div>
-
-                <!-- Feature 2: Active Ingredient Conflict & Interaction Checker Card -->
-                <div id="conflictChecker" class="checker-card card active-tab-content">
-                    <div class="checker-header">
-                        <span class="pill-badge">Active Formulation Safety</span>
-                        <h2>Ingredient Compatibility Checker</h2>
-                        <p class="section-desc">Cross-reference potent clinical actives before layering to prevent severe irritation, retinoid deactivation, or barrier burn.</p>
-                    </div>
-
-                    <div class="conflict-form-container">
-                        <div class="conflict-inputs-row">
-                            <!-- Active A -->
-                            <div class="conflict-col">
-                                <label for="activeA" class="conflict-label">Active A</label>
-                                <select id="activeA" class="conflict-select" onchange="handleConflictActiveChange()">
-                                    <option value="retinol" selected>Retinol / Retinoids</option>
-                                    <option value="vitamin_c">Vitamin C (L-Ascorbic Acid)</option>
-                                    <option value="aha_bha">AHA / BHA (Glycolic, Salicylic Acid)</option>
-                                    <option value="benzoyl_peroxide">Benzoyl Peroxide</option>
-                                    <option value="niacinamide">Niacinamide (Vitamin B3)</option>
-                                    <option value="copper_peptides">Copper Peptides</option>
-                                    <option value="hyaluronic_acid">Hyaluronic Acid</option>
-                                    <option value="ceramides">Ceramides</option>
-                                    <option value="azelaic_acid">Azelaic Acid</option>
-                                    <option value="spf">Sunscreen (SPF 50)</option>
-                                </select>
-                                <div class="conflict-chips-row" id="activeAChips">
-                                    <!-- Populated dynamically via JS -->
+                        <div class="tracker-header-right">
+                            <div class="streak-adherence-card">
+                                <div class="streak-ring-wrapper" title="30-Day Routine Adherence Ring">
+                                    <svg class="adherence-circular-svg" viewBox="0 0 60 60" width="60" height="60">
+                                        <circle class="adherence-ring-bg" cx="30" cy="30" r="24" stroke-width="5" fill="none"></circle>
+                                        <circle class="adherence-ring-fill" id="routineAdherenceRing" cx="30" cy="30" r="24" stroke-width="5" fill="none" stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"></circle>
+                                    </svg>
+                                    <div class="streak-ring-content">
+                                        <span class="streak-icon">🔥</span>
+                                        <span class="adherence-mini-pct" id="routineAdherencePct">0%</span>
+                                    </div>
+                                </div>
+                                <div class="streak-data">
+                                    <span class="streak-count"><span id="streakCount">0</span> Days</span>
+                                    <span class="streak-label">Daily Streak</span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <!-- Swap Col -->
-                            <div class="conflict-swap-col">
-                                <button type="button" class="swap-actives-btn" onclick="swapConflictActives()" title="Swap Active A and Active B">
-                                    ⇄
+                    <!-- Feature 5: Lifestyle Historical Correlation Insight Banner -->
+                    <div id="lifestyleStreakInsight" class="streak-correlation-banner">
+                        <span class="insight-sparkle">💡</span>
+                        <span id="streakInsightText">Past 7 days: Breakouts correlated with High Stress / Low Sleep.</span>
+                    </div>
+
+                    <!-- Daily Checklist Container (Dynamically updated when routine is adopted) -->
+                    <div class="tracker-checklist" id="trackerChecklistContainer">
+                        <label class="check-container">
+                            <input type="checkbox" id="checkAM" onchange="handleRoutineCheck('am')" />
+                            <span class="check-label">
+                                <span class="check-title">☀️ Morning Routine Completed</span>
+                                <span class="check-time">Cleanse • Hydrate • SPF 50</span>
+                            </span>
+                        </label>
+                        <label class="check-container">
+                            <input type="checkbox" id="checkPM" onchange="handleRoutineCheck('pm')" />
+                            <span class="check-label">
+                                <span class="check-title">🌙 Evening Routine Completed</span>
+                                <span class="check-time">Pre-Cleanse • Treatment • Barrier Moisturizer</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div id="trackerStatusMsg" class="tracker-msg"></div>
+
+                    <!-- Gentle Local Notifications Reminder Box -->
+                    <div class="reminder-clean-box" id="reminderCard">
+                        <div class="reminder-text-wrap">
+                            <span class="reminder-bell">🔔</span>
+                            <div>
+                                <strong>Daily Routine Reminders</strong>
+                                <p>Receive gentle notifications at 8:00 AM &amp; 9:00 PM to keep your streak going.</p>
+                            </div>
+                        </div>
+                        <div class="reminder-actions-wrap">
+                            <button type="button" id="pushNotificationBtn" class="action-btn reminder-btn" onclick="requestNotificationPermission()">
+                                Enable Reminders
+                            </button>
+                            <span id="notificationStatus" class="notification-status-badge status-disabled">Disabled</span>
+                            <button type="button" id="testNotificationBtn" class="ghost-btn test-btn" onclick="testNotification()" title="Send test notification">Test</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section> <!-- End #view-regimen -->
+
+        <!-- View 4: Climate & UV Environmental Shield -->
+        <section id="view-climate" class="app-view">
+            <button type="button" class="back-overview-btn" data-target="home">← Back to Overview</button>
+            <div class="climate-view-card card">
+                <div class="climate-view-header">
+                    <span class="pill-badge">Environmental Telemetry</span>
+                    <h2>Climate &amp; UV Environmental Shield</h2>
+                    <p class="section-desc">Live atmospheric monitoring via GPS telemetry. Automatically adapts your formulation occlusiveness, humectants, and SPF reapplication intervals to ambient conditions.</p>
+                </div>
+                <div class="climate-view-body">
+                    <!-- Feature 1: Live UV Index & Climate-Adaptive Routine Badge with Animated Circular Telemetry Gauge -->
+                    <div id="climateWidget" class="climate-widget tactile-telemetry-widget">
+                        <div class="climate-widget-content">
+                            <div class="uv-circular-gauge-box" title="UV Radiation Telemetry">
+                                <svg class="uv-gauge-svg" viewBox="0 0 44 44" width="44" height="44">
+                                    <circle class="gauge-bg" cx="22" cy="22" r="18" stroke-width="3.5" fill="none"></circle>
+                                    <circle class="gauge-fill" id="uvGaugeCircle" cx="22" cy="22" r="18" stroke-width="3.5" fill="none" stroke-dasharray="113.1" stroke-dashoffset="113.1" transform="rotate(-90 22 22)"></circle>
+                                </svg>
+                                <span class="uv-center-icon" aria-hidden="true">☀️</span>
+                            </div>
+                            <div class="climate-details-col">
+                                <div class="climate-metrics">
+                                    <span id="climateUVWrap" class="climate-metric climate-uv-metric" title="Current UV Index">
+                                        UV <span id="climateUVValue">--</span>
+                                        <span id="climateUVDot" class="uv-status-dot dot-low">🟢 Low</span>
+                                    </span>
+                                    <span class="climate-sep">•</span>
+                                    <span id="climateTemp" class="climate-metric" title="Local Temperature">--°C</span>
+                                    <span class="climate-sep">•</span>
+                                    <span id="climateHumidity" class="climate-metric" title="Relative Humidity">💧 --%</span>
+                                </div>
+                                <div class="climate-action-row">
+                                    <button type="button" id="detectClimateBtn" class="detect-climate-btn" onclick="detectClimate(true)" title="Detect Local Climate via GPS">
+                                        📍 Detect Local Climate
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature 1: Dynamic Climate Alert Chips Container -->
+                    <div id="climateAlerts" class="climate-alerts-wrap" aria-live="polite"></div>
+                </div>
+            </div>
+        </section> <!-- End #view-climate -->
+
+        <!-- View 5: My Vanity Shelf & Lifestyle Logger -->
+        <section id="view-vanity" class="app-view">
+            <button type="button" class="back-overview-btn" data-target="home">← Back to Overview</button>
+
+            <!-- Feature 4: "My Vanity" Product Expiry & PAO Tracker -->
+            <section id="vanityTracker" class="vanity-section">
+                <div class="vanity-card card">
+                    <div class="vanity-header">
+                        <div>
+                            <span class="pill-badge">Freshness &amp; Safety</span>
+                            <h2>My Vanity Shelf</h2>
+                            <p class="section-desc">Track Period After Opening (PAO) and eliminate expired formulations before they trigger irritation or lose efficacy.</p>
+                        </div>
+                        <div class="vanity-stats-row">
+                            <div class="vanity-stat-pill">
+                                <span class="vanity-stat-count" id="vanityTotalCount">0</span>
+                                <span class="vanity-stat-label">Products</span>
+                            </div>
+                            <div class="vanity-stat-pill stat-amber">
+                                <span class="vanity-stat-count" id="vanityWarningCount">0</span>
+                                <span class="vanity-stat-label">Expiring Soon</span>
+                            </div>
+                            <div class="vanity-stat-pill stat-red">
+                                <span class="vanity-stat-count" id="vanityExpiredCount">0</span>
+                                <span class="vanity-stat-label">Expired</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick-Add Form -->
+                    <form id="vanityForm" class="vanity-add-form" onsubmit="handleAddVanityItem(event)">
+                        <div class="vanity-form-row">
+                            <div class="vanity-form-group flex-2">
+                                <label for="vanityName">Product Name</label>
+                                <input type="text" id="vanityName" placeholder="e.g. Ceramide Barrier Cream" required autocomplete="off" />
+                            </div>
+                            <div class="vanity-form-group flex-1">
+                                <label for="vanityCategory">Category</label>
+                                <select id="vanityCategory" required>
+                                    <option value="Cleanser">Cleanser</option>
+                                    <option value="Serum" selected>Serum</option>
+                                    <option value="Moisturizer">Moisturizer</option>
+                                    <option value="SPF">SPF Sunscreen</option>
+                                    <option value="Treatment">Treatment / Acid</option>
+                                    <option value="Eye Cream">Eye Cream</option>
+                                </select>
+                            </div>
+                            <div class="vanity-form-group flex-1">
+                                <label for="vanityPAO">PAO (Shelf Life)</label>
+                                <select id="vanityPAO" required>
+                                    <option value="3">3 Months (3M)</option>
+                                    <option value="6" selected>6 Months (6M)</option>
+                                    <option value="12">12 Months (12M)</option>
+                                    <option value="24">24 Months (24M)</option>
+                                </select>
+                            </div>
+                            <div class="vanity-form-group flex-1">
+                                <label for="vanityDateOpened">Date Opened</label>
+                                <input type="date" id="vanityDateOpened" required />
+                            </div>
+                            <div class="vanity-form-group btn-col">
+                                <button type="submit" id="addVanityBtn" class="primary-btn vanity-submit-btn">
+                                    + Add to Shelf
                                 </button>
                             </div>
-
-                            <!-- Active B -->
-                            <div class="conflict-col">
-                                <label for="activeB" class="conflict-label">Active B</label>
-                                <select id="activeB" class="conflict-select" onchange="handleConflictActiveChange()">
-                                    <option value="retinol">Retinol / Retinoids</option>
-                                    <option value="vitamin_c">Vitamin C (L-Ascorbic Acid)</option>
-                                    <option value="aha_bha" selected>AHA / BHA (Glycolic, Salicylic Acid)</option>
-                                    <option value="benzoyl_peroxide">Benzoyl Peroxide</option>
-                                    <option value="niacinamide">Niacinamide (Vitamin B3)</option>
-                                    <option value="copper_peptides">Copper Peptides</option>
-                                    <option value="hyaluronic_acid">Hyaluronic Acid</option>
-                                    <option value="ceramides">Ceramides</option>
-                                    <option value="azelaic_acid">Azelaic Acid</option>
-                                    <option value="spf">Sunscreen (SPF 50)</option>
-                                </select>
-                                <div class="conflict-chips-row" id="activeBChips">
-                                    <!-- Populated dynamically via JS -->
-                                </div>
-                            </div>
                         </div>
+                    </form>
 
-                        <div class="conflict-actions-row">
-                            <button type="button" id="checkCompatibilityBtn" class="primary-btn conflict-check-btn" onclick="checkIngredientCompatibility()">
-                                ⚡ Check Compatibility
-                            </button>
-                            <div class="popular-pairs-wrap">
-                                <span class="pairs-label">Popular pairings:</span>
-                                <button type="button" class="pair-quick-btn" onclick="quickCheckPair('retinol', 'aha_bha')">Retinol + AHA/BHA</button>
-                                <button type="button" class="pair-quick-btn" onclick="quickCheckPair('retinol', 'benzoyl_peroxide')">Retinol + Benzoyl Peroxide</button>
-                                <button type="button" class="pair-quick-btn" onclick="quickCheckPair('copper_peptides', 'vitamin_c')">Vit C + Copper Peptides</button>
-                                <button type="button" class="pair-quick-btn" onclick="quickCheckPair('niacinamide', 'aha_bha')">Niacinamide + Salicylic</button>
-                                <button type="button" class="pair-quick-btn" onclick="quickCheckPair('ceramides', 'hyaluronic_acid')">HA + Ceramides</button>
-                            </div>
-                        </div>
+                    <!-- Shelf List Cards Grid -->
+                    <div id="vanityShelfGrid" class="vanity-shelf-grid">
+                        <!-- Populated dynamically via script.js -->
+                    </div>
+                </div>
+            </section>
 
-                        <!-- Result Card -->
-                        <div id="compatibilityResult" class="compatibility-result-card" role="region" aria-live="polite">
-                            <!-- Populated dynamically via JS -->
+            <!-- Feature 5: 10-Second Daily Flare-Up & Lifestyle Logger -->
+            <div id="lifestyleLogger" class="lifestyle-logger-card card" style="margin-top: 1.5rem;">
+                <div class="lifestyle-logger-header">
+                    <div class="lifestyle-title-row">
+                        <span class="lifestyle-icon">⚡</span>
+                        <div>
+                            <h3 class="lifestyle-heading">10-Second Daily Flare-Up &amp; Lifestyle Logger</h3>
+                            <p class="lifestyle-desc">Record key triggers alongside routine completion to isolate cause-and-effect patterns.</p>
                         </div>
+                    </div>
+                    <div class="lifestyle-badge-wrap">
+                        <span id="lifestyleStatusBadge" class="lifestyle-saved-badge hidden">✓ Saved for Today</span>
                     </div>
                 </div>
 
-                <!-- Pore-Clogging Scanner Card (Tab 2) -->
-                <div id="poreScannerCard" class="checker-card card hidden">
-                    <div class="checker-header">
-                        <span class="pill-badge">Ingredient Analysis</span>
-                        <h2>Pore-Clogging Scanner</h2>
-                        <p class="section-desc">Paste any cosmetic ingredient deck to screen for pore-clogging comedogens and common irritants.</p>
+                <form id="lifestyleForm" onsubmit="handleLifestyleSubmit(event)">
+                    <div class="lifestyle-grid">
+                        <!-- Sleep Duration -->
+                        <div class="lifestyle-field">
+                            <span class="field-title">😴 Sleep Duration</span>
+                            <div class="lifestyle-chips-group" id="sleepChips">
+                                <button type="button" class="lifestyle-chip" data-field="sleep" data-value="< 6 hrs" onclick="selectLifestyleChip('sleep', '< 6 hrs', this)">&lt; 6 hrs</button>
+                                <button type="button" class="lifestyle-chip active" data-field="sleep" data-value="6–8 hrs" onclick="selectLifestyleChip('sleep', '6–8 hrs', this)">6–8 hrs</button>
+                                <button type="button" class="lifestyle-chip" data-field="sleep" data-value="8+ hrs" onclick="selectLifestyleChip('sleep', '8+ hrs', this)">8+ hrs</button>
+                            </div>
+                        </div>
+
+                        <!-- Stress Level -->
+                        <div class="lifestyle-field">
+                            <span class="field-title">🧠 Stress Level</span>
+                            <div class="lifestyle-chips-group" id="stressChips">
+                                <button type="button" class="lifestyle-chip" data-field="stress" data-value="Low" onclick="selectLifestyleChip('stress', 'Low', this)">Low</button>
+                                <button type="button" class="lifestyle-chip active" data-field="stress" data-value="Moderate" onclick="selectLifestyleChip('stress', 'Moderate', this)">Moderate</button>
+                                <button type="button" class="lifestyle-chip" data-field="stress" data-value="High" onclick="selectLifestyleChip('stress', 'High', this)">High</button>
+                            </div>
+                        </div>
+
+                        <!-- Diet Triggers -->
+                        <div class="lifestyle-field">
+                            <span class="field-title">🥗 Diet Triggers</span>
+                            <div class="lifestyle-checkbox-group" id="dietTriggersGroup">
+                                <label class="lifestyle-check-chip">
+                                    <input type="checkbox" name="dietTrigger" value="Dairy" onchange="handleDietTriggerChange(this)" />
+                                    <span>🧀 Dairy</span>
+                                </label>
+                                <label class="lifestyle-check-chip">
+                                    <input type="checkbox" name="dietTrigger" value="High Sugar" onchange="handleDietTriggerChange(this)" />
+                                    <span>🍭 High Sugar</span>
+                                </label>
+                                <label class="lifestyle-check-chip">
+                                    <input type="checkbox" name="dietTrigger" value="Alcohol" onchange="handleDietTriggerChange(this)" />
+                                    <span>🍷 Alcohol</span>
+                                </label>
+                                <label class="lifestyle-check-chip">
+                                    <input type="checkbox" name="dietTrigger" value="None" checked onchange="handleDietTriggerChange(this)" />
+                                    <span>🌿 None</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Skin Feel -->
+                        <div class="lifestyle-field">
+                            <span class="field-title">✨ Skin Feel Today</span>
+                            <div class="lifestyle-chips-group" id="skinFeelChips">
+                                <button type="button" class="lifestyle-chip active" data-field="skinFeel" data-value="Calm" onclick="selectLifestyleChip('skinFeel', 'Calm', this)">🌿 Calm</button>
+                                <button type="button" class="lifestyle-chip" data-field="skinFeel" data-value="Oily" onclick="selectLifestyleChip('skinFeel', 'Oily', this)">💧 Oily</button>
+                                <button type="button" class="lifestyle-chip" data-field="skinFeel" data-value="Dry / Flaky" onclick="selectLifestyleChip('skinFeel', 'Dry / Flaky', this)">🍂 Dry / Flaky</button>
+                                <button type="button" class="lifestyle-chip" data-field="skinFeel" data-value="Active Breakout" onclick="selectLifestyleChip('skinFeel', 'Active Breakout', this)">⚠️ Active Breakout</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="checker-input-wrap">
-                        <textarea id="ingredientInput" rows="3" placeholder="Water / Aqua, Glycerin, Niacinamide, Ceramide NP, Squalane, Fragrance..."></textarea>
-                        <button type="button" class="primary-btn checker-btn" onclick="analyzeIngredients()">
-                            Scan Ingredients
+                    <div class="lifestyle-footer-row">
+                        <button type="submit" id="saveLifestyleBtn" class="action-btn save-lifestyle-btn">
+                            💾 Save Daily Lifestyle Check-In
+                        </button>
+                        <span class="lifestyle-auto-note">Changes auto-save with your daily streak</span>
+                    </div>
+                </form>
+            </div>
+        </section> <!-- End #view-vanity -->
+
+        <!-- View 6: Active Ingredient Conflict & Interaction Checker + Pore Scanner -->
+        <section id="view-lab" class="app-view">
+            <button type="button" class="back-overview-btn" data-target="home">← Back to Overview</button>
+            <section id="ingredientChecker" class="checker-section">
+                <div class="checker-hub-container">
+                    <!-- Clean Sub-Tabs Navigation to avoid clutter -->
+                    <div class="checker-tabs-nav" role="tablist">
+                        <button type="button" id="tabConflictBtn" class="checker-tab active" role="tab" aria-selected="true" onclick="switchCheckerTab('conflict')">
+                            ⚡ Active Compatibility Checker
+                        </button>
+                        <button type="button" id="tabPoreBtn" class="checker-tab" role="tab" aria-selected="false" onclick="switchCheckerTab('pore')">
+                            🔍 Pore-Clogging Scanner
                         </button>
                     </div>
 
-                    <div id="checkerResults" class="checker-results hidden"></div>
+                    <!-- Feature 2: Active Ingredient Conflict & Interaction Checker Card -->
+                    <div id="conflictChecker" class="checker-card card active-tab-content">
+                        <div class="checker-header">
+                            <span class="pill-badge">Active Formulation Safety</span>
+                            <h2>Ingredient Compatibility Checker</h2>
+                            <p class="section-desc">Cross-reference potent clinical actives before layering to prevent severe irritation, retinoid deactivation, or barrier burn.</p>
+                        </div>
+
+                        <div class="conflict-form-container">
+                            <div class="conflict-inputs-row">
+                                <!-- Active A -->
+                                <div class="conflict-col">
+                                    <label for="activeA" class="conflict-label">Active A</label>
+                                    <select id="activeA" class="conflict-select" onchange="handleConflictActiveChange()">
+                                        <option value="retinol" selected>Retinol / Retinoids</option>
+                                        <option value="vitamin_c">Vitamin C (L-Ascorbic Acid)</option>
+                                        <option value="aha_bha">AHA / BHA (Glycolic, Salicylic Acid)</option>
+                                        <option value="benzoyl_peroxide">Benzoyl Peroxide</option>
+                                        <option value="niacinamide">Niacinamide (Vitamin B3)</option>
+                                        <option value="copper_peptides">Copper Peptides</option>
+                                        <option value="hyaluronic_acid">Hyaluronic Acid</option>
+                                        <option value="ceramides">Ceramides</option>
+                                        <option value="azelaic_acid">Azelaic Acid</option>
+                                        <option value="spf">Sunscreen (SPF 50)</option>
+                                    </select>
+                                    <div class="conflict-chips-row" id="activeAChips">
+                                        <!-- Populated dynamically via JS -->
+                                    </div>
+                                </div>
+
+                                <!-- Swap Col -->
+                                <div class="conflict-swap-col">
+                                    <button type="button" class="swap-actives-btn" onclick="swapConflictActives()" title="Swap Active A and Active B">
+                                        ⇄
+                                    </button>
+                                </div>
+
+                                <!-- Active B -->
+                                <div class="conflict-col">
+                                    <label for="activeB" class="conflict-label">Active B</label>
+                                    <select id="activeB" class="conflict-select" onchange="handleConflictActiveChange()">
+                                        <option value="retinol">Retinol / Retinoids</option>
+                                        <option value="vitamin_c">Vitamin C (L-Ascorbic Acid)</option>
+                                        <option value="aha_bha" selected>AHA / BHA (Glycolic, Salicylic Acid)</option>
+                                        <option value="benzoyl_peroxide">Benzoyl Peroxide</option>
+                                        <option value="niacinamide">Niacinamide (Vitamin B3)</option>
+                                        <option value="copper_peptides">Copper Peptides</option>
+                                        <option value="hyaluronic_acid">Hyaluronic Acid</option>
+                                        <option value="ceramides">Ceramides</option>
+                                        <option value="azelaic_acid">Azelaic Acid</option>
+                                        <option value="spf">Sunscreen (SPF 50)</option>
+                                    </select>
+                                    <div class="conflict-chips-row" id="activeBChips">
+                                        <!-- Populated dynamically via JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="conflict-actions-row">
+                                <button type="button" id="checkCompatibilityBtn" class="primary-btn conflict-check-btn" onclick="checkIngredientCompatibility()">
+                                    ⚡ Check Compatibility
+                                </button>
+                                <div class="popular-pairs-wrap">
+                                    <span class="pairs-label">Popular pairings:</span>
+                                    <button type="button" class="pair-quick-btn" onclick="quickCheckPair('retinol', 'aha_bha')">Retinol + AHA/BHA</button>
+                                    <button type="button" class="pair-quick-btn" onclick="quickCheckPair('retinol', 'benzoyl_peroxide')">Retinol + Benzoyl Peroxide</button>
+                                    <button type="button" class="pair-quick-btn" onclick="quickCheckPair('copper_peptides', 'vitamin_c')">Vit C + Copper Peptides</button>
+                                    <button type="button" class="pair-quick-btn" onclick="quickCheckPair('niacinamide', 'aha_bha')">Niacinamide + Salicylic</button>
+                                    <button type="button" class="pair-quick-btn" onclick="quickCheckPair('ceramides', 'hyaluronic_acid')">HA + Ceramides</button>
+                                </div>
+                            </div>
+
+                            <!-- Result Card -->
+                            <div id="compatibilityResult" class="compatibility-result-card" role="region" aria-live="polite">
+                                <!-- Populated dynamically via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pore-Clogging Scanner Card (Tab 2) -->
+                    <div id="poreScannerCard" class="checker-card card hidden">
+                        <div class="checker-header">
+                            <span class="pill-badge">Ingredient Analysis</span>
+                            <h2>Pore-Clogging Scanner</h2>
+                            <p class="section-desc">Paste any cosmetic ingredient deck to screen for pore-clogging comedogens and common irritants.</p>
+                        </div>
+
+                        <div class="checker-input-wrap">
+                            <textarea id="ingredientInput" rows="3" placeholder="Water / Aqua, Glycerin, Niacinamide, Ceramide NP, Squalane, Fragrance..."></textarea>
+                            <button type="button" class="primary-btn checker-btn" onclick="analyzeIngredients()">
+                                Scan Ingredients
+                            </button>
+                        </div>
+
+                        <div id="checkerResults" class="checker-results hidden"></div>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </section> <!-- End #view-lab -->
+
+        <!-- View 7: Interactive Visual Skin Journey -->
+        <section id="view-journey" class="app-view">
+            <button type="button" class="back-overview-btn" data-target="home">← Back to Overview</button>
+            <section id="skinJourneySlider" class="journey-section">
+                <div class="journey-card card">
+                    <div class="journey-header">
+                        <div>
+                            <span class="pill-badge">Visual Progression</span>
+                            <h2>Visual Skin Journey</h2>
+                            <p class="section-desc">Track real clinical barrier transformation over your 30-day regimen with interactive before-and-after comparison.</p>
+                        </div>
+                        <div class="journey-actions">
+                            <button type="button" class="secondary-ghost-btn reset-slider-btn" onclick="resetJourneyPhotos()" title="Reset to clinical demonstration photos">
+                                🔄 Reset Demo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 50/50 Horizontal Drag Slider Interactive Viewer -->
+                    <div class="slider-viewport-container" id="journeyViewport">
+                        <!-- Under Image: Current / Day 30 -->
+                        <div class="slider-image-layer layer-after">
+                            <img id="journeyAfterImg" src="" alt="Current (Day 30) skin progress" />
+                            <span class="slider-tag tag-after">Day 30 (Current)</span>
+                        </div>
+                        <!-- Overlay Image: Baseline / Day 1 -->
+                        <div class="slider-image-layer layer-before" id="journeyBeforeLayer">
+                            <img id="journeyBeforeImg" src="" alt="Baseline (Day 1) skin progress" />
+                            <span class="slider-tag tag-before">Day 1 (Baseline)</span>
+                        </div>
+                        <!-- Interactive Divider Handle -->
+                        <div class="slider-handle" id="journeyHandle" tabindex="0" role="slider" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Before and after split handle">
+                            <div class="slider-line"></div>
+                            <div class="slider-button" aria-hidden="true">
+                                <span>‹</span><span>›</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="slider-hint">⇄ Drag the circular handle left or right to compare baseline texture vs. current clarity</p>
+
+                    <!-- Two Image Dropzones: Baseline & Current -->
+                    <div class="journey-dropzones-grid">
+                        <!-- Dropzone 1: Baseline -->
+                        <div class="dropzone-box" id="baselineDropzone">
+                            <input type="file" id="baselinePhotoInput" accept="image/*" class="visually-hidden" onchange="handleJourneyPhotoUpload(event, 'baseline')" />
+                            <label for="baselinePhotoInput" class="dropzone-label">
+                                <span class="dropzone-icon">📷</span>
+                                <div class="dropzone-text">
+                                    <strong>Upload Baseline Photo (Day 1)</strong>
+                                    <small>Initial texture, redness, or barrier baseline</small>
+                                </div>
+                                <span class="dropzone-action-btn">Choose File</span>
+                            </label>
+                        </div>
+                        <!-- Dropzone 2: Current -->
+                        <div class="dropzone-box" id="currentDropzone">
+                            <input type="file" id="currentPhotoInput" accept="image/*" class="visually-hidden" onchange="handleJourneyPhotoUpload(event, 'current')" />
+                            <label for="currentPhotoInput" class="dropzone-label">
+                                <span class="dropzone-icon">✨</span>
+                                <div class="dropzone-text">
+                                    <strong>Upload Current Photo (Day 14 / 30)</strong>
+                                    <small>Updated skin clarity after daily adherence</small>
+                                </div>
+                                <span class="dropzone-action-btn">Choose File</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section> <!-- End #view-journey -->
         
         <!-- Feature: Clinical Dermatologist Summary Print Report Container -->
         <div id="clinicalPrintReport" class="clinical-print-report" aria-hidden="true"></div>
